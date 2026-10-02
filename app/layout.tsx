@@ -1,12 +1,15 @@
 import "./globals.css";
-
+import { Inter } from "next/font/google";
 import { ReduxProvider } from "@/redux/ReduxProvider";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { buildWebSiteSchema } from "@/lib/seo/structured-data";
 import { seoConfig } from "@/lib/seo/seo.config";
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
+const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   ...buildMetadata(),
   metadataBase: new URL(seoConfig.siteUrl),
@@ -21,9 +24,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <JsonLd data={buildWebSiteSchema()} />
-        <ReduxProvider>{children}</ReduxProvider>
+        <TooltipProvider>
+          <ReduxProvider>{children}</ReduxProvider>
+        </TooltipProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

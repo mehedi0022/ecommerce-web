@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "next-env.d.ts",
+    "modules/product/editor.types.ts",
+    "modules/product/editorApi.ts",
+    "modules/product/editor-workflow.ts",
+    "modules/product/components/editor/**/*.tsx",
+    "app/admin/products/new/page.tsx",
+    "app/admin/products/[id]/edit/page.tsx",
+    "app/admin/layout.tsx"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

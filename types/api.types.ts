@@ -4,6 +4,17 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedApiResponse<T> extends ApiResponse<T[]> {
+  meta: PaginationMeta;
+}
+
 export interface ApiMessageResponse {
   success: boolean;
   message: string;
@@ -21,3 +32,5 @@ export interface ApiErrorResponse {
   requestId?: string;
   details?: ApiValidationDetail[];
 }
+
+export type ApiError = ApiErrorResponse | { status?: number; data?: ApiErrorResponse | unknown; error?: string };

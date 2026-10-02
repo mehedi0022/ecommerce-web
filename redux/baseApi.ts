@@ -7,7 +7,11 @@ import {
 } from "@reduxjs/toolkit/query/react";
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL,
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
+  prepareHeaders: (headers) => {
+    headers.set("Accept", "application/json");
+    return headers;
+  },
   credentials: "include",
 });
 
@@ -83,6 +87,9 @@ export const baseApi = createApi({
     "Review",
     "Return",
     "Refund",
+    "Navigation",
+    "Slider",
+    "Popup",
   ],
 
   endpoints: () => ({}),

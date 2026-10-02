@@ -5,8 +5,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { getApiErrorMessage } from "@/lib/api/get-api-error-message";
+import { Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react";
 
+import { getApiErrorMessage } from "@/lib/api/get-api-error-message";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ export function LoginForm() {
   const router = useRouter();
   const [login, { isLoading }] = useLoginMutation();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -35,20 +37,15 @@ export function LoginForm() {
     },
   });
 
-  const rememberMe = useWatch({
-    control,
-    name: "rememberMe",
-  });
+  const rememberMe = useWatch({ control, name: "rememberMe" });
 
   const onSubmit = async (values: LoginFormValues) => {
     setServerError(null);
-
     try {
       const response = await login(values).unwrap();
-
       const user = response.data.user;
 
-      if (user.role.key === "admin") {
+      if (user.role.key.toUpperCase() !== "CUSTOMER") {
         router.replace("/admin");
       } else {
         router.replace("/account");
@@ -62,74 +59,110 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      {/* Email Input */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          aria-invalid={Boolean(errors.email)}
-          {...register("email")}
-        />
-
+        <Label htmlFor="email">Email address</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="name@example.com"
+            className="pl-9 h-10"
+            aria-invalid={Boolean(errors.email)}
+            {...register("email")}
+          />
+        </div>
         {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
+          <p className="text-xs font-medium text-destructive">
+            {errors.email.message}
+          </p>
         )}
       </div>
 
+      {/* Password Input */}
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          aria-invalid={Boolean(errors.password)}
-          {...register("password")}
-        />
-
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="pl-9 pr-9 h-10"
+            aria-invalid={Boolean(errors.password)}
+            {...register("password")}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? (
+              <EyeOff className="size-4" />
+            ) : (
+              <Eye className="size-4" />
+            )}
+          </button>
+        </div>
         {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
+          <p className="text-xs font-medium text-destructive">
+            {errors.password.message}
+          </p>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Remember Me */}
+      <div className="flex items-center space-x-2">
         <Checkbox
           id="rememberMe"
           checked={rememberMe}
           onCheckedChange={(checked) =>
-            setValue("rememberMe", checked === true, {
-              shouldDirty: true,
-            })
+            setValue("rememberMe", checked === true, { shouldDirty: true })
           }
         />
-
-        <Label htmlFor="rememberMe" className="cursor-pointer font-normal">
-          Remember me
+        <Label
+          htmlFor="rememberMe"
+          className="cursor-pointer text-sm font-normal text-muted-foreground"
+        >
+          Remember me for 30 days
         </Label>
       </div>
 
+      {/* Server Error Alert */}
       {serverError && (
-        <p role="alert" className="text-sm text-destructive">
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive"
+        >
           {serverError}
-        </p>
+        </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Signing in..." : "Sign in"}
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        className="w-full h-10 font-semibold"
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          "Signing in..."
+        ) : (
+          <span className="flex items-center gap-2">
+            Sign in <ArrowRight className="size-4" />
+          </span>
+        )}
       </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/register"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Create account
-        </Link>
-      </p>
     </form>
   );
 }

@@ -11,7 +11,7 @@ export function StoreContainer({
 }: StoreContainerProps) {
   return (
     <div
-      className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`}
+      className={`container mx-auto w-full px-4 sm:px-6 lg:px-8 ${className}`}
     >
       {children}
     </div>

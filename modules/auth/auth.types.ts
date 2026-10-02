@@ -47,3 +47,21 @@ export type RegisterResponse = ApiResponse<PublicUser>;
 export type RefreshResponse = ApiMessageResponse;
 
 export type LogoutResponse = ApiMessageResponse;
+
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  password: string;
+}
+
+export interface VerifyEmailInput {
+  token: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
