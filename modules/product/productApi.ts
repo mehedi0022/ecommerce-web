@@ -15,6 +15,10 @@ import type {
 } from "./types";
 export const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    listPublicProducts: builder.query<ProductListResponse, ProductQuery | void>({
+      query: params => ({ url: "/products/public", params: params ?? {} }),
+      providesTags: ["Product"],
+    }),
     listProducts: builder.query<ProductListResponse, ProductQuery | void>({
       query: (params) => ({ url: "/products", params: params ?? {} }),
       providesTags: ["Product"],
@@ -144,6 +148,7 @@ export const productApi = baseApi.injectEndpoints({
   }),
 });
 export const {
+  useListPublicProductsQuery,
   useListProductsQuery,
   useGetProductQuery,
   useGetPublicProductBySlugQuery,

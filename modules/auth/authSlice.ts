@@ -4,8 +4,9 @@ import type { AuthUser } from "./auth.types";
 interface AuthState {
   user: AuthUser | null;
   initialized: boolean;
+  expired: boolean;
 }
-const initialState: AuthState = { user: null, initialized: false };
+const initialState: AuthState = { user: null, initialized: false, expired: false };
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -13,10 +14,12 @@ const authSlice = createSlice({
     setSession: (state, action: PayloadAction<AuthUser | null>) => {
       state.user = action.payload;
       state.initialized = true;
+      state.expired = false;
     },
     clearSession: (state) => {
       state.user = null;
       state.initialized = true;
+      state.expired = true;
     },
   },
 });

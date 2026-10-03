@@ -1,4 +1,6 @@
 "use client";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
+import { RichTextContent } from "@/components/rich-text/RichTextContent";
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
@@ -33,7 +35,7 @@ export default function ProductDetailsPage() {
           <div className="flex aspect-square items-center justify-center rounded-lg bg-muted">
             {image ? (
               <img
-                src={image.imageUrl}
+                src={mediaUrl(image.imageUrl)}
                 alt={image.altText || product.name}
                 className="max-h-full max-w-full object-contain"
               />
@@ -50,7 +52,7 @@ export default function ProductDetailsPage() {
                 className="h-16 w-16 overflow-hidden rounded border"
               >
                 <img
-                  src={item.imageUrl}
+                  src={mediaUrl(item.imageUrl)}
                   alt={item.altText || product.name}
                   className="h-full w-full object-cover"
                 />
@@ -60,9 +62,7 @@ export default function ProductDetailsPage() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">{product.name}</h1>
-          <p className="mt-4 text-muted-foreground">
-            {product.description || product.shortDescription}
-          </p>
+          <div className="mt-4 text-muted-foreground"><RichTextContent value={product.description || product.shortDescription || ""}/></div>
           <div className="mt-8 space-y-3">
             <h2 className="font-semibold">Available variants</h2>
             {(product.variants ?? []).map((variant) => (

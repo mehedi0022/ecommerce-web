@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { ProductCard } from "@/modules/product/components/store/ProductCard";
-import { useListProductsQuery } from "@/modules/product/productApi";
+import { useListPublicProductsQuery } from "@/modules/product/productApi";
+import { Button } from "@/components/ui/button";
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { Input } from "@/components/ui/input";
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
-  const { data, isLoading, isError } = useListProductsQuery({
-    page: 1,
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError, isFetching, refetch } = useListPublicProductsQuery({
+    page,
     limit: 24,
-    search: search || undefined,
+    search: search.trim() || undefined,
     status: "ACTIVE",
   });
   const products = data?.data ?? [];
@@ -26,7 +28,9 @@ export default function ProductsPage() {
         </div>
         <Input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          maxLength={100}
+          aria-label="Search products"
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search products..."
           className="max-w-sm"
         />
@@ -34,7 +38,7 @@ export default function ProductsPage() {
       {isLoading && (
         <p className="text-muted-foreground">Loading products...</p>
       )}
-      {isError && <p className="text-destructive">Unable to load products.</p>}
+      {isError && <div role="alert"><p className="text-destructive">Unable to load products.</p><Button variant="outline" onClick={refetch}>Try again</Button></div>}
       {!isLoading && !isError && products.length === 0 && (
         <p className="text-muted-foreground">No products found.</p>
       )}
@@ -43,6 +47,7 @@ export default function ProductsPage() {
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
+      {!isError && <div className="mt-8 flex items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{data?.meta.total ?? 0} products</p><div className="flex gap-2"><Button variant="outline" disabled={page === 1 || isFetching} onClick={() => setPage(page - 1)}>Previous</Button><Button variant="outline" disabled={page >= (data?.meta.totalPages ?? 1) || isFetching} onClick={() => setPage(page + 1)}>Next</Button></div></div>}
     </StoreContainer>
   );
 }

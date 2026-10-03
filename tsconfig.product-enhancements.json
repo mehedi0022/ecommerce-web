@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.catalog.json","include":["next-env.d.ts","modules/catalog/**/*.tsx","modules/product/**/*.ts","modules/product/components/editor/**/*.tsx","components/media/**/*.tsx","components/rich-text/**/*.tsx","app/admin/products/page.tsx","app/(store)/products/[slug]/page.tsx","app/(store)/products/page.tsx"],"exclude":["node_modules",".next"]}

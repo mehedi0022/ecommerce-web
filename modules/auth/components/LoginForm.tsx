@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/hooks";
+import { setSession } from "../authSlice";
+import { sessionDestination } from "../redirect";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react";
@@ -18,6 +21,7 @@ import { loginSchema, type LoginFormValues } from "../auth.schema";
 
 export function LoginForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,12 +48,8 @@ export function LoginForm() {
     try {
       const response = await login(values).unwrap();
       const user = response.data.user;
-
-      if (user.role.key.toUpperCase() !== "CUSTOMER") {
-        router.replace("/admin");
-      } else {
-        router.replace("/account");
-      }
+      dispatch(setSession(user));
+      router.replace(sessionDestination(user.role.key, window.location.search));
     } catch (error) {
       setServerError(
         getApiErrorMessage(error, "Unable to sign in. Please try again."),

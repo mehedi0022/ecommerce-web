@@ -8,6 +8,7 @@ import type { AttributeOption, EditorInitial, InventorySnapshot } from "./editor
 
 export const editorApi = baseApi.injectEndpoints({
   endpoints: b => ({
+    uploadDescriptionImage: b.mutation<ApiResponse<{ url: string }>, File>({ query: file => { const body = new FormData(); body.append("image", file); return { url: "/products/description-images", method: "POST", body }; } }),
     editorOptions: b.query<{ categories: Category[]; brands: Brand[] }, void>({
       async queryFn(_arg, _api, _extra, query) {
         const result: { categories: Category[]; brands: Brand[] } = { categories: [], brands: [] };
@@ -73,4 +74,4 @@ export const editorApi = baseApi.injectEndpoints({
     }),
   }),
 });
-export const { useEditorOptionsQuery, useEditorAttributesQuery, useEditorInitialQuery, useLazyGetEditorInventoryQuery, useInitializeEditorInventoryMutation, useUpdateEditorImageMutation } = editorApi;
+export const { useUploadDescriptionImageMutation, useEditorOptionsQuery, useEditorAttributesQuery, useEditorInitialQuery, useLazyGetEditorInventoryQuery, useInitializeEditorInventoryMutation, useUpdateEditorImageMutation } = editorApi;
