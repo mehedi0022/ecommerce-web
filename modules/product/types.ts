@@ -6,7 +6,7 @@ export interface ProductAttributeValue { id: number; value: string; slug: string
 export interface ProductVariant { id: number; productId: number; sku: string; price: string; compareAtPrice: string | null; costPrice: string | null; isActive: boolean; sortOrder: number; attributeValues?: Array<{ attributeValue: ProductAttributeValue }>; }
 export interface Product { brand?: { id: number; name: string; slug: string } | null; id: number; name: string; slug: string; shortDescription: string | null; description: string | null; brandId: number | null; status: ProductStatus; isFeatured: boolean; categories: ProductCategory[]; images?: ProductImage[]; variants?: ProductVariant[]; }
 export interface ProductInput { name: string; shortDescription?: string | null; description?: string | null; brandId?: number | null; status?: ProductStatus; isFeatured?: boolean; categories?: ProductCategory[]; }
-export interface ProductQuery { page?: number; limit?: number; search?: string; status?: ProductStatus; brandId?: number; categoryId?: number; }
+export interface ProductQuery { page?: number; limit?: number; search?: string; status?: ProductStatus; brandId?: number; categoryId?: number; isFeatured?: boolean; sortBy?: string; sortOrder?: "asc" | "desc"; }
 export interface VariantInput { sku: string; price: number; compareAtPrice?: number | null; costPrice?: number | null; isActive?: boolean; sortOrder?: number; attributeValueIds: number[]; }
 export type ProductListResponse = PaginatedApiResponse<Product>;
 export type ProductResponse = ApiResponse<Product>;

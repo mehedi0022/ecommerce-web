@@ -1,0 +1,106 @@
+import type { ApiResponse, PaginatedApiResponse } from "@/types/api.types";
+
+export interface OrderItemAttribute {
+  id: number;
+  attributeName: string;
+  attributeValue: string;
+}
+
+export interface OrderItem {
+  id: number;
+  productId: number;
+  variantId: number | null;
+  productName: string;
+  productSlug: string;
+  sku: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  createdAt: string;
+  attributes?: OrderItemAttribute[];
+}
+
+export interface OrderAddress {
+  id: number;
+  type: "SHIPPING" | "BILLING";
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  division?: string | null;
+  district: string;
+  upazila?: string | null;
+  thana?: string | null;
+  area?: string | null;
+  postalCode?: string | null;
+  countryCode: string;
+}
+
+export interface OrderStatusHistory {
+  id: number;
+  fromStatus: string | null;
+  toStatus: string;
+  note?: string | null;
+  changedById?: number | null;
+  createdAt: string;
+}
+
+export interface OrderShipment {
+  id: number;
+  status: string;
+  courierName: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+}
+
+export interface Order {
+  id: number;
+  orderNumber: string;
+  userId: number | null;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string;
+  status: "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
+  couponId: number | null;
+  couponCode: string | null;
+  subtotal: string;
+  shippingCharge: string;
+  discountAmount: string;
+  taxAmount: string;
+  grandTotal: string;
+  shippingZoneId: number;
+  shippingMethodId: number;
+  shippingZoneName: string;
+  shippingMethodName: string;
+  customerNote: string | null;
+  adminNote?: string | null;
+  placedAt: string;
+  confirmedAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[];
+  addresses: OrderAddress[];
+  statusHistory: OrderStatusHistory[];
+  shipment?: OrderShipment | null;
+}
+
+export interface OrderListQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  paymentStatus?: string;
+  orderNumber?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+}
+
+export type OrderResponse = ApiResponse<Order>;
+export type OrderListResponse = PaginatedApiResponse<Order>;
+

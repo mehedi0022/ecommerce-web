@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Heart,
@@ -11,6 +13,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StoreContainer } from "./StoreContainer";
+import { useGetCartQuery } from "@/modules/cart/cartApi";
 
 const navItems = [
   { href: "/products", label: "Shop" },
@@ -20,6 +23,8 @@ const navItems = [
 ];
 
 export function StoreHeader() {
+  const { data: cartData } = useGetCartQuery();
+  const cartCount = cartData?.data?.summary?.itemCount ?? 0;
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="bg-primary text-primary-foreground">
@@ -88,10 +93,15 @@ export function StoreHeader() {
             </Link>
             <Link
               href="/cart"
-              aria-label="Cart"
-              className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+              aria-label={`Cart with ${cartCount} items`}
+              className={cn("relative", buttonVariants({ variant: "ghost", size: "icon" }))}
             >
               <ShoppingCart className="size-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-xs">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </Link>
           </div>
         </div>
