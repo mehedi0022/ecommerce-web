@@ -34,11 +34,15 @@ export function CartSummaryCard({
 
   const subtotal = Number(summary.subtotal || "0");
   const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shippingFee = isFreeShipping || subtotal === 0 ? 0 : STANDARD_SHIPPING_COST;
-  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const shippingFee =
+    isFreeShipping || subtotal === 0 ? 0 : STANDARD_SHIPPING_COST;
+  const remainingForFreeShipping = Math.max(
+    0,
+    FREE_SHIPPING_THRESHOLD - subtotal,
+  );
   const progressPercent = Math.min(
     100,
-    Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100)
+    Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100),
   );
 
   const discountAmount = appliedCoupon ? subtotal * 0.1 : 0; // 10% demo discount
@@ -86,7 +90,7 @@ export function CartSummaryCard({
           <div
             className={cn(
               "h-full rounded-full transition-all duration-500",
-              isFreeShipping ? "bg-emerald-500" : "bg-primary"
+              isFreeShipping ? "bg-emerald-500" : "bg-primary",
             )}
             style={{ width: `${progressPercent}%` }}
           />
@@ -97,7 +101,8 @@ export function CartSummaryCard({
       <div className="mt-6 space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">
-            Subtotal ({summary.itemCount} {summary.itemCount === 1 ? "item" : "items"})
+            Subtotal ({summary.itemCount}{" "}
+            {summary.itemCount === 1 ? "item" : "items"})
           </span>
           <span className="font-semibold text-foreground">
             ${subtotal.toFixed(2)}
@@ -174,7 +179,9 @@ export function CartSummaryCard({
 
       {/* ── Total ───────────────────────────────────────────────────────── */}
       <div className="flex items-baseline justify-between">
-        <span className="text-base font-bold text-foreground">Estimated Total</span>
+        <span className="text-base font-bold text-foreground">
+          Estimated Total
+        </span>
         <div className="text-right">
           <span className="text-2xl font-black text-foreground">
             ${finalTotal.toFixed(2)}
@@ -198,7 +205,7 @@ export function CartSummaryCard({
           className={cn(
             buttonVariants({ size: "lg" }),
             "w-full h-12 text-base font-bold gap-2 shadow-sm transition-all",
-            hasUnavailableItems && "pointer-events-none opacity-50"
+            hasUnavailableItems && "pointer-events-none opacity-50",
           )}
         >
           Proceed to Checkout
@@ -224,4 +231,3 @@ export function CartSummaryCard({
     </div>
   );
 }
-

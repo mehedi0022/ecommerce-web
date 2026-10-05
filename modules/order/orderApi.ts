@@ -24,13 +24,15 @@ export const orderApi = baseApi.injectEndpoints({
       providesTags: ["Order"],
     }),
 
-    listCustomerOrders: builder.query<OrderListResponse, OrderListQuery | void>({
-      query: (params) => ({
-        url: "/orders",
-        params: params ?? {},
-      }),
-      providesTags: ["Order"],
-    }),
+    listCustomerOrders: builder.query<OrderListResponse, OrderListQuery | void>(
+      {
+        query: (params) => ({
+          url: "/orders",
+          params: params ?? {},
+        }),
+        providesTags: ["Order"],
+      },
+    ),
   }),
 });
 
@@ -39,4 +41,3 @@ export const {
   useGetGuestOrderByNumberQuery,
   useListCustomerOrdersQuery,
 } = orderApi;
-

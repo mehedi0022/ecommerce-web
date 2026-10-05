@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Trash2,
-  Sparkles,
-  ShoppingBag,
-} from "lucide-react";
+import { ArrowLeft, Trash2, Sparkles, ShoppingBag } from "lucide-react";
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,7 +22,11 @@ import { useListPublicProductsQuery } from "@/modules/product/productApi";
 import type { Product } from "@/modules/product/types";
 
 export default function CartPage() {
-  const { data: cartData, isLoading: isCartLoading, isFetching } = useGetCartQuery();
+  const {
+    data: cartData,
+    isLoading: isCartLoading,
+    isFetching,
+  } = useGetCartQuery();
   const [updateCartItem] = useUpdateCartItemMutation();
   const [removeCartItem] = useRemoveCartItemMutation();
   const [clearCart, { isLoading: isClearing }] = useClearCartMutation();
@@ -79,7 +78,8 @@ export default function CartPage() {
   };
 
   const handleQuickAdd = async (product: Product) => {
-    const defaultVariant = product.variants?.find((v) => v.isActive) ?? product.variants?.[0];
+    const defaultVariant =
+      product.variants?.find((v) => v.isActive) ?? product.variants?.[0];
     if (!defaultVariant) {
       toast.error("No available options for this product");
       return;
@@ -95,7 +95,10 @@ export default function CartPage() {
   return (
     <StoreContainer className="py-8 md:py-12">
       {/* ── Breadcrumb ──────────────────────────────────────────────────── */}
-      <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-muted-foreground">
+      <nav
+        aria-label="Breadcrumb"
+        className="mb-6 flex items-center gap-2 text-xs text-muted-foreground"
+      >
         <Link href="/" className="transition hover:text-foreground">
           Home
         </Link>
@@ -192,7 +195,7 @@ export default function CartPage() {
                   href="/products"
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "sm" }),
-                    "gap-2 text-muted-foreground hover:text-foreground"
+                    "gap-2 text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <ArrowLeft className="size-4" />
@@ -247,4 +250,3 @@ export default function CartPage() {
     </StoreContainer>
   );
 }
-

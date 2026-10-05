@@ -62,7 +62,13 @@ export interface Order {
   customerName: string;
   customerEmail: string | null;
   customerPhone: string;
-  status: "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED";
   paymentMethod: "CASH_ON_DELIVERY" | "ONLINE";
   paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
   couponId: number | null;
@@ -103,4 +109,3 @@ export interface OrderListQuery {
 
 export type OrderResponse = ApiResponse<Order>;
 export type OrderListResponse = PaginatedApiResponse<Order>;
-

@@ -1,6 +1,10 @@
 import { baseApi } from "@/redux/baseApi";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/api.types";
-import type { ProductReview, RatingSummary, RatingSummaryResponse } from "./types";
+import type {
+  ProductReview,
+  RatingSummary,
+  RatingSummaryResponse,
+} from "./types";
 
 export const reviewApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -21,8 +25,5 @@ export const reviewApi = baseApi.injectEndpoints({
   }),
 });
 
-export const {
-  useGetProductReviewsQuery,
-  useGetProductRatingSummaryQuery,
-} = reviewApi;
-
+export const { useGetProductReviewsQuery, useGetProductRatingSummaryQuery } =
+  reviewApi;
