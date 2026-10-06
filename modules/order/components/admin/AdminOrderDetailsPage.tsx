@@ -23,6 +23,7 @@ import {
   FileText,
   Save,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,7 @@ import {
   useTransitionOrderStatusMutation,
   useUpdateAdminOrderMutation,
 } from "../../orderApi";
+import { useSyncCourierOrderStatusMutation } from "@/modules/courier/courierApi";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { AdminPaymentVerificationCard } from "./AdminPaymentVerificationCard";
@@ -63,6 +65,22 @@ export function AdminOrderDetailsPage({
     useTransitionOrderStatusMutation();
   const [updateAdminOrder, { isLoading: isUpdatingAdmin }] =
     useUpdateAdminOrderMutation();
+  const [syncCourierStatus, { isLoading: isSyncingCourier }] =
+    useSyncCourierOrderStatusMutation();
+
+  const handleSyncCourierStatus = async () => {
+    try {
+      const res = await syncCourierStatus(orderNumber).unwrap();
+      if (res?.data) {
+        toast.success(
+          `Courier status synced! Current status: ${res.data.courierStatus || res.data.shipmentStatus}`
+        );
+        void refetch();
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to sync courier status");
+    }
+  };
 
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isShipmentDialogOpen, setIsShipmentDialogOpen] = useState(false);
@@ -796,15 +814,26 @@ export function AdminOrderDetailsPage({
                     </div>
                   )}
 
-                  <div className="border-t pt-2.5 mt-2 flex gap-2">
+                  <div className="border-t pt-2.5 mt-2 flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 h-8 text-xs gap-1"
+                      className="h-8 text-xs gap-1 flex-1 text-primary hover:text-primary font-medium"
+                      disabled={isSyncingCourier}
+                      onClick={handleSyncCourierStatus}
+                      title="Fetch live delivery status from courier API"
+                    >
+                      <RefreshCw className={`size-3 ${isSyncingCourier ? "animate-spin" : ""}`} />
+                      {isSyncingCourier ? "Syncing..." : "Sync Status"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1"
                       onClick={() => setIsBookCourierDialogOpen(true)}
                     >
                       <Truck className="size-3" />
-                      Re-book API
+                      Re-book
                     </Button>
                     <Button
                       size="sm"
@@ -812,7 +841,7 @@ export function AdminOrderDetailsPage({
                       className="h-8 text-xs text-muted-foreground"
                       onClick={() => setIsShipmentDialogOpen(true)}
                     >
-                      Manual Edit
+                      Edit
                     </Button>
                   </div>
                 </div>

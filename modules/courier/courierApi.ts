@@ -70,6 +70,28 @@ export const courierApi = baseApi.injectEndpoints({
     >({
       query: (code) => `/courier/providers/${code}/stores`,
     }),
+
+    syncCourierOrderStatus: builder.mutation<
+      ApiResponse<any>,
+      string
+    >({
+      query: (orderNumber) => ({
+        url: `/courier/orders/${orderNumber}/sync`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Order", "Shipment"],
+    }),
+
+    syncActiveCourierShipments: builder.mutation<
+      ApiResponse<{ totalChecked: number; updatedCount: number; results: any[] }>,
+      void
+    >({
+      query: () => ({
+        url: "/courier/sync-active",
+        method: "POST",
+      }),
+      invalidatesTags: ["Order", "Shipment"],
+    }),
   }),
 });
 
@@ -82,4 +104,6 @@ export const {
   useTrackCourierOrderQuery,
   useLazyTrackCourierOrderQuery,
   useLazyGetCourierStoresQuery,
+  useSyncCourierOrderStatusMutation,
+  useSyncActiveCourierShipmentsMutation,
 } = courierApi;

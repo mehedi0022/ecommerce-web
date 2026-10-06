@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Truck,
   Settings,
@@ -13,6 +13,8 @@ import {
   Zap,
   Globe,
   Loader2,
+  Webhook,
+  Copy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import { toast } from "sonner";
 import {
   useGetCourierProvidersQuery,
   useLazyCheckCourierBalanceQuery,
+  useSyncActiveCourierShipmentsMutation,
 } from "../../courierApi";
 import { CourierConfigModal } from "./CourierConfigModal";
 import type { CourierProviderConfig } from "../../types";
@@ -29,10 +32,19 @@ export function CourierSettingsManagement() {
   const { data, isLoading, refetch } = useGetCourierProvidersQuery();
   const [triggerCheckBalance, { isFetching: isCheckingBalance }] =
     useLazyCheckCourierBalanceQuery();
+  const [syncActiveShipments, { isLoading: isSyncingActive }] =
+    useSyncActiveCourierShipmentsMutation();
 
   const [selectedProvider, setSelectedProvider] =
     useState<CourierProviderConfig | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [origin, setOrigin] = useState<string>("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   // Balance cache per provider code
   const [balances, setBalances] = useState<Record<string, { balance: number; currency: string }>>({});
@@ -63,6 +75,20 @@ export function CourierSettingsManagement() {
     }
   };
 
+  const handleSyncAllActive = async () => {
+    try {
+      const res = await syncActiveShipments().unwrap();
+      if (res?.data) {
+        toast.success(
+          `Synced ${res.data.totalChecked} active shipments (${res.data.updatedCount} updated)`
+        );
+        void refetch();
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to sync active shipments");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -77,16 +103,30 @@ export function CourierSettingsManagement() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 self-start sm:self-auto"
-          onClick={() => refetch()}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
-          Refresh Providers
-        </Button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="default"
+            size="sm"
+            className="gap-1.5"
+            disabled={isSyncingActive}
+            onClick={handleSyncAllActive}
+            title="Poll live delivery statuses from courier APIs for all pending parcels"
+          >
+            <RefreshCw className={`size-3.5 ${isSyncingActive ? "animate-spin" : ""}`} />
+            {isSyncingActive ? "Syncing..." : "Sync Active Shipments"}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Info Notice Banner */}
@@ -293,6 +333,80 @@ export function CourierSettingsManagement() {
           })}
         </div>
       )}
+
+      {/* Webhook Endpoints & Automated Sync Card */}
+      <Card className="border bg-card">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600">
+              <Webhook className="size-4" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold">Courier Webhook Endpoints (Auto Delivery Sync)</CardTitle>
+              <CardDescription className="text-xs">
+                Provide these public webhook URLs in your Pathao or Steadfast developer portal to receive instant status updates upon delivery or return.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3 pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-red-500 inline-block" />
+                  Pathao Webhook URL
+                </span>
+                <Badge variant="outline" className="text-[10px] uppercase">POST</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <code className="text-[11px] font-mono bg-background border px-2 py-1 rounded flex-1 truncate">
+                  {origin ? `${origin}/api/v1/courier/webhooks/pathao` : "/api/v1/courier/webhooks/pathao"}
+                </code>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 text-xs px-2.5"
+                  onClick={() => {
+                    const url = `${window.location.origin}/api/v1/courier/webhooks/pathao`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Pathao webhook URL copied!");
+                  }}
+                >
+                  <Copy className="size-3 mr-1" /> Copy
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-emerald-500 inline-block" />
+                  Steadfast Webhook URL
+                </span>
+                <Badge variant="outline" className="text-[10px] uppercase">POST</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <code className="text-[11px] font-mono bg-background border px-2 py-1 rounded flex-1 truncate">
+                  {origin ? `${origin}/api/v1/courier/webhooks/steadfast` : "/api/v1/courier/webhooks/steadfast"}
+                </code>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="h-7 text-xs px-2.5"
+                  onClick={() => {
+                    const url = `${window.location.origin}/api/v1/courier/webhooks/steadfast`;
+                    navigator.clipboard.writeText(url);
+                    toast.success("Steadfast webhook URL copied!");
+                  }}
+                >
+                  <Copy className="size-3 mr-1" /> Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Extensible Architecture Note */}
       <Card className="bg-muted/30 border-dashed shadow-none">
