@@ -221,22 +221,53 @@ export default function OrderSuccessPage({
 
           {/* Payment Method */}
           <div className="rounded-2xl border border-border bg-card p-6 shadow-xs space-y-3">
-            <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
-              <Banknote className="size-4 text-emerald-600" />
-              <span>Payment Information</span>
+            <div className="flex items-center justify-between pb-2 border-b">
+              <div className="flex items-center gap-2 font-semibold text-foreground text-sm">
+                {order?.paymentMethod === "CASH_ON_DELIVERY" ? (
+                  <Banknote className="size-4 text-emerald-600" />
+                ) : (
+                  <CreditCard className="size-4 text-primary" />
+                )}
+                <span>Payment Information</span>
+              </div>
+
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  order?.paymentStatus === "PAID"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : order?.paymentStatus === "PENDING"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {order?.paymentStatus === "PAID"
+                  ? "Paid"
+                  : order?.paymentStatus === "PENDING"
+                  ? "Awaiting Verification"
+                  : "Unpaid (COD)"}
+              </span>
             </div>
 
             <div className="text-xs space-y-1">
               <p className="font-semibold text-foreground">
-                Cash on Delivery (COD)
+                {order?.paymentMethod === "CASH_ON_DELIVERY"
+                  ? "Cash on Delivery (COD)"
+                  : "Online / Mobile Wallet (MFS)"}
               </p>
-              <p className="text-muted-foreground">
-                Please prepare the exact cash amount of{" "}
-                <strong className="text-foreground">
-                  ৳{Number(order?.grandTotal || "0").toFixed(2)}
-                </strong>{" "}
-                when the delivery agent arrives.
-              </p>
+              {order?.paymentMethod === "CASH_ON_DELIVERY" ? (
+                <p className="text-muted-foreground">
+                  Please prepare the exact cash amount of{" "}
+                  <strong className="text-foreground">
+                    ৳{Number(order?.grandTotal || "0").toFixed(2)}
+                  </strong>{" "}
+                  when the delivery agent arrives.
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  আপনার পেমেন্ট ট্রানজেকশন তথ্য গ্রহণ করা হয়েছে। আমাদের টিম ভেরিফাই করার পর আপনার অর্ডার প্রসেসিং শুরু হবে।
+                </p>
+              )}
             </div>
 
             <div className="pt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">

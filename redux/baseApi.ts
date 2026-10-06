@@ -41,6 +41,7 @@ export const baseApi = createApi({
     "Navigation",
     "Slider",
     "Popup",
+    "Payment",
   ],
 
   endpoints: () => ({}),

@@ -65,5 +65,13 @@ export const adminNavigation: AdminNavItem[] = [
     ],
   },
   { title: "Shipping", href: "/admin/shipping", icon: Truck },
-  { title: "Settings", href: "/admin/settings", icon: Settings },
+  {
+    title: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
+    children: [
+      { title: "General Settings", href: "/admin/settings" },
+      { title: "Payment Methods", href: "/admin/settings/payments" },
+    ],
+  },
 ];

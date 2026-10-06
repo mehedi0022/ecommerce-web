@@ -10,6 +10,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "5000", // Matches the port in your error message
+        pathname: "/uploads/**", // Optional: restrict to specific paths
+      },
+    ],
+  },
 };
 
 export default nextConfig;

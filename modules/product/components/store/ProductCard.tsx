@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, ShoppingCart, Star, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import { useWishlist } from "@/modules/wishlist/useWishlist";
@@ -21,7 +22,10 @@ const placeholderGradients = [
   "from-sky-100 via-cyan-50 to-teal-100",
 ];
 
-function getDiscount(price: string, compareAtPrice: string | null): number | null {
+function getDiscount(
+  price: string,
+  compareAtPrice: string | null,
+): number | null {
   if (!compareAtPrice) return null;
   const p = Number(price);
   const c = Number(compareAtPrice);
@@ -88,8 +92,7 @@ export function ProductCard({
     : null;
 
   const isNew =
-    product.isFeatured &&
-    !discount; /* treat featured-only as "New" badge */
+    product.isFeatured && !discount; /* treat featured-only as "New" badge */
 
   return (
     <div className={cn("group relative flex flex-col", className)}>
@@ -103,11 +106,16 @@ export function ProductCard({
         <div
           className={cn(
             "relative flex aspect-[4/5] items-center justify-center overflow-hidden bg-gradient-to-br",
-            gradientClass
+            gradientClass,
           )}
         >
           {primaryImage ? (
-            <img
+            <Image
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized={true}
+              priority={true}
+              quality={80}
               src={mediaUrl(primaryImage.imageUrl)}
               alt={primaryImage.altText ?? product.name}
               className="size-full object-cover transition duration-500 group-hover:scale-105"
@@ -139,7 +147,10 @@ export function ProductCard({
             </Badge>
           )}
           {product.status === "INACTIVE" && (
-            <Badge variant="outline" className="text-[11px] bg-background/80 backdrop-blur-sm">
+            <Badge
+              variant="outline"
+              className="text-[11px] bg-background/80 backdrop-blur-sm"
+            >
               Unavailable
             </Badge>
           )}
@@ -149,7 +160,9 @@ export function ProductCard({
         {showWishlist && (
           <button
             type="button"
-            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            aria-label={
+              isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+            }
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -163,7 +176,7 @@ export function ProductCard({
               "absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-background hover:scale-110",
               isWishlisted
                 ? "opacity-100 bg-background text-rose-500 shadow-sm"
-                : "opacity-0 text-foreground/70 group-hover:opacity-100"
+                : "opacity-0 text-foreground/70 group-hover:opacity-100",
             )}
           >
             <Heart
@@ -171,7 +184,7 @@ export function ProductCard({
                 "size-4 transition-colors",
                 isWishlisted
                   ? "fill-rose-500 text-rose-500"
-                  : "text-foreground/70 hover:text-rose-500"
+                  : "text-foreground/70 hover:text-rose-500",
               )}
             />
           </button>
@@ -228,14 +241,16 @@ export function ProductCard({
                 "size-3",
                 reviewCount > 0 && s <= Math.round(rating)
                   ? "fill-amber-400 text-amber-400"
-                  : "fill-muted text-muted-foreground/30"
+                  : "fill-muted text-muted-foreground/30",
               )}
             />
           ))}
           <span className="ml-1 text-[11px] text-muted-foreground">
             {reviewCount > 0 ? (
               <>
-                <span className="font-semibold text-foreground/80">{rating.toFixed(1)}</span>
+                <span className="font-semibold text-foreground/80">
+                  {rating.toFixed(1)}
+                </span>
                 <span className="ml-0.5">({reviewCount})</span>
               </>
             ) : (
@@ -249,16 +264,18 @@ export function ProductCard({
           {price !== null ? (
             <>
               <span className="text-base font-bold text-foreground">
-                ${price.toFixed(2)}
+                ৳{price.toFixed(2)}
               </span>
               {compareAt && compareAt > price && (
                 <span className="text-sm text-muted-foreground line-through">
-                  ${compareAt.toFixed(2)}
+                  ৳{compareAt.toFixed(2)}
                 </span>
               )}
             </>
           ) : (
-            <span className="text-sm text-muted-foreground">Price unavailable</span>
+            <span className="text-sm text-muted-foreground">
+              Price unavailable
+            </span>
           )}
         </div>
       </div>

@@ -33,6 +33,9 @@ export interface AuthenticatedCheckoutInput {
   billingAddressId?: number;
   shippingMethodId: number;
   paymentMethod: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentMethodCode?: string;
+  senderNumber?: string;
+  transactionId?: string;
   couponCode?: string;
   customerNote?: string;
 }
@@ -44,15 +47,21 @@ export interface GuestCheckoutInput {
   billingAddress?: CheckoutAddress;
   shippingMethodId: number;
   paymentMethod: "CASH_ON_DELIVERY" | "ONLINE";
+  paymentMethodCode?: string;
+  senderNumber?: string;
+  transactionId?: string;
   couponCode?: string;
   customerNote?: string;
 }
 
 export interface CheckoutResponseData {
+  id?: number;
   orderNumber: string;
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  paymentMethodCode?: string;
+  paymentMethodType?: string;
   subtotal: string;
   shippingCharge: string;
   discountAmount: string;

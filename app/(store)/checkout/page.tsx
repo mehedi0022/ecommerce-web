@@ -32,6 +32,7 @@ import {
   useCalculateShippingMutation,
 } from "@/modules/checkout/checkoutApi";
 import { useValidateCouponMutation } from "@/modules/coupon/couponApi";
+import { useInitiateGatewayPaymentMutation } from "@/modules/payment/paymentApi";
 import { CheckoutContactStep } from "@/modules/checkout/components/CheckoutContactStep";
 import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddressForm";
 import { CheckoutShippingMethods } from "@/modules/checkout/components/CheckoutShippingMethods";
@@ -81,8 +82,14 @@ export default function CheckoutPage() {
     useCheckoutGuestMutation();
   const [createAddress, { isLoading: isCreatingAddress }] =
     useCreateAddressMutation();
+  const [initiateGateway, { isLoading: isInitiatingGateway }] =
+    useInitiateGatewayPaymentMutation();
 
-  const isSubmitting = isSubmittingAuth || isSubmittingGuest || isCreatingAddress;
+  const isSubmitting =
+    isSubmittingAuth ||
+    isSubmittingGuest ||
+    isCreatingAddress ||
+    isInitiatingGateway;
 
   // Cart & User Data
   const user = userData?.data ?? null;
@@ -117,6 +124,10 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<
     "CASH_ON_DELIVERY" | "ONLINE"
   >("CASH_ON_DELIVERY");
+  const [paymentMethodCode, setPaymentMethodCode] = useState<string>("cod");
+  const [paymentMethodType, setPaymentMethodType] = useState<string>("COD");
+  const [senderNumber, setSenderNumber] = useState<string>("");
+  const [transactionId, setTransactionId] = useState<string>("");
   const [couponCode, setCouponCode] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return sessionStorage.getItem("checkout_coupon_code") || "";
@@ -313,6 +324,20 @@ export default function CheckoutPage() {
       return;
     }
 
+    const isManual =
+      paymentMethodType === "MANUAL_MFS" || paymentMethodType === "MANUAL_BANK";
+
+    if (isManual) {
+      if (!senderNumber.trim()) {
+        toast.error("Please enter the mobile number you sent the payment from");
+        return;
+      }
+      if (!transactionId.trim()) {
+        toast.error("Please enter the Transaction ID (TrxID) for your payment");
+        return;
+      }
+    }
+
     try {
       if (user) {
         // Authenticated Checkout
@@ -377,6 +402,9 @@ export default function CheckoutPage() {
           billingSameAsShipping,
           shippingMethodId,
           paymentMethod,
+          paymentMethodCode,
+          senderNumber: paymentMethodCode !== "cod" ? senderNumber.trim() : undefined,
+          transactionId: paymentMethodCode !== "cod" ? transactionId.trim() : undefined,
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
         }).unwrap();
@@ -385,6 +413,26 @@ export default function CheckoutPage() {
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("checkout_coupon_code");
           sessionStorage.removeItem("checkout_coupon_discount");
+        }
+
+        // If automated gateway, initiate session and redirect customer to gateway portal
+        if (
+          res.data.paymentMethodType === "AUTOMATED_GATEWAY" &&
+          res.data.id
+        ) {
+          toast.loading("Redirecting to secure payment gateway...");
+          try {
+            const initRes = await initiateGateway(res.data.id).unwrap();
+            if (initRes.data?.gatewayUrl) {
+              window.location.href = initRes.data.gatewayUrl;
+              return;
+            }
+          } catch (initErr: any) {
+            toast.error(
+              initErr?.data?.message ||
+                "Failed to connect to payment gateway. Please check your order in order history."
+            );
+          }
         }
 
         toast.success("Order placed successfully!");
@@ -430,6 +478,9 @@ export default function CheckoutPage() {
           billingAddress: billingSameAsShipping ? undefined : billingAddress,
           shippingMethodId,
           paymentMethod,
+          paymentMethodCode,
+          senderNumber: paymentMethodCode !== "cod" ? senderNumber.trim() : undefined,
+          transactionId: paymentMethodCode !== "cod" ? transactionId.trim() : undefined,
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
         }).unwrap();
@@ -443,6 +494,26 @@ export default function CheckoutPage() {
         // Store guest access token for accessing guest order status
         if (res.data.guestAccessToken) {
           sessionStorage.setItem(`order_token_${res.data.orderNumber}`, res.data.guestAccessToken);
+        }
+
+        // If automated gateway, initiate session and redirect customer to gateway portal
+        if (
+          res.data.paymentMethodType === "AUTOMATED_GATEWAY" &&
+          res.data.id
+        ) {
+          toast.loading("Redirecting to secure payment gateway...");
+          try {
+            const initRes = await initiateGateway(res.data.id).unwrap();
+            if (initRes.data?.gatewayUrl) {
+              window.location.href = initRes.data.gatewayUrl;
+              return;
+            }
+          } catch (initErr: any) {
+            toast.error(
+              initErr?.data?.message ||
+                "Failed to connect to payment gateway. Please check your order status."
+            );
+          }
         }
 
         toast.success("Order placed successfully!");
@@ -681,8 +752,21 @@ export default function CheckoutPage() {
             </div>
 
             <CheckoutPaymentMethod
-              paymentMethod={paymentMethod}
-              onSelectPaymentMethod={setPaymentMethod}
+              selectedCode={paymentMethodCode}
+              onSelectMethod={(code, type, methodType) => {
+                setPaymentMethodCode(code);
+                setPaymentMethod(type);
+                if (methodType) setPaymentMethodType(methodType);
+              }}
+              senderNumber={senderNumber}
+              onChangeSenderNumber={setSenderNumber}
+              transactionId={transactionId}
+              onChangeTransactionId={setTransactionId}
+              totalAmount={
+                Number(summary?.subtotal || 0) +
+                Number(shippingFee || 0) -
+                Number(couponDiscount || 0)
+              }
             />
           </section>
 

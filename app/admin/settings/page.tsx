@@ -6,7 +6,173 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PaymentMethodsManagement } from "@/modules/payment/components/admin/PaymentMethodsManagement";
 
-const tabs = ["General", "Profile", "Notifications", "Security"];
-export default function SettingsPage() { const [tab, setTab] = useState("General"); const [saved, setSaved] = useState(false); const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2200); }; return <div className="container mx-auto max-w-5xl space-y-6"><header><h1 className="text-2xl font-semibold tracking-tight">Settings</h1><p className="mt-1 text-sm text-muted-foreground">Manage your store preferences and account settings.</p></header><div className="grid gap-6 lg:grid-cols-[190px_1fr]"><nav className="flex gap-1 overflow-x-auto lg:flex-col">{tabs.map((item) => <button key={item} onClick={() => setTab(item)} className={`rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${tab === item ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}>{item}</button>)}</nav><section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6"><div className="mb-6 border-b pb-5"><h2 className="text-lg font-semibold">{tab} settings</h2><p className="mt-1 text-sm text-muted-foreground">Update your {tab.toLowerCase()} preferences.</p></div>{tab === "General" && <div className="space-y-5"><Field label="Store name" helper="This name appears across your storefront."><Input defaultValue="Northstar Goods" /></Field><Field label="Store description" helper="A short description for search and social previews."><Textarea defaultValue="Thoughtfully designed essentials for everyday living." /></Field><Field label="Support email" helper="Customers will use this address to contact your team."><Input type="email" defaultValue="support@northstar.example" /></Field></div>}{tab === "Profile" && <div className="grid gap-5 sm:grid-cols-2"><Field label="First name"><Input defaultValue="Alex" /></Field><Field label="Last name"><Input defaultValue="Morgan" /></Field><Field label="Email address"><Input type="email" defaultValue="alex@example.com" /></Field><Field label="Role"><Input defaultValue="Administrator" disabled /></Field></div>}{tab === "Notifications" && <div className="space-y-4">{["New order notifications", "Low inventory alerts", "Weekly performance summary"].map((label) => <label key={label} className="flex items-center justify-between rounded-lg border p-4"><span><span className="block text-sm font-medium">{label}</span><span className="text-xs text-muted-foreground">Receive updates by email.</span></span><input type="checkbox" defaultChecked className="size-4 accent-primary" /></label>)}</div>}{tab === "Security" && <div className="space-y-5"><Field label="Current password"><Input type="password" /></Field><Field label="New password" helper="Use at least 8 characters."><Input type="password" /></Field><Field label="Confirm new password"><Input type="password" /></Field></div>}<div className="mt-8 flex items-center justify-end gap-3 border-t pt-5"><span className={`text-sm text-emerald-600 transition-opacity ${saved ? "opacity-100" : "opacity-0"}`}><Check className="mr-1 inline size-4" />Saved</span><Button onClick={save}><Save /> Save changes</Button></div></section></div></div>; }
-function Field({ label, helper, children }: { label: string; helper?: string; children: React.ReactNode }) { return <div className="space-y-2"><Label>{label}</Label>{children}{helper && <p className="text-xs text-muted-foreground">{helper}</p>}</div>; }
+const tabs = ["General", "Payment Methods", "Profile", "Notifications", "Security"];
+
+export default function SettingsPage() {
+  const [tab, setTab] = useState("General");
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2200);
+  };
+
+  return (
+    <div className="container mx-auto max-w-6xl space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your store preferences, payment channels, and account settings.
+        </p>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[200px_1fr]">
+        <nav className="flex gap-1 overflow-x-auto lg:flex-col">
+          {tabs.map((item) => (
+            <button
+              key={item}
+              onClick={() => setTab(item)}
+              className={`rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors cursor-pointer ${
+                tab === item
+                  ? "bg-muted text-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </nav>
+
+        {tab === "Payment Methods" ? (
+          <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+            <PaymentMethodsManagement />
+          </section>
+        ) : (
+          <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+            <div className="mb-6 border-b pb-5">
+              <h2 className="text-lg font-semibold">{tab} settings</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Update your {tab.toLowerCase()} preferences.
+              </p>
+            </div>
+
+            {tab === "General" && (
+              <div className="space-y-5">
+                <Field
+                  label="Store name"
+                  helper="This name appears across your storefront."
+                >
+                  <Input defaultValue="Premium Store" />
+                </Field>
+                <Field
+                  label="Store description"
+                  helper="A short description for search and social previews."
+                >
+                  <Textarea defaultValue="Quality products with express delivery across Bangladesh." />
+                </Field>
+                <Field
+                  label="Support email"
+                  helper="Customers will use this address to contact your team."
+                >
+                  <Input type="email" defaultValue="support@example.com" />
+                </Field>
+              </div>
+            )}
+
+            {tab === "Profile" && (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="First name">
+                  <Input defaultValue="Admin" />
+                </Field>
+                <Field label="Last name">
+                  <Input defaultValue="User" />
+                </Field>
+                <Field label="Email address">
+                  <Input type="email" defaultValue="admin@example.com" />
+                </Field>
+                <Field label="Role">
+                  <Input defaultValue="Administrator" disabled />
+                </Field>
+              </div>
+            )}
+
+            {tab === "Notifications" && (
+              <div className="space-y-4">
+                {[
+                  "New order notifications",
+                  "Low inventory alerts",
+                  "Weekly performance summary",
+                ].map((label) => (
+                  <label
+                    key={label}
+                    className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
+                  >
+                    <span>
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Receive updates by email.
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="size-4 accent-primary"
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {tab === "Security" && (
+              <div className="space-y-5">
+                <Field label="Current password">
+                  <Input type="password" />
+                </Field>
+                <Field label="New password" helper="Use at least 8 characters.">
+                  <Input type="password" />
+                </Field>
+                <Field label="Confirm new password">
+                  <Input type="password" />
+                </Field>
+              </div>
+            )}
+
+            <div className="mt-8 flex items-center justify-end gap-3 border-t pt-5">
+              <span
+                className={`text-sm text-emerald-600 transition-opacity ${
+                  saved ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <Check className="mr-1 inline size-4" />
+                Saved
+              </span>
+              <Button onClick={save}>
+                <Save className="size-4 mr-1" /> Save changes
+              </Button>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  helper,
+  children,
+}: {
+  label: string;
+  helper?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {children}
+      {helper && <p className="text-xs text-muted-foreground">{helper}</p>}
+    </div>
+  );
+}

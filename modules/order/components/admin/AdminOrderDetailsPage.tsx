@@ -35,6 +35,7 @@ import {
 } from "../../orderApi";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
+import { AdminPaymentVerificationCard } from "./AdminPaymentVerificationCard";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
@@ -635,6 +636,14 @@ export function AdminOrderDetailsPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Payment Verification Card */}
+          <AdminPaymentVerificationCard
+            orderId={order.id}
+            orderNumber={order.orderNumber}
+            orderGrandTotal={order.grandTotal}
+            currentPaymentStatus={order.paymentStatus}
+          />
 
           {/* Payment & Shipping Method Card */}
           <Card className="shadow-none">

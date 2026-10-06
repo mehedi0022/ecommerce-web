@@ -84,8 +84,8 @@ export interface Order {
     | "SHIPPED"
     | "DELIVERED"
     | "CANCELLED";
-  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE";
-  paymentStatus: "UNPAID" | "PAID" | "REFUNDED";
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | string;
+  paymentStatus: "UNPAID" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
   couponId: number | null;
   couponCode: string | null;
   subtotal: string;
