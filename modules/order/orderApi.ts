@@ -4,6 +4,7 @@ import type {
   OrderResponse,
   OrderListResponse,
   OrderListQuery,
+  OrderTrackResponse,
 } from "./order.types";
 
 export const orderApi = baseApi.injectEndpoints({
@@ -33,6 +34,17 @@ export const orderApi = baseApi.injectEndpoints({
         providesTags: ["Order"],
       },
     ),
+
+    trackOrder: builder.query<
+      OrderTrackResponse,
+      { orderNumber: string; phone?: string }
+    >({
+      query: (params) => ({
+        url: "/orders/track",
+        params,
+      }),
+      providesTags: ["Order"],
+    }),
   }),
 });
 
@@ -40,4 +52,6 @@ export const {
   useGetOrderByNumberQuery,
   useGetGuestOrderByNumberQuery,
   useListCustomerOrdersQuery,
+  useTrackOrderQuery,
+  useLazyTrackOrderQuery,
 } = orderApi;

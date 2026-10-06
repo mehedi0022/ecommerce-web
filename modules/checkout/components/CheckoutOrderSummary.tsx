@@ -24,7 +24,8 @@ interface CheckoutOrderSummaryProps {
   summary: CartSummary;
   shippingFee: number;
   couponCode?: string;
-  onApplyCoupon: (code: string) => void;
+  discountAmount?: number;
+  onApplyCoupon: (code: string) => Promise<boolean>;
   onRemoveCoupon: () => void;
   onPlaceOrder: () => Promise<void>;
   isSubmitting?: boolean;
@@ -35,6 +36,7 @@ export function CheckoutOrderSummary({
   summary,
   shippingFee,
   couponCode,
+  discountAmount = 0,
   onApplyCoupon,
   onRemoveCoupon,
   onPlaceOrder,
@@ -45,18 +47,22 @@ export function CheckoutOrderSummary({
   const [isApplying, setIsApplying] = useState(false);
 
   const subtotal = Number(summary.subtotal || "0");
-  const discountAmount = couponCode ? subtotal * 0.1 : 0; // 10% promo discount demonstration
-  const grandTotal = Math.max(0, subtotal + shippingFee - discountAmount);
+  const actualDiscount = Math.min(subtotal, Math.max(0, discountAmount));
+  const grandTotal = Math.max(0, subtotal + shippingFee - actualDiscount);
 
-  const handleApply = (e: React.FormEvent) => {
+  const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputCoupon.trim()) return;
+    const trimmed = inputCoupon.trim().toUpperCase();
+    if (!trimmed) return;
     setIsApplying(true);
-    setTimeout(() => {
-      onApplyCoupon(inputCoupon.trim().toUpperCase());
+    try {
+      const ok = await onApplyCoupon(trimmed);
+      if (ok) {
+        setInputCoupon("");
+      }
+    } finally {
       setIsApplying(false);
-      setInputCoupon("");
-    }, 400);
+    }
   };
 
   return (
@@ -127,7 +133,7 @@ export function CheckoutOrderSummary({
                   </div>
 
                   <span className="text-xs font-semibold text-foreground shrink-0">
-                    ${Number(item.lineTotal).toFixed(2)}
+                    ৳{Number(item.lineTotal).toFixed(2)}
                   </span>
                 </div>
               );
@@ -141,7 +147,7 @@ export function CheckoutOrderSummary({
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
           <span className="font-semibold text-foreground">
-            ${subtotal.toFixed(2)}
+            ৳{subtotal.toFixed(2)}
           </span>
         </div>
 
@@ -153,23 +159,23 @@ export function CheckoutOrderSummary({
                 FREE
               </span>
             ) : (
-              `$${shippingFee.toFixed(2)}`
+              `৳${shippingFee.toFixed(2)}`
             )}
           </span>
         </div>
 
-        {couponCode && (
+        {couponCode && actualDiscount > 0 && (
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-medium">
             <span className="flex items-center gap-1">
               <Tag className="size-3.5" /> Coupon ({couponCode})
             </span>
-            <span>-${discountAmount.toFixed(2)}</span>
+            <span>-৳{actualDiscount.toFixed(2)}</span>
           </div>
         )}
 
         <div className="flex items-center justify-between text-muted-foreground text-xs">
           <span>Estimated Tax</span>
-          <span>$0.00</span>
+          <span>৳0.00</span>
         </div>
       </div>
 
@@ -179,7 +185,7 @@ export function CheckoutOrderSummary({
           <div className="flex items-center justify-between rounded-lg bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="size-3.5" />
-              Code {couponCode} applied
+              Code {couponCode} applied (-৳{actualDiscount.toFixed(2)})
             </span>
             <button
               type="button"
@@ -218,7 +224,7 @@ export function CheckoutOrderSummary({
         <span className="text-base font-bold text-foreground">Total to Pay</span>
         <div className="text-right">
           <span className="text-2xl font-black text-foreground">
-            ${grandTotal.toFixed(2)}
+            ৳{grandTotal.toFixed(2)}
           </span>
           <p className="text-[11px] text-muted-foreground">
             All taxes & delivery fees included
@@ -243,7 +249,7 @@ export function CheckoutOrderSummary({
           ) : (
             <>
               <Lock className="size-4" />
-              Place Order (${grandTotal.toFixed(2)})
+              Place Order (৳{grandTotal.toFixed(2)})
             </>
           )}
         </Button>

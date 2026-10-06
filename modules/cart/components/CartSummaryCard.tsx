@@ -10,14 +10,13 @@ import {
   Tag,
   CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useValidateCouponMutation } from "@/modules/coupon/couponApi";
 import type { CartSummary } from "../cart.types";
-
-const FREE_SHIPPING_THRESHOLD = 50.0;
-const STANDARD_SHIPPING_COST = 5.0;
 
 interface CartSummaryCardProps {
   summary: CartSummary;
@@ -28,14 +27,28 @@ export function CartSummaryCard({
   summary,
   hasUnavailableItems = false,
 }: CartSummaryCardProps) {
-  const [couponCode, setCouponCode] = useState("");
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("checkout_coupon_code") || null;
+    }
+    return null;
+  });
+  const [discountAmount, setDiscountAmount] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("checkout_coupon_discount");
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+
+  const [validateCoupon, { isLoading: isApplyingCoupon }] =
+    useValidateCouponMutation();
+
+  const FREE_SHIPPING_THRESHOLD = 2000; // Free shipping threshold in BDT (৳2000)
 
   const subtotal = Number(summary.subtotal || "0");
   const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
-  const shippingFee =
-    isFreeShipping || subtotal === 0 ? 0 : STANDARD_SHIPPING_COST;
   const remainingForFreeShipping = Math.max(
     0,
     FREE_SHIPPING_THRESHOLD - subtotal,
@@ -45,17 +58,40 @@ export function CartSummaryCard({
     Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100),
   );
 
-  const discountAmount = appliedCoupon ? subtotal * 0.1 : 0; // 10% demo discount
-  const finalTotal = Math.max(0, subtotal + shippingFee - discountAmount);
+  const actualDiscount = Math.min(subtotal, Math.max(0, discountAmount));
+  const finalTotal = Math.max(0, subtotal - actualDiscount);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!couponCode.trim()) return;
-    setIsApplyingCoupon(true);
-    setTimeout(() => {
-      setAppliedCoupon(couponCode.trim().toUpperCase());
-      setIsApplyingCoupon(false);
-    }, 600);
+    const trimmed = couponInput.trim().toUpperCase();
+    if (!trimmed) return;
+
+    try {
+      const res = await validateCoupon({ code: trimmed }).unwrap();
+      const disc = Number(res.data?.discountAmount || "0");
+      setAppliedCoupon(res.data?.code || trimmed);
+      setDiscountAmount(disc);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("checkout_coupon_code", res.data?.code || trimmed);
+        sessionStorage.setItem("checkout_coupon_discount", String(disc));
+      }
+      setCouponInput("");
+      toast.success(
+        res.message || `Coupon ${res.data?.code} applied! Saved ৳${disc.toFixed(2)}`
+      );
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.message || "Invalid coupon code");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("checkout_coupon_code");
+      sessionStorage.removeItem("checkout_coupon_discount");
+    }
+    toast.info("Coupon removed");
   };
 
   return (
@@ -77,7 +113,7 @@ export function CartSummaryCard({
               <span>
                 Add{" "}
                 <strong className="text-primary">
-                  ${remainingForFreeShipping.toFixed(2)}
+                  ৳{remainingForFreeShipping.toFixed(2)}
                 </strong>{" "}
                 more for free shipping
               </span>
@@ -105,35 +141,29 @@ export function CartSummaryCard({
             {summary.itemCount === 1 ? "item" : "items"})
           </span>
           <span className="font-semibold text-foreground">
-            ${subtotal.toFixed(2)}
+            ৳{subtotal.toFixed(2)}
           </span>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Estimated Shipping</span>
-          <span className="font-medium">
-            {isFreeShipping ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                FREE
-              </span>
-            ) : (
-              `$${STANDARD_SHIPPING_COST.toFixed(2)}`
-            )}
+          <span className="text-muted-foreground">Shipping</span>
+          <span className="text-xs text-muted-foreground">
+            Calculated at checkout
           </span>
         </div>
 
-        {appliedCoupon && (
+        {appliedCoupon && actualDiscount > 0 && (
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-medium">
             <span className="flex items-center gap-1">
               <Tag className="size-3.5" /> Coupon ({appliedCoupon})
             </span>
-            <span>-${discountAmount.toFixed(2)}</span>
+            <span>-৳{actualDiscount.toFixed(2)}</span>
           </div>
         )}
 
         <div className="flex items-center justify-between text-muted-foreground">
           <span>Estimated Tax</span>
-          <span className="text-xs">Calculated at checkout</span>
+          <span className="text-xs">৳0.00</span>
         </div>
       </div>
 
@@ -143,11 +173,11 @@ export function CartSummaryCard({
           <div className="flex items-center justify-between rounded-lg bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="size-4" />
-              Code {appliedCoupon} applied
+              Code {appliedCoupon} applied (-৳{actualDiscount.toFixed(2)})
             </span>
             <button
               type="button"
-              onClick={() => setAppliedCoupon(null)}
+              onClick={handleRemoveCoupon}
               className="text-xs text-muted-foreground hover:text-destructive underline"
             >
               Remove
@@ -158,15 +188,15 @@ export function CartSummaryCard({
             <Input
               type="text"
               placeholder="Promo or coupon code"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value)}
               className="h-9 text-xs"
             />
             <Button
               type="submit"
               variant="outline"
               size="sm"
-              disabled={!couponCode.trim() || isApplyingCoupon}
+              disabled={!couponInput.trim() || isApplyingCoupon}
               className="h-9 shrink-0 text-xs font-semibold px-3"
             >
               {isApplyingCoupon ? "Applying..." : "Apply"}
@@ -184,10 +214,10 @@ export function CartSummaryCard({
         </span>
         <div className="text-right">
           <span className="text-2xl font-black text-foreground">
-            ${finalTotal.toFixed(2)}
+            ৳{finalTotal.toFixed(2)}
           </span>
           <p className="text-[11px] text-muted-foreground">
-            USD, taxes & shipping included
+            Shipping calculated at checkout
           </p>
         </div>
       </div>

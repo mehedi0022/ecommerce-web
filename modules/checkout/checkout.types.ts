@@ -5,6 +5,13 @@ export interface CheckoutAddress {
   phone: string;
   addressLine1: string;
   addressLine2?: string;
+
+  // Canonical Bangladesh structured IDs
+  divisionId?: string;
+  districtId: string;
+  upazilaId?: string;
+  unionId?: string;
+
   division?: string;
   district: string;
   upazila?: string;
@@ -63,9 +70,42 @@ export interface ShippingMethod {
   description: string | null;
   isActive: boolean;
   sortOrder: number;
+  charge?: string;
+  regularCharge?: string;
+  finalCharge?: string;
+  isFree?: boolean;
+  isRecommended?: boolean;
+  freeShippingThreshold?: string | null;
+  estimatedMinDays?: number | null;
+  estimatedMaxDays?: number | null;
 }
 
 export type ShippingMethodsApiResponse = ApiResponse<ShippingMethod[]>;
+
+export interface CalculateShippingInput {
+  divisionId?: string;
+  districtId?: string;
+  upazilaId?: string;
+  unionId?: string;
+  countryCode?: string;
+  division?: string;
+  district?: string;
+  upazila?: string;
+  thana?: string;
+  area?: string;
+  postalCode?: string;
+  subtotal?: number;
+}
+
+export interface CalculateShippingResponseData {
+  zone: {
+    id: number;
+    name: string;
+  };
+  methods: ShippingMethod[];
+}
+
+export type CalculateShippingApiResponse = ApiResponse<CalculateShippingResponseData>;
 
 export interface SavedAddress extends CheckoutAddress {
   id: number;
@@ -75,4 +115,3 @@ export interface SavedAddress extends CheckoutAddress {
 }
 
 export type SavedAddressesApiResponse = ApiResponse<SavedAddress[]>;
-

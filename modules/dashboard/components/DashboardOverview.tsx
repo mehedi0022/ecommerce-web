@@ -140,15 +140,18 @@ export function DashboardOverview() {
               ["Processing", 24, Package, "text-blue-600"],
               ["Shipped", 64, Truck, "text-violet-600"],
               ["Delivered", 142, Boxes, "text-emerald-600"],
-            ].map(([label, count, Icon, color]) => (
-              <div key={String(label)} className="flex justify-between text-sm">
-                <span className="flex items-center gap-3">
-                  <Icon className={`size-4 ${String(color)}`} />
-                  {String(label)}
-                </span>
-                <b>{String(count)}</b>
-              </div>
-            ))}
+            ].map(([label, count, Icon, color]) => {
+              const IconComp = Icon as any;
+              return (
+                <div key={String(label)} className="flex justify-between text-sm">
+                  <span className="flex items-center gap-3">
+                    <IconComp className={`size-4 ${String(color)}`} />
+                    {String(label)}
+                  </span>
+                  <b>{String(count)}</b>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       </section>

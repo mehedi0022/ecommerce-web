@@ -10,6 +10,10 @@ export function StoreFooter() {
           <p>© {new Date().getFullYear()} Store. All rights reserved.</p>
 
           <div className="flex gap-4">
+            <Link href="/track-order" className="hover:text-foreground">
+              Track Order
+            </Link>
+
             <Link href="/privacy" className="hover:text-foreground">
               Privacy
             </Link>

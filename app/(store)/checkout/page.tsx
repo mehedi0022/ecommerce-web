@@ -28,7 +28,10 @@ import {
   useCheckoutGuestMutation,
   useGetPublicShippingMethodsQuery,
   useGetSavedAddressesQuery,
+  useCreateAddressMutation,
+  useCalculateShippingMutation,
 } from "@/modules/checkout/checkoutApi";
+import { useValidateCouponMutation } from "@/modules/coupon/couponApi";
 import { CheckoutContactStep } from "@/modules/checkout/components/CheckoutContactStep";
 import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddressForm";
 import { CheckoutShippingMethods } from "@/modules/checkout/components/CheckoutShippingMethods";
@@ -38,6 +41,7 @@ import type {
   CheckoutAddress,
   CheckoutCustomer,
   SavedAddress,
+  ShippingMethod,
 } from "@/modules/checkout/checkout.types";
 
 const INITIAL_ADDRESS: CheckoutAddress = {
@@ -45,8 +49,12 @@ const INITIAL_ADDRESS: CheckoutAddress = {
   phone: "",
   addressLine1: "",
   addressLine2: "",
+  divisionId: "6",
+  districtId: "47",
+  upazilaId: "",
+  unionId: "",
   district: "Dhaka",
-  division: "",
+  division: "Dhaka",
   upazila: "",
   thana: "",
   area: "",
@@ -71,8 +79,10 @@ export default function CheckoutPage() {
     useCheckoutAuthenticatedMutation();
   const [checkoutGuest, { isLoading: isSubmittingGuest }] =
     useCheckoutGuestMutation();
+  const [createAddress, { isLoading: isCreatingAddress }] =
+    useCreateAddressMutation();
 
-  const isSubmitting = isSubmittingAuth || isSubmittingGuest;
+  const isSubmitting = isSubmittingAuth || isSubmittingGuest || isCreatingAddress;
 
   // Cart & User Data
   const user = userData?.data ?? null;
@@ -107,24 +117,165 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<
     "CASH_ON_DELIVERY" | "ONLINE"
   >("CASH_ON_DELIVERY");
-  const [couponCode, setCouponCode] = useState<string>("");
+  const [couponCode, setCouponCode] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("checkout_coupon_code") || "";
+    }
+    return "";
+  });
+  const [couponDiscount, setCouponDiscount] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("checkout_coupon_discount");
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
   const [customerNote, setCustomerNote] = useState<string>("");
+
+  // Coupon validation mutation
+  const [validateCoupon] = useValidateCouponMutation();
+
+  // If coupon code was saved from cart page, re-validate with current cart subtotal
+  useEffect(() => {
+    if (couponCode && summary?.subtotal && Number(summary.subtotal) > 0) {
+      validateCoupon({ code: couponCode })
+        .unwrap()
+        .then((res) => {
+          const disc = Number(res.data?.discountAmount || "0");
+          setCouponDiscount(disc);
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("checkout_coupon_discount", String(disc));
+          }
+        })
+        .catch(() => {
+          // If no longer valid (e.g. cart subtotal decreased below minimum order amount)
+          setCouponCode("");
+          setCouponDiscount(0);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("checkout_coupon_code");
+            sessionStorage.removeItem("checkout_coupon_discount");
+          }
+        });
+    }
+  }, [summary?.subtotal]);
+
+  const handleApplyCoupon = async (code: string): Promise<boolean> => {
+    try {
+      const res = await validateCoupon({ code }).unwrap();
+      const disc = Number(res.data?.discountAmount || "0");
+      setCouponCode(res.data?.code || code);
+      setCouponDiscount(disc);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("checkout_coupon_code", res.data?.code || code);
+        sessionStorage.setItem("checkout_coupon_discount", String(disc));
+      }
+      toast.success(res.message || `Coupon ${res.data?.code} applied! Saved ৳${disc.toFixed(2)}`);
+      return true;
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.message || "Invalid coupon code");
+      return false;
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode("");
+    setCouponDiscount(0);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("checkout_coupon_code");
+      sessionStorage.removeItem("checkout_coupon_discount");
+    }
+    toast.info("Coupon removed");
+  };
+
+  // Dynamic Shipping Calculation State
+  const [calculateShipping, { isLoading: isCalculatingShipping }] =
+    useCalculateShippingMutation();
+  const [availableMethods, setAvailableMethods] = useState<ShippingMethod[]>([]);
+  const [resolvedZoneName, setResolvedZoneName] = useState<string>("");
+
+  // Determine active address for shipping calculation
+  const activeAddress =
+    user && savedAddresses.length > 0 && !useCustomAddress
+      ? savedAddresses.find((a) => a.id === selectedAddressId)
+      : shippingAddress;
+
+  // Calculate dynamic shipping options when delivery address location changes
+  useEffect(() => {
+    const district = activeAddress?.district?.trim();
+    if (!district && !activeAddress?.districtId) return;
+
+    let isMounted = true;
+    calculateShipping({
+      divisionId: activeAddress?.divisionId || undefined,
+      districtId: activeAddress?.districtId || undefined,
+      upazilaId: activeAddress?.upazilaId || undefined,
+      unionId: activeAddress?.unionId || undefined,
+      countryCode: activeAddress?.countryCode || "BD",
+      division: activeAddress?.division?.trim() || undefined,
+      district: district || undefined,
+      upazila: activeAddress?.upazila?.trim() || undefined,
+      area: activeAddress?.area?.trim() || undefined,
+      postalCode: activeAddress?.postalCode?.trim() || undefined,
+      subtotal: summary?.subtotal ? Number(summary.subtotal) : undefined,
+    })
+      .unwrap()
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.data) {
+          const fetchedMethods = res.data.methods || [];
+          setAvailableMethods(fetchedMethods);
+          setResolvedZoneName(res.data.zone?.name || "");
+
+          setShippingMethodId((prevId) => {
+            const exists = fetchedMethods.some((m: ShippingMethod) => m.id === prevId);
+            if (exists) return prevId;
+            const recommended = fetchedMethods.find((m: ShippingMethod) => m.isRecommended);
+            return recommended ? recommended.id : (fetchedMethods[0]?.id ?? null);
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to calculate shipping options:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    activeAddress?.districtId,
+    activeAddress?.divisionId,
+    activeAddress?.upazilaId,
+    activeAddress?.unionId,
+    activeAddress?.district,
+    activeAddress?.division,
+    activeAddress?.upazila,
+    activeAddress?.area,
+    activeAddress?.countryCode,
+    summary?.subtotal,
+    calculateShipping,
+  ]);
 
   // Sync default shipping method when loaded
   useEffect(() => {
-    if (shippingMethods.length > 0 && !shippingMethodId) {
-      setShippingMethodId(shippingMethods[0].id);
+    if (shippingMethods.length > 0 && !shippingMethodId && availableMethods.length === 0) {
+      const rec = shippingMethods.find((m) => m.isRecommended);
+      setShippingMethodId(rec ? rec.id : shippingMethods[0].id);
     }
-  }, [shippingMethods, shippingMethodId]);
+  }, [shippingMethods, shippingMethodId, availableMethods.length]);
 
   // Sync user info when logged in
   useEffect(() => {
     if (user) {
+      const userName = user.fullName || user.userName || "";
       setCustomer({
-        name: user.fullName || user.userName || "",
+        name: userName,
         email: user.email ?? "",
         phone: "",
       });
+      setShippingAddress((prev) => ({
+        ...prev,
+        fullName: prev.fullName || userName,
+      }));
     }
   }, [user]);
 
@@ -138,9 +289,17 @@ export default function CheckoutPage() {
   }, [savedAddresses, selectedAddressId, useCustomAddress]);
 
   // Calculate selected shipping fee
-  const selectedMethod = shippingMethods.find((m) => m.id === shippingMethodId);
-  const isExpress = selectedMethod?.code.toUpperCase().includes("EXPRESS");
-  const shippingFee = isExpress ? 10.0 : 5.0;
+  const methodsToDisplay =
+    availableMethods.length > 0 ? availableMethods : shippingMethods;
+  const selectedMethod = methodsToDisplay.find((m: ShippingMethod) => m.id === shippingMethodId);
+  const shippingFee =
+    selectedMethod?.finalCharge !== undefined
+      ? Number(selectedMethod.finalCharge)
+      : selectedMethod?.charge !== undefined
+      ? Number(selectedMethod.charge)
+      : selectedMethod?.code.toUpperCase().includes("EXPRESS")
+      ? 120.0
+      : 60.0;
 
   // Handle Place Order
   const handlePlaceOrder = async () => {
@@ -160,13 +319,52 @@ export default function CheckoutPage() {
         let targetAddressId = selectedAddressId;
 
         if (savedAddresses.length === 0 || useCustomAddress) {
-          if (!shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.addressLine1 || !shippingAddress.district) {
-            toast.error("Please fill in all required shipping address fields");
+          if (!shippingAddress.fullName.trim()) {
+            toast.error("Please enter recipient's full name");
             return;
           }
-          // Note: If no saved addresses exist, we inform user
-          toast.error("Please save an address to your account or select an existing one.");
-          return;
+          if (!shippingAddress.phone.trim()) {
+            toast.error("Please enter recipient's delivery phone number");
+            return;
+          }
+          if (!shippingAddress.addressLine1.trim()) {
+            toast.error("Please enter your street address");
+            return;
+          }
+          if (!shippingAddress.district.trim()) {
+            toast.error("Please select your District");
+            return;
+          }
+
+          // Auto-save this address to user's account seamlessly
+          try {
+            const savedAddrRes = await createAddress({
+              fullName: shippingAddress.fullName.trim(),
+              phone: shippingAddress.phone.trim(),
+              addressLine1: shippingAddress.addressLine1.trim(),
+              addressLine2: shippingAddress.addressLine2?.trim() || undefined,
+              divisionId: shippingAddress.divisionId || undefined,
+              districtId: shippingAddress.districtId || undefined,
+              upazilaId: shippingAddress.upazilaId || undefined,
+              unionId: shippingAddress.unionId || undefined,
+              division: shippingAddress.division?.trim() || undefined,
+              district: shippingAddress.district.trim(),
+              upazila: shippingAddress.upazila?.trim() || undefined,
+              thana: shippingAddress.thana?.trim() || undefined,
+              area: shippingAddress.area?.trim() || undefined,
+              postalCode: shippingAddress.postalCode?.trim() || undefined,
+              countryCode: shippingAddress.countryCode || "BD",
+            }).unwrap();
+
+            targetAddressId = savedAddrRes.data.id;
+            setSelectedAddressId(targetAddressId);
+            setUseCustomAddress(false);
+          } catch (addrErr: any) {
+            toast.error(
+              addrErr?.data?.message || addrErr?.message || "Failed to save delivery address"
+            );
+            return;
+          }
         }
 
         if (!targetAddressId) {
@@ -182,6 +380,12 @@ export default function CheckoutPage() {
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
         }).unwrap();
+
+        // Clean up applied coupon from session
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("checkout_coupon_code");
+          sessionStorage.removeItem("checkout_coupon_discount");
+        }
 
         toast.success("Order placed successfully!");
         router.push(`/order-success/${res.data.orderNumber}`);
@@ -229,6 +433,12 @@ export default function CheckoutPage() {
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
         }).unwrap();
+
+        // Clean up applied coupon from session
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("checkout_coupon_code");
+          sessionStorage.removeItem("checkout_coupon_discount");
+        }
 
         // Store guest access token for accessing guest order status
         if (res.data.guestAccessToken) {
@@ -394,7 +604,7 @@ export default function CheckoutPage() {
                 <CheckoutAddressForm
                   address={shippingAddress}
                   onChange={setShippingAddress}
-                  showContactFields={deliverToSomeoneElse}
+                  showContactFields={user ? true : deliverToSomeoneElse}
                 />
                 {!user && (
                   <div className="pt-2">
@@ -451,10 +661,11 @@ export default function CheckoutPage() {
             </div>
 
             <CheckoutShippingMethods
-              methods={shippingMethods}
+              methods={methodsToDisplay}
               selectedMethodId={shippingMethodId}
               onSelectMethod={setShippingMethodId}
-              isLoading={isShippingMethodsLoading}
+              isLoading={isShippingMethodsLoading || isCalculatingShipping}
+              zoneName={resolvedZoneName}
             />
           </section>
 
@@ -500,8 +711,9 @@ export default function CheckoutPage() {
             summary={summary}
             shippingFee={shippingFee}
             couponCode={couponCode}
-            onApplyCoupon={setCouponCode}
-            onRemoveCoupon={() => setCouponCode("")}
+            discountAmount={couponDiscount}
+            onApplyCoupon={handleApplyCoupon}
+            onRemoveCoupon={handleRemoveCoupon}
             onPlaceOrder={handlePlaceOrder}
             isSubmitting={isSubmitting}
           />

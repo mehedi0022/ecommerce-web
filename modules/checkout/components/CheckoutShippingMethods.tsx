@@ -1,6 +1,6 @@
 "use client";
 
-import { Truck, Zap, Check } from "lucide-react";
+import { Truck, Zap, Check, AlertCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ShippingMethod } from "../checkout.types";
 
@@ -9,6 +9,7 @@ interface CheckoutShippingMethodsProps {
   selectedMethodId: number | null;
   onSelectMethod: (methodId: number) => void;
   isLoading?: boolean;
+  zoneName?: string;
 }
 
 export function CheckoutShippingMethods({
@@ -16,6 +17,7 @@ export function CheckoutShippingMethods({
   selectedMethodId,
   onSelectMethod,
   isLoading = false,
+  zoneName,
 }: CheckoutShippingMethodsProps) {
   if (isLoading) {
     return (
@@ -28,17 +30,37 @@ export function CheckoutShippingMethods({
 
   if (methods.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
-        Standard delivery will be automatically applied.
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+        <AlertCircle className="size-4 text-muted-foreground shrink-0" />
+        <span>Please select your District to calculate available shipping methods.</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
+      {zoneName && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+          <span>Resolved Shipping Zone:</span>
+          <span className="font-semibold text-foreground bg-primary/10 text-primary px-2.5 py-0.5 rounded-full">
+            {zoneName}
+          </span>
+        </div>
+      )}
+
       {methods.map((method) => {
         const isSelected = selectedMethodId === method.id;
         const isExpress = method.code.toUpperCase().includes("EXPRESS");
+        const isFree = method.isFree || method.charge === "0.00" || method.finalCharge === "0.00";
+        const finalChargeNum = Number(method.finalCharge ?? method.charge ?? 0);
+        const regularChargeNum = Number(method.regularCharge ?? method.charge ?? 0);
+
+        const deliveryEstimate =
+          method.estimatedMinDays && method.estimatedMaxDays
+            ? `${method.estimatedMinDays}–${method.estimatedMaxDays} business days`
+            : method.estimatedMinDays
+            ? `${method.estimatedMinDays} business days`
+            : method.description || (isExpress ? "Next-day priority delivery" : "2-3 business days");
 
         return (
           <div
@@ -55,7 +77,8 @@ export function CheckoutShippingMethods({
               "group relative flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all duration-200",
               isSelected
                 ? "border-primary bg-primary/5 shadow-xs"
-                : "border-border bg-card hover:border-foreground/30"
+                : "border-border bg-card hover:border-foreground/30",
+              method.isRecommended && !isSelected && "border-primary/40 bg-primary/[0.02]"
             )}
           >
             <div className="flex items-center gap-3.5">
@@ -75,26 +98,46 @@ export function CheckoutShippingMethods({
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-foreground text-sm">
                     {method.name}
                   </span>
-                  {isExpress && (
+                  {method.isRecommended && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <Sparkles className="size-2.5" /> Recommended
+                    </span>
+                  )}
+                  {isExpress && !method.isRecommended && (
                     <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                       Fastest
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {method.description || (isExpress ? "Next-day priority delivery" : "2-3 business days")}
+                  {deliveryEstimate}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-foreground">
-                {isExpress ? "$10.00" : "$5.00"}
-              </span>
+              <div className="text-right">
+                {isFree ? (
+                  <div className="flex items-center gap-1.5">
+                    {regularChargeNum > 0 && (
+                      <span className="text-xs text-muted-foreground line-through">
+                        ৳{regularChargeNum.toFixed(0)}
+                      </span>
+                    )}
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      FREE
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-bold text-foreground">
+                    ৳{finalChargeNum.toFixed(0)}
+                  </span>
+                )}
+              </div>
 
               <div
                 className={cn(
@@ -113,4 +156,3 @@ export function CheckoutShippingMethods({
     </div>
   );
 }
-

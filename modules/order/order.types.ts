@@ -107,5 +107,36 @@ export interface OrderListQuery {
   customerEmail?: string;
 }
 
+export interface OrderTrackData {
+  orderNumber: string;
+  status:
+    | "PENDING"
+    | "CONFIRMED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED";
+  placedAt: string;
+  confirmedAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  customerName: string;
+  itemCount: number;
+  grandTotal: string;
+  shippingMethodName: string;
+  shippingZoneName: string;
+  deliveryDistrict: string;
+  shipment?: OrderShipment | null;
+  items: Array<{
+    id: number;
+    productName: string;
+    quantity: number;
+    unitPrice: string;
+    lineTotal: string;
+    attributes?: OrderItemAttribute[];
+  }>;
+}
+
 export type OrderResponse = ApiResponse<Order>;
 export type OrderListResponse = PaginatedApiResponse<Order>;
+export type OrderTrackResponse = ApiResponse<OrderTrackData>;

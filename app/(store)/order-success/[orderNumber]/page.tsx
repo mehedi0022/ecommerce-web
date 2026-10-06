@@ -233,7 +233,7 @@ export default function OrderSuccessPage({
               <p className="text-muted-foreground">
                 Please prepare the exact cash amount of{" "}
                 <strong className="text-foreground">
-                  ${Number(order?.grandTotal || "0").toFixed(2)}
+                  ৳{Number(order?.grandTotal || "0").toFixed(2)}
                 </strong>{" "}
                 when the delivery agent arrives.
               </p>
@@ -268,7 +268,7 @@ export default function OrderSuccessPage({
                 <div>
                   <p className="font-medium text-foreground">{item.productName}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    Qty: {item.quantity} × ${Number(item.unitPrice).toFixed(2)}
+                    Qty: {item.quantity} × ৳{Number(item.unitPrice).toFixed(2)}
                   </p>
                   {item.attributes && item.attributes.length > 0 && (
                     <p className="text-[10px] text-muted-foreground">
@@ -279,7 +279,7 @@ export default function OrderSuccessPage({
                   )}
                 </div>
                 <span className="font-semibold text-foreground">
-                  ${Number(item.lineTotal).toFixed(2)}
+                  ৳{Number(item.lineTotal).toFixed(2)}
                 </span>
               </div>
             ))}
@@ -292,7 +292,7 @@ export default function OrderSuccessPage({
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal</span>
               <span className="font-medium text-foreground">
-                ${Number(order?.subtotal || "0").toFixed(2)}
+                ৳{Number(order?.subtotal || "0").toFixed(2)}
               </span>
             </div>
 
@@ -301,20 +301,20 @@ export default function OrderSuccessPage({
               <span className="font-medium text-foreground">
                 {Number(order?.shippingCharge || "0") === 0
                   ? "FREE"
-                  : `$${Number(order?.shippingCharge || "0").toFixed(2)}`}
+                  : `৳${Number(order?.shippingCharge || "0").toFixed(2)}`}
               </span>
             </div>
 
             {Number(order?.discountAmount || "0") > 0 && (
               <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-medium">
                 <span>Discount</span>
-                <span>-${Number(order?.discountAmount).toFixed(2)}</span>
+                <span>-৳{Number(order?.discountAmount).toFixed(2)}</span>
               </div>
             )}
 
             <div className="flex justify-between text-muted-foreground">
               <span>Tax</span>
-              <span>$0.00</span>
+              <span>৳0.00</span>
             </div>
 
             <Separator className="my-2" />
@@ -322,7 +322,7 @@ export default function OrderSuccessPage({
             <div className="flex justify-between text-sm font-bold text-foreground pt-1">
               <span>Grand Total</span>
               <span className="text-base text-primary">
-                ${Number(order?.grandTotal || "0").toFixed(2)}
+                ৳{Number(order?.grandTotal || "0").toFixed(2)}
               </span>
             </div>
           </div>

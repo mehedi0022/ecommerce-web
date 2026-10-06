@@ -128,7 +128,7 @@ export function CartItemRow({
 
         {/* Unit Price */}
         <p className="text-xs text-muted-foreground">
-          ${Number(item.variant.price).toFixed(2)} each
+          ৳{Number(item.variant.price).toFixed(2)} each
         </p>
       </div>
 
@@ -169,7 +169,7 @@ export function CartItemRow({
         <div className="flex items-center gap-3">
           <div className="text-right">
             <span className="block text-base font-bold text-foreground sm:text-lg">
-              ${Number(item.lineTotal).toFixed(2)}
+              ৳{Number(item.lineTotal).toFixed(2)}
             </span>
           </div>
 
