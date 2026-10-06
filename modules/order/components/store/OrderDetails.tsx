@@ -13,6 +13,7 @@ import {
   Calendar,
   XCircle,
   ExternalLink,
+  Printer,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,7 +25,10 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
+import Link from "next/link";
 import { ReviewModal } from "@/modules/review/components/ReviewModal";
+import { OrderTimeline } from "./OrderTimeline";
+import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import type { Order, OrderItem } from "../../order.types";
 import { useState } from "react";
 
@@ -36,6 +40,7 @@ interface OrderDetailsProps {
 
 export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
   const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   if (!order) return null;
 
@@ -70,6 +75,31 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
         </DialogHeader>
 
         <div className="space-y-6 py-2">
+          {/* ── Order Status & Live Courier Tracking Timeline ────────────────── */}
+          <div className="rounded-xl border bg-card p-4 sm:p-5 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between border-b pb-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Truck className="size-3.5 text-primary" /> Delivery & Courier Timeline
+              </span>
+              <Link
+                href={`/track-order?orderNumber=${order.orderNumber}`}
+                target="_blank"
+                className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                Public Tracking <ExternalLink className="size-3" />
+              </Link>
+            </div>
+            <OrderTimeline
+              status={order.status}
+              placedAt={order.placedAt || order.createdAt}
+              confirmedAt={order.confirmedAt}
+              shippedAt={order.shippedAt}
+              deliveredAt={order.deliveredAt}
+              cancelledAt={order.cancelledAt}
+              shipment={order.shipment}
+            />
+          </div>
+
           {/* ── Items Breakdown ────────────────────────────────────────────── */}
           <div>
             <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
@@ -219,8 +249,31 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
               </span>
             </div>
           </div>
+
+          {/* Action Row */}
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <span className="text-xs text-muted-foreground">
+              Need a physical bill or delivery record?
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowInvoiceModal(true)}
+              className="gap-1.5 text-xs font-semibold cursor-pointer"
+            >
+              <Printer className="size-3.5" />
+              Tax Invoice & Slip
+            </Button>
+          </div>
         </div>
       </DialogContent>
+
+      {/* Invoice Modal */}
+      <OrderInvoiceModal
+        order={order}
+        open={showInvoiceModal}
+        onOpenChange={setShowInvoiceModal}
+      />
 
       {/* Review Modal */}
       {reviewingItem && (

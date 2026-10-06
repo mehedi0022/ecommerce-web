@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -9,6 +10,7 @@ import {
   Truck,
   ChevronRight,
   Eye,
+  Printer,
   CheckCircle2,
   Clock,
   AlertCircle,
@@ -19,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
+import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import type { Order } from "../../order.types";
 
 const statusConfig: Record<
@@ -69,6 +72,8 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, onViewDetails }: OrderCardProps) {
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
   const statusInfo = statusConfig[order.status] ?? {
     label: order.status,
     variant: "outline",
@@ -119,15 +124,26 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
 
         <div className="flex items-center gap-2 sm:self-center">
           <Link
-            href={`/order-success/${order.orderNumber}`}
+            href={`/track-order?orderNumber=${order.orderNumber}`}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "h-8 text-xs font-medium gap-1.5"
+              "h-8 text-xs font-semibold gap-1.5 border-primary/20 text-primary hover:bg-primary/5"
             )}
           >
-            <Eye className="size-3.5" />
-            View Invoice
+            <Truck className="size-3.5" />
+            Track
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowInvoiceModal(true)}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "h-8 text-xs font-medium gap-1.5 cursor-pointer"
+            )}
+          >
+            <Printer className="size-3.5" />
+            Invoice
+          </button>
           {onViewDetails && (
             <button
               type="button"
@@ -209,6 +225,15 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
             <Truck className="size-3.5" />
             {order.shippingMethodName || "Standard Delivery"}
           </span>
+          {order.shipment?.courierName && (
+            <>
+              <span>•</span>
+              <span className="font-semibold text-primary flex items-center gap-1">
+                {order.shipment.courierName}
+                {order.shipment.trackingNumber && ` (${order.shipment.trackingNumber})`}
+              </span>
+            </>
+          )}
           {order.couponCode && (
             <>
               <span>•</span>
@@ -227,6 +252,12 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
           </span>
         </div>
       </div>
+
+      <OrderInvoiceModal
+        order={order}
+        open={showInvoiceModal}
+        onOpenChange={setShowInvoiceModal}
+      />
     </div>
   );
 }

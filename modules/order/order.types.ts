@@ -136,6 +136,7 @@ export interface OrderTrackData {
   confirmedAt?: string | null;
   shippedAt?: string | null;
   deliveredAt?: string | null;
+  cancelledAt?: string | null;
   customerName: string;
   itemCount: number;
   grandTotal: string;
@@ -146,6 +147,8 @@ export interface OrderTrackData {
   items: Array<{
     id: number;
     productName: string;
+    productSlug?: string;
+    imageUrl?: string | null;
     quantity: number;
     unitPrice: string;
     lineTotal: string;

@@ -58,6 +58,48 @@ export const reviewApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Review"],
     }),
+
+    getAdminReviews: builder.query<
+      PaginatedApiResponse<ProductReview>,
+      {
+        page?: number;
+        limit?: number;
+        status?: "PENDING" | "APPROVED" | "REJECTED";
+        rating?: number;
+        productId?: number;
+        userId?: number;
+      }
+    >({
+      query: (params) => ({
+        url: "/admin/reviews",
+        params,
+      }),
+      providesTags: ["Review"],
+    }),
+
+    approveReview: builder.mutation<ApiResponse<ProductReview>, number>({
+      query: (id) => ({
+        url: `/admin/reviews/${id}/approve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Review"],
+    }),
+
+    rejectReview: builder.mutation<ApiResponse<ProductReview>, number>({
+      query: (id) => ({
+        url: `/admin/reviews/${id}/reject`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Review"],
+    }),
+
+    adminDeleteReview: builder.mutation<ApiResponse<null>, number>({
+      query: (id) => ({
+        url: `/admin/reviews/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Review"],
+    }),
   }),
 });
 
@@ -68,4 +110,9 @@ export const {
   useCreateReviewMutation,
   useUpdateReviewMutation,
   useDeleteReviewMutation,
+  useGetAdminReviewsQuery,
+  useApproveReviewMutation,
+  useRejectReviewMutation,
+  useAdminDeleteReviewMutation,
 } = reviewApi;
+

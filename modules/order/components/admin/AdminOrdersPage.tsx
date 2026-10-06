@@ -22,6 +22,7 @@ import {
   Phone,
   ArrowUpDown,
   ExternalLink,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import { useListAdminOrdersQuery } from "../../orderApi";
 import type { Order } from "../../order.types";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
+import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
@@ -71,6 +73,7 @@ export function AdminOrdersPage() {
   // Modal States
   const [statusModalOrder, setStatusModalOrder] = useState<Order | null>(null);
   const [shipmentModalOrder, setShipmentModalOrder] = useState<Order | null>(null);
+  const [invoiceModalOrder, setInvoiceModalOrder] = useState<Order | null>(null);
 
   const queryParams = {
     page,
@@ -500,6 +503,16 @@ export function AdminOrdersPage() {
                               </Button>
                             )}
 
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Print Tax Invoice & Slip"
+                            onClick={() => setInvoiceModalOrder(order)}
+                          >
+                            <Printer className="size-3.5" />
+                          </Button>
+
                           <Link href={`/admin/orders/${order.orderNumber}`}>
                             <Button
                               size="icon-sm"
@@ -553,6 +566,13 @@ export function AdminOrdersPage() {
           orderNumber={shipmentModalOrder.orderNumber}
         />
       )}
+
+      {/* Invoice Modal */}
+      <OrderInvoiceModal
+        order={invoiceModalOrder}
+        open={Boolean(invoiceModalOrder)}
+        onOpenChange={(open) => !open && setInvoiceModalOrder(null)}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StoreContainer } from "./StoreContainer";
+import { LiveSearch } from "./LiveSearch";
 import { useGetCartQuery } from "@/modules/cart/cartApi";
 import { useWishlist } from "@/modules/wishlist/useWishlist";
 
@@ -59,24 +60,9 @@ export function StoreHeader() {
             Store<span className="text-primary">.</span>
           </Link>
 
-          <form
-            action="/search"
-            className="order-3 flex w-full basis-full lg:order-none lg:mx-auto lg:max-w-xl lg:flex-1"
-          >
-            <label htmlFor="store-search" className="sr-only">
-              Search products
-            </label>
-            <div className="relative w-full">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                id="store-search"
-                name="q"
-                type="search"
-                placeholder="Search products..."
-                className="h-10 w-full rounded-full border bg-muted/40 pl-10 pr-4 text-sm outline-none transition focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-          </form>
+          <div className="order-3 flex w-full basis-full lg:order-none lg:mx-auto lg:max-w-xl lg:flex-1">
+            <LiveSearch />
+          </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1">
             <Link

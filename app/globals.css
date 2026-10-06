@@ -127,3 +127,36 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Ensure web navigation, headers, and buttons are hidden during print */
+  nav, header, footer, aside, .no-print, [data-slot="dialog-overlay"], [data-slot="dialog-close"] {
+    display: none !important;
+  }
+
+  /* Reset dialog container in print so it doesn't get clipped by fixed/transform */
+  [data-slot="dialog-content"] {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+}

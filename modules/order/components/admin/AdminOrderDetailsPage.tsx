@@ -35,6 +35,7 @@ import {
 } from "../../orderApi";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
+import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
 interface AdminOrderDetailsPageProps {
@@ -63,6 +64,7 @@ export function AdminOrderDetailsPage({
 
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isShipmentDialogOpen, setIsShipmentDialogOpen] = useState(false);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
@@ -115,7 +117,7 @@ export function AdminOrderDetailsPage({
   };
 
   const handlePrint = () => {
-    window.print();
+    setIsInvoiceModalOpen(true);
   };
 
   if (isLoading) {
@@ -801,6 +803,12 @@ export function AdminOrderDetailsPage({
           orderNumber={order.orderNumber}
         />
       )}
+
+      <OrderInvoiceModal
+        order={order}
+        open={isInvoiceModalOpen}
+        onOpenChange={setIsInvoiceModalOpen}
+      />
     </div>
   );
 }

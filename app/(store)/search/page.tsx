@@ -1,7 +1,14 @@
-import { buildMetadata } from "@/lib/seo/metadata";
+import { redirect } from "next/navigation";
 
-export const metadata = buildMetadata({ title: "Search", noIndex: true });
-
-export default function SearchPage() {
-  return <main><h1>Search</h1></main>;
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; search?: string }>;
+}) {
+  const params = await searchParams;
+  const query = params.q || params.search || "";
+  if (query) {
+    redirect(`/products?search=${encodeURIComponent(query)}`);
+  }
+  redirect("/products");
 }

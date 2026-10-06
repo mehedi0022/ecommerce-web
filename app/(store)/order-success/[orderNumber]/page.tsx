@@ -29,6 +29,7 @@ import {
   useGetGuestOrderByNumberQuery,
 } from "@/modules/order/orderApi";
 import { useMeQuery } from "@/modules/auth/authApi";
+import { OrderInvoiceModal } from "@/modules/order/components/invoice/OrderInvoiceModal";
 
 export default function OrderSuccessPage({
   params,
@@ -39,6 +40,7 @@ export default function OrderSuccessPage({
   const orderNumber = resolvedParams.orderNumber;
   const searchParams = useSearchParams();
   const [copied, setCopied] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   // Check if token is in search params or session storage (for guest order)
   const tokenFromUrl = searchParams.get("token") || "";
@@ -84,9 +86,7 @@ export default function OrderSuccessPage({
   };
 
   const handlePrint = () => {
-    if (typeof window !== "undefined") {
-      window.print();
-    }
+    setShowInvoiceModal(true);
   };
 
   const shippingAddress =
@@ -331,6 +331,18 @@ export default function OrderSuccessPage({
 
       {/* ── Actions Footer ──────────────────────────────────────────────── */}
       <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 print:hidden">
+        <button
+          type="button"
+          onClick={() => setShowInvoiceModal(true)}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "lg" }),
+            "gap-2 font-semibold w-full sm:w-auto cursor-pointer"
+          )}
+        >
+          <Printer className="size-4" />
+          Tax Invoice (A4 Slip)
+        </button>
+
         <Link
           href={`/account/orders`}
           className={cn(buttonVariants({ size: "lg" }), "gap-2 font-bold px-8 shadow-xs w-full sm:w-auto")}
@@ -349,6 +361,12 @@ export default function OrderSuccessPage({
           Continue Shopping
         </Link>
       </div>
+
+      <OrderInvoiceModal
+        order={order || null}
+        open={showInvoiceModal}
+        onOpenChange={setShowInvoiceModal}
+      />
     </StoreContainer>
   );
 }

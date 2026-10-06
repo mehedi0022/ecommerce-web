@@ -28,16 +28,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import { useLazyTrackOrderQuery } from "@/modules/order/orderApi";
+import { OrderTimeline } from "@/modules/order/components/store/OrderTimeline";
 import type { OrderTrackData } from "@/modules/order/order.types";
-
-const TRACKING_STEPS = [
-  { key: "PENDING", label: "Order Placed", desc: "Order details received" },
-  { key: "CONFIRMED", label: "Confirmed", desc: "Order verified & accepted" },
-  { key: "PROCESSING", label: "Processing", desc: "Item being prepared" },
-  { key: "SHIPPED", label: "Shipped", desc: "Handed over to courier" },
-  { key: "DELIVERED", label: "Delivered", desc: "Safely reached customer" },
-];
 
 export default function TrackOrderPage() {
   const searchParams = useSearchParams();
@@ -88,21 +82,6 @@ export default function TrackOrderPage() {
         });
     }
   }, [orderFromQuery, triggerTrack]);
-
-  // Determine current step index
-  const getStepStatus = (stepKey: string, currentStatus: string) => {
-    const orderHierarchy = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"];
-    if (currentStatus === "CANCELLED") {
-      return stepKey === "PENDING" ? "completed" : "cancelled";
-    }
-    const currentIdx = orderHierarchy.indexOf(currentStatus);
-    const stepIdx = orderHierarchy.indexOf(stepKey);
-
-    if (currentIdx === -1) return "upcoming";
-    if (stepIdx < currentIdx) return "completed";
-    if (stepIdx === currentIdx) return "active";
-    return "upcoming";
-  };
 
   return (
     <main className="min-h-[calc(100vh-5rem)] bg-muted/30 py-8 sm:py-16">
@@ -233,95 +212,17 @@ export default function TrackOrderPage() {
               </div>
 
               {/* Status Timeline */}
-              <div className="mt-8 pt-2">
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 relative">
-                  {TRACKING_STEPS.map((step, idx) => {
-                    const status = getStepStatus(step.key, orderResult.status);
-                    const isCompleted = status === "completed";
-                    const isActive = status === "active";
-                    const isCancelled = status === "cancelled";
-
-                    return (
-                      <div
-                        key={step.key}
-                        className={cn(
-                          "flex flex-col items-center text-center relative",
-                          idx < TRACKING_STEPS.length - 1 &&
-                            "sm:after:content-[''] sm:after:absolute sm:after:top-4 sm:after:left-[50%] sm:after:w-full sm:after:h-0.5 sm:after:z-0",
-                          idx < TRACKING_STEPS.length - 1 &&
-                            (isCompleted
-                              ? "sm:after:bg-primary"
-                              : "sm:after:bg-muted")
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "relative z-10 flex size-9 items-center justify-center rounded-full border-2 text-xs font-bold transition-all shadow-xs",
-                            isCompleted && "bg-primary border-primary text-primary-foreground",
-                            isActive && "bg-background border-primary text-primary ring-4 ring-primary/20 animate-pulse",
-                            isCancelled && "bg-destructive/10 border-destructive text-destructive",
-                            status === "upcoming" && "bg-muted border-muted-foreground/30 text-muted-foreground"
-                          )}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="size-5" />
-                          ) : (
-                            <span>{idx + 1}</span>
-                          )}
-                        </div>
-
-                        <span
-                          className={cn(
-                            "mt-3 text-xs font-bold",
-                            isActive || isCompleted
-                              ? "text-foreground"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {step.label}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5 max-w-[120px]">
-                          {step.desc}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="mt-8">
+                <OrderTimeline
+                  status={orderResult.status}
+                  placedAt={orderResult.placedAt}
+                  confirmedAt={orderResult.confirmedAt}
+                  shippedAt={orderResult.shippedAt}
+                  deliveredAt={orderResult.deliveredAt}
+                  cancelledAt={orderResult.cancelledAt}
+                  shipment={orderResult.shipment}
+                />
               </div>
-
-              {/* Courier Tracking Link (if shipped) */}
-              {orderResult.shipment && (
-                <div className="mt-6 rounded-xl bg-primary/5 border border-primary/20 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-3">
-                    <Truck className="size-5 text-primary shrink-0" />
-                    <div>
-                      <p className="font-bold text-foreground">
-                        Courier: {orderResult.shipment.courierName || "Express Courier"}
-                      </p>
-                      {orderResult.shipment.trackingNumber && (
-                        <p className="text-muted-foreground font-mono">
-                          Tracking ID: {orderResult.shipment.trackingNumber}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {orderResult.shipment.trackingUrl && (
-                    <a
-                      href={orderResult.shipment.trackingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(
-                        buttonVariants({ variant: "default", size: "sm" }),
-                        "gap-1.5 text-xs font-semibold self-start sm:self-auto"
-                      )}
-                    >
-                      Track on Courier Site
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Delivery & Items Summary */}
@@ -378,22 +279,46 @@ export default function TrackOrderPage() {
                 {orderResult.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
+                    className="py-3.5 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
                   >
-                    <div>
-                      <p className="font-semibold text-foreground">{item.productName}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Qty: {item.quantity} × ৳{Number(item.unitPrice).toFixed(2)}
-                      </p>
-                      {item.attributes && item.attributes.length > 0 && (
-                        <p className="text-[10px] text-muted-foreground">
-                          {item.attributes
-                            .map((a) => `${a.attributeName}: ${a.attributeValue}`)
-                            .join(", ")}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted border overflow-hidden relative">
+                        {item.imageUrl ? (
+                          <img
+                            src={mediaUrl(item.imageUrl)}
+                            alt={item.productName}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <Package className="size-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {item.productSlug ? (
+                          <Link
+                            href={`/products/${item.productSlug}`}
+                            className="font-semibold text-foreground hover:text-primary transition-colors truncate block"
+                          >
+                            {item.productName}
+                          </Link>
+                        ) : (
+                          <p className="font-semibold text-foreground truncate">
+                            {item.productName}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Qty: {item.quantity} × ৳{Number(item.unitPrice).toFixed(2)}
                         </p>
-                      )}
+                        {item.attributes && item.attributes.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground">
+                            {item.attributes
+                              .map((a) => `${a.attributeName}: ${a.attributeValue}`)
+                              .join(", ")}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-bold text-foreground">
+                    <span className="font-bold text-foreground shrink-0">
                       ৳{Number(item.lineTotal).toFixed(2)}
                     </span>
                   </div>

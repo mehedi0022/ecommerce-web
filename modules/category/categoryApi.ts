@@ -8,6 +8,14 @@ import type {
 } from "./types";
 export const categoryApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    listPublicCategories: builder.query<CategoryListResponse, CategoryQuery | void>({
+      query: (params) => ({ url: "/categories/public", params: params ?? {} }),
+      providesTags: ["Category"],
+    }),
+    getPublicCategoryTree: builder.query<ApiResponse<Category[]>, void>({
+      query: () => "/categories/public/tree",
+      providesTags: ["Category"],
+    }),
     listCategories: builder.query<CategoryListResponse, CategoryQuery | void>({
       query: (params) => ({ url: "/categories", params: params ?? {} }),
       providesTags: ["Category"],
@@ -65,6 +73,8 @@ export const categoryApi = baseApi.injectEndpoints({
   }),
 });
 export const {
+  useListPublicCategoriesQuery,
+  useGetPublicCategoryTreeQuery,
   useListCategoriesQuery,
   useGetCategoryTreeQuery,
   useGetCategoryQuery,
