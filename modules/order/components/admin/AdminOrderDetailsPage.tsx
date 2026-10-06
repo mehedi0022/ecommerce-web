@@ -465,6 +465,19 @@ export function AdminOrderDetailsPage({
                       ৳{Number(order.grandTotal).toLocaleString()}
                     </span>
                   </div>
+
+                  {(order.isAdvanceRequired || Number(order.advanceAmount || 0) > 0) && (
+                    <div className="pt-2 border-t border-dashed space-y-1">
+                      <div className="flex justify-between text-amber-600 dark:text-amber-400 font-semibold">
+                        <span>Advance Required:</span>
+                        <span className="font-mono">৳{Number(order.advanceAmount || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-foreground font-semibold">
+                        <span>Due on Delivery (COD):</span>
+                        <span className="font-mono">৳{Number(order.dueAmount || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -657,7 +670,9 @@ export function AdminOrderDetailsPage({
               <div className="flex items-center justify-between border-b pb-2.5">
                 <span className="text-muted-foreground">Payment Method:</span>
                 <span className="font-medium text-foreground">
-                  {order.paymentMethod === "CASH_ON_DELIVERY"
+                  {order.paymentMethod === "PARTIAL_COD" || order.isAdvanceRequired
+                    ? "Partial Advance + COD"
+                    : order.paymentMethod === "CASH_ON_DELIVERY"
                     ? "Cash on Delivery"
                     : "Online Payment"}
                 </span>
@@ -671,10 +686,14 @@ export function AdminOrderDetailsPage({
                     className={`text-[10px] font-bold ${
                       order.paymentStatus === "PAID"
                         ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20"
+                        : order.paymentStatus === "PARTIALLY_PAID"
+                        ? "bg-blue-500/10 text-blue-700 border-blue-500/20"
                         : "bg-amber-500/10 text-amber-700 border-amber-500/20"
                     }`}
                   >
-                    {order.paymentStatus}
+                    {order.paymentStatus === "PARTIALLY_PAID"
+                      ? "PARTIALLY PAID"
+                      : order.paymentStatus}
                   </Badge>
 
                   {order.paymentStatus === "UNPAID" && (

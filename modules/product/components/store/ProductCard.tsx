@@ -135,7 +135,17 @@ export function ProductCard({
         </div>
 
         {/* ── Badges (top-left) ─── */}
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+        <div className="absolute left-3 top-3 flex flex-col gap-1.5 z-10">
+          {product.isFreeShipping && (
+            <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wide shadow-sm">
+              🚚 Free Shipping
+            </Badge>
+          )}
+          {product.requiresAdvancePayment && (
+            <Badge className="bg-amber-600 text-white hover:bg-amber-600 rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wide shadow-sm">
+              ⚡ Advance Req.
+            </Badge>
+          )}
           {discount !== null && (
             <Badge className="bg-rose-500 text-white hover:bg-rose-500 rounded-md px-2 py-0.5 text-[11px] font-bold tracking-wide shadow-sm">
               -{discount}%
@@ -278,6 +288,17 @@ export function ProductCard({
             </span>
           )}
         </div>
+
+        {product.isFreeShipping && (
+          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            🚚 Free Shipping (ফ্রি ডেলিভারি)
+          </p>
+        )}
+        {product.requiresAdvancePayment && (
+          <p className="text-[11px] text-amber-600 dark:text-amber-400">
+            ⚡ {product.advancePaymentAmount ? `৳${product.advancePaymentAmount} অগ্রিম প্রদেয়` : "অগ্রিম পেমেন্ট প্রযোজ্য"}
+          </p>
+        )}
       </div>
     </div>
   );

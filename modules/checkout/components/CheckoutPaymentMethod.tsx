@@ -28,6 +28,12 @@ interface CheckoutPaymentMethodProps {
   transactionId: string;
   onChangeTransactionId: (val: string) => void;
   totalAmount?: number | string;
+  isAdvanceRequired?: boolean;
+  advanceAmount?: number;
+  dueAmount?: number;
+  isCodAvailable?: boolean;
+  paidInFull?: boolean;
+  onTogglePaidInFull?: (val: boolean) => void;
 }
 
 export function CheckoutPaymentMethod({
@@ -38,6 +44,12 @@ export function CheckoutPaymentMethod({
   transactionId,
   onChangeTransactionId,
   totalAmount,
+  isAdvanceRequired = false,
+  advanceAmount,
+  dueAmount,
+  isCodAvailable = true,
+  paidInFull = false,
+  onTogglePaidInFull,
 }: CheckoutPaymentMethodProps) {
   const { data, isLoading } = useGetPublicPaymentMethodsQuery();
   const [copiedId, setCopiedId] = useState<number | null>(null);
@@ -137,44 +149,126 @@ export function CheckoutPaymentMethod({
 
   return (
     <div className="space-y-3.5">
+      {/* ── Advance vs Full Payment Preference Switcher ── */}
+      {isAdvanceRequired && onTogglePaidInFull && (
+        <div className="rounded-xl border border-primary/20 bg-primary/[0.02] p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <span>💳</span> পেমেন্টের পরিমাণ নির্ধারণ করুন:
+            </span>
+            <Badge variant="outline" className="text-[10px] bg-background">
+              {paidInFull ? "সম্পূর্ণ পেমেন্ট (৳০ বাকি)" : "আংশিক অগ্রিম + COD"}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Option 1: Minimum Advance */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => onTogglePaidInFull(false)}
+              className={cn(
+                "cursor-pointer rounded-lg border p-3 text-left transition-all",
+                !paidInFull
+                  ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary"
+                  : "border-border bg-card hover:border-foreground/20"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground">
+                  আংশিক অগ্রিম (Partial Advance)
+                </span>
+                <span className="font-mono text-sm font-bold text-primary">
+                  ৳{advanceAmount?.toFixed(2)}
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                এখন ৳{advanceAmount?.toFixed(2)} পরিশোধ করবেন, বাকি <strong>৳{dueAmount?.toFixed(2)}</strong> ডেলিভারির সময় COD
+              </p>
+            </div>
+
+            {/* Option 2: Pay Full Amount */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => onTogglePaidInFull(true)}
+              className={cn(
+                "cursor-pointer rounded-lg border p-3 text-left transition-all",
+                paidInFull
+                  ? "border-emerald-600 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-600 dark:border-emerald-500"
+                  : "border-border bg-card hover:border-foreground/20"
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground">
+                  সম্পূর্ণ পরিশোধ (Full Payment)
+                </span>
+                <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  ৳{Number(totalAmount).toFixed(2)}
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                এখনই সম্পূর্ণ মূল্য পরিশোধ করুন, ডেলিভারির সময় কোনো টাকা বাকি থাকবে না (No Due, ৳০)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {displayMethods.map((method) => {
         const isSelected = selectedCode === method.code;
         const isManual =
           method.type === "MANUAL_MFS" || method.type === "MANUAL_BANK";
         const isCOD = method.type === "COD";
+        const isCodDisabled = isCOD && (isCodAvailable === false || isAdvanceRequired);
         const colors = getBrandColors(method);
+
+        const handleSelectThis = () => {
+          if (isCodDisabled) {
+            if (isAdvanceRequired) {
+              toast.warning(
+                `এই অর্ডারের জন্য ন্যূনতম ৳${advanceAmount?.toFixed(2) ?? "100"} অগ্রিম পেমেন্ট আবশ্যক। ফুল ক্যাশ অন ডেলিভারি প্রযোজ্য নয়। অনুগ্রহ করে বিকাশ, নগদ বা অনলাইন পেমেন্ট নির্বাচন করুন।`,
+                { duration: 4000 }
+              );
+            } else {
+              toast.error("কার্টের এক বা একাধিক পণ্যের জন্য ক্যাশ অন ডেলিভারি প্রযোজ্য নয়।");
+            }
+            return;
+          }
+          onSelectMethod(
+            method.code,
+            isCOD ? "CASH_ON_DELIVERY" : "ONLINE",
+            method.type
+          );
+        };
 
         return (
           <div
             key={method.id}
             className={cn(
               "overflow-hidden rounded-xl border transition-all duration-200",
-              isSelected
+              isCodDisabled && "opacity-60 cursor-not-allowed bg-muted/20 border-dashed",
+              !isCodDisabled && isSelected
                 ? "border-primary bg-primary/[0.03] shadow-xs"
-                : "border-border bg-card hover:border-foreground/30"
+                : !isCodDisabled
+                ? "border-border bg-card hover:border-foreground/30"
+                : ""
             )}
           >
             {/* ── Method Select Header ── */}
             <div
               role="button"
-              tabIndex={0}
-              onClick={() =>
-                onSelectMethod(
-                  method.code,
-                  isCOD ? "CASH_ON_DELIVERY" : "ONLINE",
-                  method.type
-                )
-              }
+              tabIndex={isCodDisabled ? -1 : 0}
+              onClick={handleSelectThis}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  onSelectMethod(
-                    method.code,
-                    isCOD ? "CASH_ON_DELIVERY" : "ONLINE",
-                    method.type
-                  );
+                  handleSelectThis();
                 }
               }}
-              className="flex cursor-pointer items-start justify-between p-4"
+              className={cn(
+                "flex items-start justify-between p-4",
+                isCodDisabled ? "cursor-not-allowed" : "cursor-pointer"
+              )}
             >
               <div className="flex items-start gap-3.5">
                 <div
@@ -192,10 +286,22 @@ export function CheckoutPaymentMethod({
                       {method.name}
                     </span>
 
-                    {isCOD && (
+                    {isCOD && !isCodDisabled && (
                       <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                         Recommended
                       </span>
+                    )}
+
+                    {isCOD && isAdvanceRequired && (
+                      <Badge variant="outline" className="text-[10px] py-0 h-4 border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-500/10">
+                        ⚡ অগ্রিম আবশ্যক
+                      </Badge>
+                    )}
+
+                    {isCOD && isCodAvailable === false && !isAdvanceRequired && (
+                      <Badge variant="outline" className="text-[10px] py-0 h-4 border-destructive text-destructive bg-destructive/10">
+                        ❌ Not Available
+                      </Badge>
                     )}
 
                     {isManual && (
@@ -221,7 +327,11 @@ export function CheckoutPaymentMethod({
                   </div>
 
                   <p className="text-xs text-muted-foreground line-clamp-1">
-                    {isCOD
+                    {isCOD && isAdvanceRequired
+                      ? `ন্যূনতম ৳${advanceAmount?.toFixed(2) ?? "100"} অগ্রিম প্রদান সাপেক্ষে বাকি ৳${dueAmount?.toFixed(2) ?? "0"} ক্যাশ অন ডেলিভারি।`
+                      : isCOD && isCodAvailable === false
+                      ? "কার্টের পণ্যের জন্য ফুল ক্যাশ অন ডেলিভারি প্রযোজ্য নয়।"
+                      : isCOD
                       ? "Pay with cash when your package is delivered at your doorstep."
                       : isManual && method.accountNumber
                       ? `Send payment to: ${method.accountNumber} (${method.accountType.toLowerCase()})`
@@ -289,7 +399,10 @@ export function CheckoutPaymentMethod({
                     </div>
 
                     {totalAmount && (() => {
-                      const baseTotal = Number(totalAmount);
+                      const baseTotal =
+                        isAdvanceRequired && !paidInFull && advanceAmount !== undefined && advanceAmount > 0
+                          ? Number(advanceAmount)
+                          : Number(totalAmount);
                       const pctFee = Number(method.chargePercentage) > 0 ? (baseTotal * Number(method.chargePercentage)) / 100 : 0;
                       const flatFee = Number(method.chargeFlat) || 0;
                       const fee = Math.round((pctFee + flatFee) * 100) / 100;
@@ -297,6 +410,17 @@ export function CheckoutPaymentMethod({
 
                       return (
                         <div className="pt-1.5 space-y-1 text-[11px] border-t border-border/60">
+                          {isAdvanceRequired && !paidInFull && advanceAmount && dueAmount && dueAmount > 0 ? (
+                            <div className="flex justify-between font-semibold text-amber-700 dark:text-amber-400">
+                              <span>অগ্রিম পরিশোধ আবশ্যক:</span>
+                              <span className="font-mono">৳{baseTotal.toFixed(2)}</span>
+                            </div>
+                          ) : isAdvanceRequired && paidInFull ? (
+                            <div className="flex justify-between font-semibold text-emerald-700 dark:text-emerald-400">
+                              <span>সম্পূর্ণ মূল্য পরিশোধ করছেন:</span>
+                              <span className="font-mono">৳{baseTotal.toFixed(2)}</span>
+                            </div>
+                          ) : null}
                           {fee > 0 && (
                             <div className="flex justify-between text-muted-foreground">
                               <span>
@@ -310,11 +434,19 @@ export function CheckoutPaymentMethod({
                             </div>
                           )}
                           <div className="flex justify-between items-center text-foreground font-semibold">
-                            <span>পরিশোধের মোট পরিমাণ:</span>
+                            <span>{isAdvanceRequired && !paidInFull ? "এখন পরিশোধের মোট পরিমাণ:" : "পরিশোধের মোট পরিমাণ:"}</span>
                             <span className="font-mono text-sm font-bold text-primary">
                               ৳{payableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </div>
+                          {isAdvanceRequired && (
+                            <div className="flex justify-between text-muted-foreground pt-1 border-t border-border/40 text-[10px]">
+                              <span>পণ্য পৌঁছালে বাকি টাকা (Due COD):</span>
+                              <span className={cn("font-semibold font-mono", paidInFull ? "text-emerald-600 dark:text-emerald-400" : "text-foreground")}>
+                                {paidInFull ? "৳0.00 (কোনো বকেয়া নেই)" : `৳${dueAmount?.toFixed(2)}`}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}

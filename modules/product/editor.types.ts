@@ -14,6 +14,10 @@ export interface EditorImage {
 export interface EditorForm {
   name: string; shortDescription: string; description: string; brandId: string;
   categoryIds: number[]; primaryCategoryId: string; isFeatured: boolean; status: ProductStatus;
+  isFreeShipping: boolean;
+  isCodAvailable: boolean;
+  requiresAdvancePayment: boolean;
+  advancePaymentAmount: string;
   variants: VariantRow[]; images: EditorImage[];
 }
 export type SaveStep = "details" | "variants" | "inventory" | "images" | "publish";
@@ -35,6 +39,10 @@ export function initialForm(initial?: EditorInitial): EditorForm {
     brandId: product?.brandId ? String(product.brandId) : "", categoryIds: product?.categories.map(c => c.categoryId) ?? [],
     primaryCategoryId: String(product?.categories.find(c => c.isPrimary)?.categoryId ?? ""),
     isFeatured: product?.isFeatured ?? false, status: product?.status ?? "DRAFT",
+    isFreeShipping: product?.isFreeShipping ?? false,
+    isCodAvailable: product?.isCodAvailable ?? true,
+    requiresAdvancePayment: product?.requiresAdvancePayment ?? false,
+    advancePaymentAmount: product?.advancePaymentAmount != null ? String(product.advancePaymentAmount) : "",
     variants: initial?.variants.length ? initial.variants.map(v => ({
       key: `variant-${v.id}`, id: v.id, sku: v.sku, price: String(v.price), compareAtPrice: v.compareAtPrice ?? "", costPrice: v.costPrice ?? "",
       selections: Object.fromEntries((v.attributeValues ?? []).map(x => [x.attributeValue.attributeId, x.attributeValue.id])),

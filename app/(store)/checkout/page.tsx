@@ -100,6 +100,7 @@ export default function CheckoutPage() {
     (m) => m.isActive
   );
   const savedAddresses = savedAddressesData?.data ?? [];
+  const isAllFreeShipping = items.length > 0 && items.every((i) => i.product?.isFreeShipping);
 
   // Form State
   const [customer, setCustomer] = useState<CheckoutCustomer>({
@@ -128,6 +129,7 @@ export default function CheckoutPage() {
   const [paymentMethodType, setPaymentMethodType] = useState<string>("COD");
   const [senderNumber, setSenderNumber] = useState<string>("");
   const [transactionId, setTransactionId] = useState<string>("");
+  const [paidInFull, setPaidInFull] = useState<boolean>(false);
   const [couponCode, setCouponCode] = useState<string>(() => {
     if (typeof window !== "undefined") {
       return sessionStorage.getItem("checkout_coupon_code") || "";
@@ -228,6 +230,7 @@ export default function CheckoutPage() {
       area: activeAddress?.area?.trim() || undefined,
       postalCode: activeAddress?.postalCode?.trim() || undefined,
       subtotal: summary?.subtotal ? Number(summary.subtotal) : undefined,
+      isAllFreeShipping,
     })
       .unwrap()
       .then((res) => {
@@ -263,6 +266,7 @@ export default function CheckoutPage() {
     activeAddress?.area,
     activeAddress?.countryCode,
     summary?.subtotal,
+    isAllFreeShipping,
     calculateShipping,
   ]);
 
@@ -299,18 +303,71 @@ export default function CheckoutPage() {
     }
   }, [savedAddresses, selectedAddressId, useCustomAddress]);
 
+  // Partial COD / Advance calculation
+  const isCodAvailableForAll = items.length > 0 && items.every((i) => i.product?.isCodAvailable !== false);
+  const anyRequiresAdvance = items.some((i) => i.product?.requiresAdvancePayment);
+  const anyCodDisabled = items.some((i) => i.product?.isCodAvailable === false);
+
   // Calculate selected shipping fee
-  const methodsToDisplay =
+  const rawMethods =
     availableMethods.length > 0 ? availableMethods : shippingMethods;
+  const methodsToDisplay = rawMethods.map((m: ShippingMethod) => {
+    const isExpress = m.code?.toUpperCase().includes("EXPRESS");
+    if (isAllFreeShipping && !isExpress) {
+      return {
+        ...m,
+        isFree: true,
+        finalCharge: "0.00",
+        charge: "0.00",
+        regularCharge: m.regularCharge ?? m.charge ?? "60.00",
+      };
+    }
+    return m;
+  });
+
   const selectedMethod = methodsToDisplay.find((m: ShippingMethod) => m.id === shippingMethodId);
-  const shippingFee =
+  const isSelectedExpress = Boolean(selectedMethod?.code?.toUpperCase().includes("EXPRESS"));
+  const baseShippingFee =
     selectedMethod?.finalCharge !== undefined
       ? Number(selectedMethod.finalCharge)
       : selectedMethod?.charge !== undefined
       ? Number(selectedMethod.charge)
-      : selectedMethod?.code.toUpperCase().includes("EXPRESS")
+      : isSelectedExpress
       ? 120.0
       : 60.0;
+  const shippingFee = (isAllFreeShipping && !isSelectedExpress) ? 0 : baseShippingFee;
+
+  let advanceRequiredAmount = 0;
+  if (anyRequiresAdvance) {
+    for (const x of items) {
+      if (x.product?.requiresAdvancePayment) {
+        const perProductAdvance =
+          Number(x.product?.advancePaymentAmount) > 0
+            ? Number(x.product?.advancePaymentAmount)
+            : shippingFee > 0
+              ? shippingFee
+              : 100;
+        advanceRequiredAmount += perProductAdvance;
+      }
+    }
+  } else if (anyCodDisabled) {
+    advanceRequiredAmount = shippingFee > 0 ? shippingFee : 100;
+  }
+
+  const isAdvanceRequired = advanceRequiredAmount > 0;
+  const subtotalNum = Number(summary?.subtotal || 0);
+  const grandTotalNum = Math.max(0, subtotalNum + shippingFee - Number(couponDiscount || 0));
+  const advanceAmountNum = isAdvanceRequired ? Math.min(advanceRequiredAmount, grandTotalNum) : 0;
+  const dueAmountNum = Math.max(0, grandTotalNum - advanceAmountNum);
+
+  // Auto-switch away from COD if advance payment is strictly required
+  useEffect(() => {
+    if (isAdvanceRequired && paymentMethodCode === "cod") {
+      setPaymentMethodCode("bkash");
+      setPaymentMethod("ONLINE");
+      setPaymentMethodType("MANUAL_MFS");
+    }
+  }, [isAdvanceRequired, paymentMethodCode]);
 
   // Handle Place Order
   const handlePlaceOrder = async () => {
@@ -321,6 +378,13 @@ export default function CheckoutPage() {
 
     if (!shippingMethodId) {
       toast.error("Please select a delivery method");
+      return;
+    }
+
+    if (isAdvanceRequired && paymentMethodCode === "cod") {
+      toast.error(
+        `Full Cash on Delivery is unavailable. A minimum advance payment of ৳${advanceAmountNum.toFixed(2)} is required for this order.`
+      );
       return;
     }
 
@@ -407,6 +471,7 @@ export default function CheckoutPage() {
           transactionId: paymentMethodCode !== "cod" ? transactionId.trim() : undefined,
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
+          paidInFull: isAdvanceRequired ? paidInFull : true,
         }).unwrap();
 
         // Clean up applied coupon from session
@@ -483,6 +548,7 @@ export default function CheckoutPage() {
           transactionId: paymentMethodCode !== "cod" ? transactionId.trim() : undefined,
           couponCode: couponCode || undefined,
           customerNote: customerNote || undefined,
+          paidInFull: isAdvanceRequired ? paidInFull : true,
         }).unwrap();
 
         // Clean up applied coupon from session
@@ -762,11 +828,13 @@ export default function CheckoutPage() {
               onChangeSenderNumber={setSenderNumber}
               transactionId={transactionId}
               onChangeTransactionId={setTransactionId}
-              totalAmount={
-                Number(summary?.subtotal || 0) +
-                Number(shippingFee || 0) -
-                Number(couponDiscount || 0)
-              }
+              totalAmount={grandTotalNum}
+              isAdvanceRequired={isAdvanceRequired}
+              advanceAmount={advanceAmountNum}
+              dueAmount={dueAmountNum}
+              isCodAvailable={isCodAvailableForAll}
+              paidInFull={paidInFull}
+              onTogglePaidInFull={setPaidInFull}
             />
           </section>
 
@@ -796,6 +864,11 @@ export default function CheckoutPage() {
             shippingFee={shippingFee}
             couponCode={couponCode}
             discountAmount={couponDiscount}
+            isFreeShipping={isAllFreeShipping && !isSelectedExpress}
+            isAdvanceRequired={isAdvanceRequired}
+            advanceAmount={advanceAmountNum}
+            dueAmount={dueAmountNum}
+            paidInFull={paidInFull}
             onApplyCoupon={handleApplyCoupon}
             onRemoveCoupon={handleRemoveCoupon}
             onPlaceOrder={handlePlaceOrder}

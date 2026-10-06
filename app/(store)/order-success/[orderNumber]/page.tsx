@@ -243,19 +243,29 @@ export default function OrderSuccessPage({
               >
                 {order?.paymentStatus === "PAID"
                   ? "Paid"
+                  : order?.paymentStatus === "PARTIALLY_PAID"
+                  ? "Partially Paid"
                   : order?.paymentStatus === "PENDING"
-                  ? "Awaiting Verification"
+                  ? order?.isAdvanceRequired
+                    ? "Advance Awaiting Verification"
+                    : "Awaiting Verification"
                   : "Unpaid (COD)"}
               </span>
             </div>
 
             <div className="text-xs space-y-1">
               <p className="font-semibold text-foreground">
-                {order?.paymentMethod === "CASH_ON_DELIVERY"
+                {order?.paymentMethod === "PARTIAL_COD" || order?.isAdvanceRequired
+                  ? "Partial Advance + Cash on Delivery"
+                  : order?.paymentMethod === "CASH_ON_DELIVERY"
                   ? "Cash on Delivery (COD)"
                   : "Online / Mobile Wallet (MFS)"}
               </p>
-              {order?.paymentMethod === "CASH_ON_DELIVERY" ? (
+              {order?.isAdvanceRequired || order?.paymentMethod === "PARTIAL_COD" ? (
+                <p className="text-muted-foreground">
+                  অগ্রিম পরিশোধ আবশ্যক: <strong>৳{Number(order?.advanceAmount || "0").toFixed(2)}</strong> (যাচাই সাপেক্ষে)। ডেলিভারির সময় বাকি <strong className="text-foreground">৳{Number(order?.dueAmount || "0").toFixed(2)}</strong> ক্যাশ অন ডেলিভারি হিসেবে পরিশোধ করবেন।
+                </p>
+              ) : order?.paymentMethod === "CASH_ON_DELIVERY" ? (
                 <p className="text-muted-foreground">
                   Please prepare the exact cash amount of{" "}
                   <strong className="text-foreground">
@@ -356,6 +366,19 @@ export default function OrderSuccessPage({
                 ৳{Number(order?.grandTotal || "0").toFixed(2)}
               </span>
             </div>
+
+            {(order?.isAdvanceRequired || Number(order?.advanceAmount || 0) > 0) && (
+              <div className="pt-2 border-t border-dashed space-y-1.5 text-xs">
+                <div className="flex justify-between text-amber-600 dark:text-amber-400 font-semibold">
+                  <span>Advance Payment (অগ্রিম)</span>
+                  <span className="font-mono">৳{Number(order?.advanceAmount || "0").toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-foreground font-semibold">
+                  <span>Due on Delivery (ক্যাশ অন ডেলিভারি)</span>
+                  <span className="font-mono">৳{Number(order?.dueAmount || "0").toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

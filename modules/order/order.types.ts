@@ -84,8 +84,8 @@ export interface Order {
     | "SHIPPED"
     | "DELIVERED"
     | "CANCELLED";
-  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | string;
-  paymentStatus: "UNPAID" | "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | "PARTIAL_COD" | string;
+  paymentStatus: "UNPAID" | "PENDING" | "PAID" | "PARTIALLY_PAID" | "FAILED" | "REFUNDED" | string;
   couponId: number | null;
   couponCode: string | null;
   subtotal: string;
@@ -93,6 +93,10 @@ export interface Order {
   discountAmount: string;
   taxAmount: string;
   grandTotal: string;
+  advanceAmount?: string | number | null;
+  dueAmount?: string | number | null;
+  isAdvanceRequired?: boolean;
+  isFreeShipping?: boolean;
   shippingZoneId: number;
   shippingMethodId: number;
   shippingZoneName: string;

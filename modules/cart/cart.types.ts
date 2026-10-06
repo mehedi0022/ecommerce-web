@@ -16,6 +16,10 @@ export interface CartProduct {
   name: string;
   slug: string;
   status: string;
+  isFreeShipping?: boolean;
+  isCodAvailable?: boolean;
+  requiresAdvancePayment?: boolean;
+  advancePaymentAmount?: string | number | null;
   images?: CartProductImage[];
 }
 

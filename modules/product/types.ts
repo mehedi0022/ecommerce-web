@@ -46,6 +46,10 @@ export interface Product {
   brandId: number | null;
   status: ProductStatus;
   isFeatured: boolean;
+  isFreeShipping?: boolean;
+  isCodAvailable?: boolean;
+  requiresAdvancePayment?: boolean;
+  advancePaymentAmount?: string | number | null;
   categories: ProductCategory[];
   images?: ProductImage[];
   variants?: ProductVariant[];
@@ -59,6 +63,10 @@ export interface ProductInput {
   brandId?: number | null;
   status?: ProductStatus;
   isFeatured?: boolean;
+  isFreeShipping?: boolean;
+  isCodAvailable?: boolean;
+  requiresAdvancePayment?: boolean;
+  advancePaymentAmount?: number | null;
   categories?: ProductCategory[];
 }
 export interface ProductQuery {

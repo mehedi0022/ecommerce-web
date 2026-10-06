@@ -12,6 +12,11 @@ export function validateEditor(form: EditorForm, attributes: AttributeOption[], 
   if (form.name.trim().length > 250) errors.name = "Use 250 characters or fewer.";
   if (form.shortDescription.length > 500) errors.shortDescription = "Use 500 characters or fewer.";
   if (form.description.length > 10000) errors.description = "Use 10,000 characters or fewer.";
+  if (form.requiresAdvancePayment && form.advancePaymentAmount) {
+    if (!money(form.advancePaymentAmount) || Number(form.advancePaymentAmount) <= 0) {
+      errors.advancePaymentAmount = "Enter a valid advance amount (e.g. 150.00).";
+    }
+  }
   const rows = form.variants.filter(variantEntered);
   if ((target === "ACTIVE" || rows.length) && !form.primaryCategoryId) errors.category = "Choose a primary category before adding variants.";
   if (target === "ACTIVE" && !rows.some(row => row.isActive)) errors.variants = "Add at least one active variant with a SKU and price.";
@@ -76,6 +81,13 @@ export async function saveEditor(
   const details: ProductInput = {
     name: form.name.trim(), shortDescription: form.shortDescription.trim() || null, description: form.description.trim() || null,
     brandId: form.brandId ? Number(form.brandId) : null, isFeatured: form.isFeatured,
+    isFreeShipping: form.isFreeShipping ?? false,
+    isCodAvailable: form.isCodAvailable ?? true,
+    requiresAdvancePayment: form.requiresAdvancePayment ?? false,
+    advancePaymentAmount:
+      form.requiresAdvancePayment && form.advancePaymentAmount
+        ? Number(form.advancePaymentAmount)
+        : null,
     categories: form.categoryIds.map((categoryId, sortOrder) => ({ categoryId, isPrimary: categoryId === Number(form.primaryCategoryId), sortOrder })),
   };
   const post = async <T,>(operation: () => Promise<T>): Promise<T> => {

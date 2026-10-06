@@ -102,6 +102,11 @@ export function CheckoutShippingMethods({
                   <span className="font-semibold text-foreground text-sm">
                     {method.name}
                   </span>
+                  {isFree && (
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                      Free Shipping
+                    </span>
+                  )}
                   {method.isRecommended && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                       <Sparkles className="size-2.5" /> Recommended

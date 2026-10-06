@@ -38,6 +38,7 @@ export interface AuthenticatedCheckoutInput {
   transactionId?: string;
   couponCode?: string;
   customerNote?: string;
+  paidInFull?: boolean;
 }
 
 export interface GuestCheckoutInput {
@@ -52,6 +53,7 @@ export interface GuestCheckoutInput {
   transactionId?: string;
   couponCode?: string;
   customerNote?: string;
+  paidInFull?: boolean;
 }
 
 export interface CheckoutResponseData {
@@ -104,6 +106,7 @@ export interface CalculateShippingInput {
   area?: string;
   postalCode?: string;
   subtotal?: number;
+  isAllFreeShipping?: boolean;
 }
 
 export interface CalculateShippingResponseData {

@@ -291,11 +291,28 @@ export default function ProductDetailsPage() {
               <h1 className="text-3xl font-black leading-tight tracking-tight">
                 {product.name}
               </h1>
-              {product.isFeatured && (
-                <Badge className="w-fit bg-emerald-500 text-white text-[11px] font-bold">
-                  Featured
-                </Badge>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {product.isFeatured && (
+                  <Badge className="w-fit bg-emerald-500 text-white text-[11px] font-bold">
+                    Featured
+                  </Badge>
+                )}
+                {product.isFreeShipping && (
+                  <Badge className="w-fit bg-emerald-600 text-white text-[11px] font-bold">
+                    🚚 Free Shipping (ফ্রি ডেলিভারি)
+                  </Badge>
+                )}
+                {product.requiresAdvancePayment && (
+                  <Badge className="w-fit bg-amber-600 text-white text-[11px] font-bold">
+                    ⚡ আংশিক অগ্রিম পেমেন্ট প্রযোজ্য
+                  </Badge>
+                )}
+                {!product.isCodAvailable && !product.requiresAdvancePayment && (
+                  <Badge variant="outline" className="w-fit text-destructive border-destructive text-[11px] font-medium">
+                    ক্যাশ অন ডেলিভারি প্রযোজ্য নয়
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {/* Rating */}
@@ -314,12 +331,12 @@ export default function ProductDetailsPage() {
               {price !== null ? (
                 <>
                   <span className="text-3xl font-black">
-                    ${price.toFixed(2)}
+                    ৳{price.toFixed(2)}
                   </span>
                   {compareAt && compareAt > price && (
                     <>
                       <span className="text-xl text-muted-foreground line-through">
-                        ${compareAt.toFixed(2)}
+                        ৳{compareAt.toFixed(2)}
                       </span>
                       <Badge className="bg-rose-500 text-white text-xs font-bold">
                         Save {discount}%
@@ -339,6 +356,27 @@ export default function ProductDetailsPage() {
               <p className="text-sm leading-relaxed text-muted-foreground">
                 {product.shortDescription}
               </p>
+            )}
+
+            {/* Shipping & Payment Alert Banners */}
+            {product.isFreeShipping && (
+              <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2.5 text-xs text-emerald-800 dark:text-emerald-300">
+                <Truck className="size-4 shrink-0 text-emerald-600" />
+                <span>
+                  <strong>ফ্রি ডেলিভারি:</strong> এই পণ্যটিতে কোনো ডেলিভারি চার্জ প্রযোজ্য নয় (পুরো অর্ডারে সব ফ্রি শিপিং পণ্য থাকলে শিপিং সম্পূর্ণ ফ্রি)।
+                </span>
+              </div>
+            )}
+
+            {product.requiresAdvancePayment && (
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3.5 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <span>⚡</span> আংশিক অগ্রিম পেমেন্ট পলিসি
+                </p>
+                <p className="leading-relaxed">
+                  এই অর্ডারের জন্য <strong>৳{product.advancePaymentAmount ?? "ডেলিভারি চার্জ"}</strong> অগ্রিম পেমেন্ট আবশ্যক। পণ্য হাতে পাওয়ার পর বাকি টাকা <strong>ক্যাশ অন ডেলিভারি (COD)</strong> হিসেবে পরিশোধ করবেন।
+                </p>
+              </div>
             )}
 
             <Separator />

@@ -25,6 +25,11 @@ interface CheckoutOrderSummaryProps {
   shippingFee: number;
   couponCode?: string;
   discountAmount?: number;
+  isFreeShipping?: boolean;
+  isAdvanceRequired?: boolean;
+  advanceAmount?: number;
+  dueAmount?: number;
+  paidInFull?: boolean;
   onApplyCoupon: (code: string) => Promise<boolean>;
   onRemoveCoupon: () => void;
   onPlaceOrder: () => Promise<void>;
@@ -37,6 +42,11 @@ export function CheckoutOrderSummary({
   shippingFee,
   couponCode,
   discountAmount = 0,
+  isFreeShipping = false,
+  isAdvanceRequired = false,
+  advanceAmount,
+  dueAmount,
+  paidInFull = false,
   onApplyCoupon,
   onRemoveCoupon,
   onPlaceOrder,
@@ -155,8 +165,8 @@ export function CheckoutOrderSummary({
           <span className="text-muted-foreground">Shipping</span>
           <span className="font-medium text-foreground">
             {shippingFee === 0 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                FREE
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <span>🚚</span> FREE
               </span>
             ) : (
               `৳${shippingFee.toFixed(2)}`
@@ -221,7 +231,7 @@ export function CheckoutOrderSummary({
 
       {/* ── Grand Total ─────────────────────────────────────────────────── */}
       <div className="flex items-baseline justify-between">
-        <span className="text-base font-bold text-foreground">Total to Pay</span>
+        <span className="text-base font-bold text-foreground">Total Order Value</span>
         <div className="text-right">
           <span className="text-2xl font-black text-foreground">
             ৳{grandTotal.toFixed(2)}
@@ -231,6 +241,56 @@ export function CheckoutOrderSummary({
           </p>
         </div>
       </div>
+
+      {/* ── Advance / Partial COD Breakdown ── */}
+      {isAdvanceRequired && advanceAmount !== undefined && dueAmount !== undefined && (
+        <div
+          className={cn(
+            "mt-4 rounded-xl border p-3.5 space-y-2 text-xs",
+            paidInFull
+              ? "border-emerald-500/25 bg-emerald-500/5 text-emerald-900 dark:text-emerald-200"
+              : "border-amber-500/25 bg-amber-500/5"
+          )}
+        >
+          {paidInFull ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between font-semibold text-emerald-700 dark:text-emerald-400">
+                <span>✓ Paid in Full Online (সম্পূর্ণ পরিশোধ)</span>
+                <span className="text-sm font-bold font-mono">
+                  ৳{grandTotal.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>📦 Due on Delivery (ক্যাশ অন ডেলিভারি)</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                  ৳0.00 (কোনো বকেয়া নেই)
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-normal pt-1.5 border-t border-emerald-500/15">
+                সম্পূর্ণ মূল্য অনলাইনে পরিশোধ করা হচ্ছে। ডেলিভারির সময় কোনো টাকা বকেয়া থাকবে না।
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between font-semibold text-amber-900 dark:text-amber-200">
+                <span>⚡ Advance Required Now (অনলাইন/MFS)</span>
+                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">
+                  ৳{advanceAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>📦 Due on Delivery (ক্যাশ অন ডেলিভারি)</span>
+                <span className="font-semibold text-foreground font-mono">
+                  ৳{dueAmount.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80 leading-normal pt-1.5 border-t border-amber-500/15">
+                এই অর্ডারে ৳{advanceAmount.toFixed(2)} অগ্রিম প্রদান করতে হবে। পণ্য পৌঁছালে বাকি ৳{dueAmount.toFixed(2)} ক্যাশ অন ডেলিভারি হিসেবে পরিশোধ করবেন।
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Place Order CTA Button ──────────────────────────────────────── */}
       <div className="mt-6 space-y-3">
@@ -245,6 +305,11 @@ export function CheckoutOrderSummary({
             <>
               <Loader2 className="size-5 animate-spin" />
               Processing Order...
+            </>
+          ) : isAdvanceRequired && !paidInFull && advanceAmount && dueAmount && dueAmount > 0 ? (
+            <>
+              <Lock className="size-4" />
+              Pay Advance ৳{advanceAmount.toFixed(2)} (Due: ৳{dueAmount.toFixed(2)})
             </>
           ) : (
             <>

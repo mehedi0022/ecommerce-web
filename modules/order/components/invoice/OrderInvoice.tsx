@@ -378,14 +378,22 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
                 <p>
                   <span className="text-gray-500">Payment Mode:</span>{" "}
                   <strong className="text-gray-900">
-                    {isCOD ? "Cash on Delivery (COD)" : "Online Pre-paid"}
+                    {order.paymentMethod === "PARTIAL_COD" || order.isAdvanceRequired
+                      ? "Partial Advance + COD"
+                      : isCOD
+                      ? "Cash on Delivery (COD)"
+                      : "Online Pre-paid"}
                   </strong>
                 </p>
                 <p>
                   <span className="text-gray-500">Payment Status:</span>{" "}
                   <strong
                     className={
-                      isPaid ? "text-emerald-700 font-bold" : "text-amber-700 font-bold"
+                      isPaid
+                        ? "text-emerald-700 font-bold"
+                        : order.paymentStatus === "PARTIALLY_PAID"
+                        ? "text-blue-700 font-bold"
+                        : "text-amber-700 font-bold"
                     }
                   >
                     {order.paymentStatus}
@@ -393,12 +401,16 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
                 </p>
                 <div className="pt-2 border-t mt-2">
                   <p className="text-[11px] text-gray-500">
-                    {isPaid
+                    {order.paymentMethod === "PARTIAL_COD" || order.isAdvanceRequired
+                      ? `Delivery Agent: Collect Due Cash of ৳${Number(order.dueAmount || 0).toFixed(2)} upon Handover`
+                      : isPaid
                       ? "Paid Online. Do NOT collect cash."
                       : "Delivery Agent: Collect Cash upon Handover"}
                   </p>
                   <p className="text-base font-black text-gray-900 font-mono mt-0.5">
-                    {formatBDT(order.grandTotal)}
+                    {order.paymentMethod === "PARTIAL_COD" || order.isAdvanceRequired
+                      ? `Due: ${formatBDT(order.dueAmount || 0)} (Total: ${formatBDT(order.grandTotal)})`
+                      : formatBDT(order.grandTotal)}
                   </p>
                 </div>
               </div>
@@ -542,11 +554,28 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
               )}
 
               <div className="border-t-2 border-gray-900 pt-2 flex justify-between items-baseline font-bold text-gray-900">
-                <span className="text-sm uppercase tracking-wide">Total Payable:</span>
+                <span className="text-sm uppercase tracking-wide">Total Order Value:</span>
                 <span className="text-lg font-black text-black font-mono tabular-nums">
                   {formatBDT(order.grandTotal)}
                 </span>
               </div>
+
+              {(order.isAdvanceRequired || Number(order.advanceAmount || 0) > 0) && (
+                <div className="pt-2 border-t border-dashed space-y-1 text-xs">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Advance Payment (Paid/Verified):</span>
+                    <span className="font-mono font-bold text-amber-700 tabular-nums">
+                      {formatBDT(order.advanceAmount || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-900 font-bold border-t pt-1">
+                    <span>Due on Delivery (COD to Collect):</span>
+                    <span className="font-mono text-sm tabular-nums text-emerald-800">
+                      {formatBDT(order.dueAmount || 0)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
