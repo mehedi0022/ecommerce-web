@@ -6,6 +6,20 @@ export interface OrderItemAttribute {
   attributeValue: string;
 }
 
+export interface OrderItemProductImage {
+  id: number;
+  imageUrl: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
+export interface OrderItemProduct {
+  id: number;
+  name: string;
+  slug: string;
+  images?: OrderItemProductImage[];
+}
+
 export interface OrderItem {
   id: number;
   productId: number;
@@ -18,6 +32,7 @@ export interface OrderItem {
   lineTotal: string;
   createdAt: string;
   attributes?: OrderItemAttribute[];
+  product?: OrderItemProduct | null;
 }
 
 export interface OrderAddress {
@@ -100,6 +115,7 @@ export interface Order {
 export interface OrderListQuery {
   page?: number;
   limit?: number;
+  search?: string;
   status?: string;
   paymentStatus?: string;
   orderNumber?: string;
@@ -140,3 +156,39 @@ export interface OrderTrackData {
 export type OrderResponse = ApiResponse<Order>;
 export type OrderListResponse = PaginatedApiResponse<Order>;
 export type OrderTrackResponse = ApiResponse<OrderTrackData>;
+
+export interface OrderTransitionInput {
+  status:
+    | "CONFIRMED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED";
+  note?: string;
+}
+
+export interface OrderUpdateAdminInput {
+  paymentStatus?: "UNPAID" | "PAID" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+  adminNote?: string | null;
+}
+
+export interface CreateShipmentInput {
+  courierName?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  note?: string | null;
+}
+
+export interface TransitionShipmentInput {
+  status:
+    | "READY_TO_SHIP"
+    | "SHIPPED"
+    | "IN_TRANSIT"
+    | "OUT_FOR_DELIVERY"
+    | "DELIVERED"
+    | "FAILED"
+    | "RETURNED"
+    | "CANCELLED";
+  note?: string | null;
+}
+

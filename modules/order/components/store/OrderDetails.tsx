@@ -22,7 +22,11 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import type { Order } from "../../order.types";
+import { Button } from "@/components/ui/button";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
+import { ReviewModal } from "@/modules/review/components/ReviewModal";
+import type { Order, OrderItem } from "../../order.types";
+import { useState } from "react";
 
 interface OrderDetailsProps {
   order: Order | null;
@@ -31,6 +35,8 @@ interface OrderDetailsProps {
 }
 
 export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
+  const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
+
   if (!order) return null;
 
   const shippingAddr =
@@ -70,15 +76,28 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
               Items Ordered ({order.items?.length || 0})
             </h4>
             <div className="rounded-xl border divide-y bg-muted/20">
-              {order.items?.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3.5 flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-card border text-muted-foreground font-bold">
-                      <Package className="size-5" />
-                    </div>
+              {order.items?.map((item) => {
+                const itemImg =
+                  item.product?.images?.find((img) => img.isPrimary)?.imageUrl ||
+                  item.product?.images?.[0]?.imageUrl;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-3.5 flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-card border overflow-hidden relative">
+                        {itemImg ? (
+                          <img
+                            src={mediaUrl(itemImg)}
+                            alt={item.productName}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <Package className="size-5 text-muted-foreground" />
+                        )}
+                      </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground truncate">
                         {item.productName}
@@ -95,11 +114,25 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
                       )}
                     </div>
                   </div>
-                  <span className="font-bold text-foreground shrink-0">
-                    ৳{Number(item.lineTotal).toFixed(2)}
-                  </span>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="font-bold text-foreground">
+                      ৳{Number(item.lineTotal).toFixed(2)}
+                    </span>
+                    {order.status === "DELIVERED" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setReviewingItem(item)}
+                        className="h-7 text-[11px] px-2.5 font-medium border-primary/30 text-primary hover:bg-primary/10"
+                      >
+                        Write Review
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
 
@@ -188,6 +221,17 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
           </div>
         </div>
       </DialogContent>
+
+      {/* Review Modal */}
+      {reviewingItem && (
+        <ReviewModal
+          open={Boolean(reviewingItem)}
+          onOpenChange={(open) => !open && setReviewingItem(null)}
+          orderItemId={reviewingItem.id}
+          productName={reviewingItem.productName}
+          onSuccess={() => setReviewingItem(null)}
+        />
+      )}
     </Dialog>
   );
 }

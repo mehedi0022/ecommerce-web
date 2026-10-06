@@ -14,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StoreContainer } from "./StoreContainer";
 import { useGetCartQuery } from "@/modules/cart/cartApi";
+import { useWishlist } from "@/modules/wishlist/useWishlist";
 
 const navItems = [
   { href: "/products", label: "Shop" },
@@ -24,6 +25,7 @@ const navItems = [
 
 export function StoreHeader() {
   const { data: cartData } = useGetCartQuery();
+  const { count: wishlistCount } = useWishlist();
   const cartCount = cartData?.data?.summary?.itemCount ?? 0;
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -86,10 +88,19 @@ export function StoreHeader() {
             </Link>
             <Link
               href="/wishlist"
-              aria-label="Wishlist"
-              className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+              aria-label={
+                wishlistCount > 0
+                  ? `Wishlist with ${wishlistCount} items`
+                  : "Wishlist"
+              }
+              className={cn("relative", buttonVariants({ variant: "ghost", size: "icon" }))}
             >
               <Heart className="size-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-xs">
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
+                </span>
+              )}
             </Link>
             <Link
               href="/cart"

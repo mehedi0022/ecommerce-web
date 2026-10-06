@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { Order } from "../../order.types";
 
 const statusConfig: Record<
@@ -145,15 +146,28 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
 
       {/* ── Item Previews ──────────────────────────────────────────────── */}
       <div className="mt-4 space-y-3">
-        {order.items?.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between gap-4 text-xs"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground font-bold text-xs uppercase">
-                <Package className="size-4" />
-              </div>
+        {order.items?.map((item) => {
+          const itemImg =
+            item.product?.images?.find((img) => img.isPrimary)?.imageUrl ||
+            item.product?.images?.[0]?.imageUrl;
+
+          return (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-4 text-xs"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted border overflow-hidden relative">
+                  {itemImg ? (
+                    <img
+                      src={mediaUrl(itemImg)}
+                      alt={item.productName}
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <Package className="size-4 text-muted-foreground" />
+                  )}
+                </div>
               <div className="min-w-0">
                 <p className="font-semibold text-foreground truncate">
                   {item.productName}
@@ -180,7 +194,8 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
               </span>
             </div>
           </div>
-        ))}
+        );
+      })}
       </div>
 
       {/* ── Footer Summary ─────────────────────────────────────────────── */}

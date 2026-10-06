@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
+import { useWishlist } from "@/modules/wishlist/useWishlist";
+import { useGetProductRatingSummaryQuery } from "@/modules/review/reviewApi";
 import type { Product } from "../../types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -37,6 +39,10 @@ export interface ProductCardProps {
   showWishlist?: boolean;
   /** Extra wrapper class */
   className?: string;
+  /** Pre-calculated rating override */
+  rating?: number;
+  /** Pre-calculated review count override */
+  reviewCount?: number;
   /** Called when "Add to cart" is clicked (prevents navigation) */
   onAddToCart?: (product: Product) => void;
   /** Called when wishlist button is clicked (prevents navigation) */
@@ -50,9 +56,22 @@ export function ProductCard({
   showQuickAdd = true,
   showWishlist = true,
   className,
+  rating: propRating,
+  reviewCount: propReviewCount,
   onAddToCart,
   onWishlist,
 }: ProductCardProps) {
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isWishlisted = isInWishlist(product.id);
+
+  // Fetch rating summary dynamically if not explicitly passed as prop
+  const { data: ratingData } = useGetProductRatingSummaryQuery(product.slug, {
+    skip: propRating !== undefined || !product.slug,
+  });
+
+  const rating = propRating ?? ratingData?.data?.averageRating ?? 0;
+  const reviewCount = propReviewCount ?? ratingData?.data?.reviewCount ?? 0;
+
   const activeVariant =
     product.variants?.find((v) => v.isActive) ?? product.variants?.[0];
   const primaryImage =
@@ -130,14 +149,31 @@ export function ProductCard({
         {showWishlist && (
           <button
             type="button"
-            aria-label="Add to wishlist"
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             onClick={(e) => {
               e.preventDefault();
-              onWishlist?.(product);
+              e.stopPropagation();
+              if (onWishlist) {
+                onWishlist(product);
+              } else {
+                toggleWishlist(product);
+              }
             }}
-            className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm shadow-sm opacity-0 transition-all duration-200 hover:bg-background hover:scale-110 group-hover:opacity-100"
+            className={cn(
+              "absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm shadow-sm transition-all duration-200 hover:bg-background hover:scale-110",
+              isWishlisted
+                ? "opacity-100 bg-background text-rose-500 shadow-sm"
+                : "opacity-0 text-foreground/70 group-hover:opacity-100"
+            )}
           >
-            <Heart className="size-4 text-foreground/70" />
+            <Heart
+              className={cn(
+                "size-4 transition-colors",
+                isWishlisted
+                  ? "fill-rose-500 text-rose-500"
+                  : "text-foreground/70 hover:text-rose-500"
+              )}
+            />
           </button>
         )}
 
@@ -183,18 +219,29 @@ export function ProductCard({
           </p>
         )}
 
-        {/* Rating placeholder */}
+        {/* Rating */}
         <div className="mt-0.5 flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((s) => (
             <Star
               key={s}
               className={cn(
                 "size-3",
-                s <= 4 ? "fill-amber-400 text-amber-400" : "fill-muted text-muted-foreground/30"
+                reviewCount > 0 && s <= Math.round(rating)
+                  ? "fill-amber-400 text-amber-400"
+                  : "fill-muted text-muted-foreground/30"
               )}
             />
           ))}
-          <span className="ml-1 text-[11px] text-muted-foreground">(24)</span>
+          <span className="ml-1 text-[11px] text-muted-foreground">
+            {reviewCount > 0 ? (
+              <>
+                <span className="font-semibold text-foreground/80">{rating.toFixed(1)}</span>
+                <span className="ml-0.5">({reviewCount})</span>
+              </>
+            ) : (
+              "(0)"
+            )}
+          </span>
         </div>
 
         {/* Price */}

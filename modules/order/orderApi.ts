@@ -5,7 +5,13 @@ import type {
   OrderListResponse,
   OrderListQuery,
   OrderTrackResponse,
+  OrderTransitionInput,
+  OrderUpdateAdminInput,
+  CreateShipmentInput,
+  TransitionShipmentInput,
 } from "./order.types";
+
+export * from "./order.types";
 
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -45,6 +51,68 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Order"],
     }),
+
+    // ── Admin Order Management ──
+    listAdminOrders: builder.query<OrderListResponse, OrderListQuery | void>({
+      query: (params) => ({
+        url: "/admin/orders",
+        params: params ?? {},
+      }),
+      providesTags: ["Order"],
+    }),
+
+    getAdminOrder: builder.query<OrderResponse, string>({
+      query: (orderNumber) => `/admin/orders/${orderNumber}`,
+      providesTags: ["Order"],
+    }),
+
+    transitionOrderStatus: builder.mutation<
+      OrderResponse,
+      { orderNumber: string; data: OrderTransitionInput }
+    >({
+      query: ({ orderNumber, data }) => ({
+        url: `/admin/orders/${orderNumber}/status`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Order"],
+    }),
+
+    updateAdminOrder: builder.mutation<
+      OrderResponse,
+      { orderNumber: string; data: OrderUpdateAdminInput }
+    >({
+      query: ({ orderNumber, data }) => ({
+        url: `/admin/orders/${orderNumber}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Order"],
+    }),
+
+    createOrderShipment: builder.mutation<
+      { success: boolean; message: string; data: any },
+      { orderNumber: string; data: CreateShipmentInput }
+    >({
+      query: ({ orderNumber, data }) => ({
+        url: `/admin/orders/${orderNumber}/shipment`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Order", "Shipment"],
+    }),
+
+    transitionOrderShipment: builder.mutation<
+      { success: boolean; message: string; data: any },
+      { orderNumber: string; data: TransitionShipmentInput }
+    >({
+      query: ({ orderNumber, data }) => ({
+        url: `/admin/orders/${orderNumber}/shipment/transition`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Order", "Shipment"],
+    }),
   }),
 });
 
@@ -54,4 +122,10 @@ export const {
   useListCustomerOrdersQuery,
   useTrackOrderQuery,
   useLazyTrackOrderQuery,
+  useListAdminOrdersQuery,
+  useGetAdminOrderQuery,
+  useTransitionOrderStatusMutation,
+  useUpdateAdminOrderMutation,
+  useCreateOrderShipmentMutation,
+  useTransitionOrderShipmentMutation,
 } = orderApi;

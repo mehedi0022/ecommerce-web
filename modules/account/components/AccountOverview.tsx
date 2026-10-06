@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingBag,
   UserRound,
+  Star,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { useLogoutMutation } from "@/modules/auth/authApi";
 import { useListCustomerOrdersQuery } from "@/modules/order/orderApi";
 import { useGetSavedAddressesQuery } from "@/modules/checkout/checkoutApi";
+import { useWishlist } from "@/modules/wishlist/useWishlist";
 import { OrderCard } from "@/modules/order/components/store/OrderCard";
 
 const menuItems = [
@@ -29,6 +31,7 @@ const menuItems = [
   { href: "/account/orders", label: "My orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
   { href: "/account/wishlist", label: "Wishlist", icon: Heart },
+  { href: "/account/reviews", label: "My reviews", icon: Star },
   { href: "/account/returns", label: "Returns", icon: RotateCcw },
 ];
 
@@ -40,10 +43,10 @@ const quickLinks = [
     icon: Package,
   },
   {
-    href: "/account/addresses",
-    title: "Manage addresses",
-    description: "Keep your delivery details up to date",
-    icon: MapPin,
+    href: "/account/reviews",
+    title: "My reviews",
+    description: "Ratings and feedback you've shared",
+    icon: Star,
   },
   {
     href: "/account/wishlist",
@@ -60,6 +63,7 @@ export function AccountOverview() {
   const { data: ordersData, isLoading: isOrdersLoading } =
     useListCustomerOrdersQuery();
   const { data: addressesData } = useGetSavedAddressesQuery();
+  const { count: wishlistCount } = useWishlist();
 
   const orders = ordersData?.data ?? [];
   const savedAddressCount = addressesData?.data?.length ?? 0;
@@ -139,7 +143,7 @@ export function AccountOverview() {
               <Card>
                 <CardContent className="p-5">
                   <Heart className="size-5 text-primary" />
-                  <p className="mt-4 text-2xl font-bold">0</p>
+                  <p className="mt-4 text-2xl font-bold">{wishlistCount}</p>
                   <p className="text-sm text-muted-foreground">Saved items</p>
                 </CardContent>
               </Card>

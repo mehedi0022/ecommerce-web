@@ -18,7 +18,20 @@ export interface ProductReview {
   isVerifiedPurchase: boolean;
   createdAt: string;
   updatedAt: string;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
   user?: ReviewUser;
+  product?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  orderItem?: {
+    id: number;
+    orderId: number;
+    productName: string;
+    sku: string;
+  };
 }
 
 export interface RatingSummary {
@@ -33,6 +46,21 @@ export interface RatingSummary {
   };
 }
 
+export interface CreateReviewInput {
+  orderItemId: number;
+  rating: number;
+  title?: string | null;
+  comment?: string | null;
+}
+
+export interface UpdateReviewInput {
+  id: number;
+  rating?: number;
+  title?: string | null;
+  comment?: string | null;
+}
+
 export type ReviewListResponse = PaginatedApiResponse<ProductReview>;
 export type RatingSummaryResponse = ApiResponse<RatingSummary>;
-
+export type CustomerReviewsResponse = ApiResponse<ProductReview[]>;
+export type SingleReviewResponse = ApiResponse<ProductReview>;

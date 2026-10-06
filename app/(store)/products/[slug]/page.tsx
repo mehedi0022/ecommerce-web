@@ -45,6 +45,7 @@ import { ProductGallery } from "@/modules/product/components/store/ProductGaller
 import { VariantSelector } from "@/modules/product/components/store/VariantSelector";
 import { ProductCard } from "@/modules/product/components/store/ProductCard";
 import { useListPublicProductsQuery } from "@/modules/product/productApi";
+import { useWishlist } from "@/modules/wishlist/useWishlist";
 import type { ProductVariant } from "@/modules/product/types";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -88,13 +89,19 @@ function StarRating({ rating = 0, size = "sm" }: { rating?: number; size?: "sm" 
   );
 }
 
-function RatingSummaryBadge({ count = 0, rating = 0 }: { count?: number; rating?: number }) {
+function RatingSummaryBadge({ count = 0, rating = 0, onClick }: { count?: number; rating?: number; onClick?: () => void }) {
   return (
-    <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-2 hover:opacity-80 transition-opacity text-left cursor-pointer group"
+    >
       <StarRating rating={rating} size="md" />
       <span className="text-sm font-semibold">{rating ? rating.toFixed(1) : "No ratings yet"}</span>
-      <span className="text-sm text-muted-foreground">({count} {count === 1 ? "review" : "reviews"})</span>
-    </div>
+      <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
+        ({count} {count === 1 ? "review" : "reviews"})
+      </span>
+    </button>
   );
 }
 
@@ -144,17 +151,20 @@ export default function ProductDetailsPage() {
   const { data, isLoading, isError } = useGetPublicProductBySlugQuery(slug, { skip: !slug });
   const product = data?.data;
 
+  const [activeTab, setActiveTab] = useState<"description" | "reviews" | "specs">("description");
+  const [reviewSort, setReviewSort] = useState<"newest" | "oldest" | "highest" | "lowest">("newest");
   const { data: ratingData } = useGetProductRatingSummaryQuery(slug, { skip: !slug });
   const { data: reviewsData, isLoading: isReviewsLoading } = useGetProductReviewsQuery(
-    { slug, page: 1, limit: 10 },
+    { slug, page: 1, limit: 20, sort: reviewSort },
     { skip: !slug }
   );
 
-  const [activeTab, setActiveTab] = useState<"description" | "reviews" | "specs">("description");
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
+
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const wishlisted = product ? isInWishlist(product.id) : false;
 
   // Reviews & ratings
   const ratingSummary = ratingData?.data;
@@ -289,7 +299,15 @@ export default function ProductDetailsPage() {
             </div>
 
             {/* Rating */}
-            <RatingSummaryBadge count={reviewCount} rating={averageRating} />
+            <RatingSummaryBadge
+              count={reviewCount}
+              rating={averageRating}
+              onClick={() => {
+                setActiveTab("reviews");
+                const el = document.getElementById("product-tabs");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
+            />
 
             {/* Price */}
             <div className="flex items-center gap-3">
@@ -393,7 +411,7 @@ export default function ProductDetailsPage() {
               <button
                 type="button"
                 aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                onClick={() => setWishlisted((w) => !w)}
+                onClick={() => toggleWishlist(product)}
                 className={cn(
                   "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border transition-all",
                   wishlisted
@@ -465,7 +483,7 @@ export default function ProductDetailsPage() {
         {/* ════════════════════════════════════════
             TABS SECTION — Description / Reviews / Specs
         ════════════════════════════════════════ */}
-        <div className="mt-16">
+        <div className="mt-16" id="product-tabs">
           {/* Tab Navigation Bar */}
           <div className="border-b border-border">
             <div className="flex gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
@@ -626,6 +644,26 @@ export default function ProductDetailsPage() {
 
                 {/* Reviews List */}
                 <div className="flex flex-col gap-4">
+                  {/* Reviews Header and Sorting */}
+                  <div className="flex items-center justify-between pb-1">
+                    <p className="text-xs font-semibold text-muted-foreground">
+                      Customer Feedback ({reviewsList.length})
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground hidden sm:inline">Sort by:</span>
+                      <select
+                        value={reviewSort}
+                        onChange={(e) => setReviewSort(e.target.value as any)}
+                        className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="highest">Highest Rating</option>
+                        <option value="lowest">Lowest Rating</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {isReviewsLoading ? (
                     <div className="space-y-4">
                       <Skeleton className="h-28 w-full rounded-xl" />

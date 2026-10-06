@@ -16,6 +16,7 @@ import {
   RotateCcw,
   UserRound,
   LogOut,
+  Star,
 } from "lucide-react";
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { Card } from "@/components/ui/card";
@@ -36,6 +37,7 @@ const menuItems = [
   { href: "/account/orders", label: "My orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
   { href: "/account/wishlist", label: "Wishlist", icon: Heart },
+  { href: "/account/reviews", label: "My reviews", icon: Star },
   { href: "/account/returns", label: "Returns", icon: RotateCcw },
 ];
 

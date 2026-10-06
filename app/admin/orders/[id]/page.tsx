@@ -1,7 +1,16 @@
-"use client";
-import Link from "next/link";
-import { ArrowLeft, CheckCircle2, MapPin, Package, Truck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-export default function OrderDetailsPage() { return <div className="container mx-auto max-w-[1200px] space-y-6"><header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><nav className="mb-3 text-sm text-muted-foreground">Dashboard / Orders / <span className="text-foreground">ORD-10482</span></nav><h1 className="text-2xl font-semibold tracking-tight">Order ORD-10482</h1><p className="mt-1 text-sm text-muted-foreground">Placed Oct 2, 2026 · Customer order-time snapshot</p></div><Button variant="outline" render={<Link href="/admin/orders"/>}><ArrowLeft/> Back to orders</Button></header><div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]"><div className="space-y-4"><Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Order items</CardTitle><Badge className="bg-emerald-500/10 text-emerald-700">Delivered</Badge></CardHeader><CardContent className="divide-y p-0"><div className="flex items-center gap-4 p-5"><div className="flex size-12 items-center justify-center rounded-lg bg-muted"><Package className="size-5 text-muted-foreground"/></div><div className="flex-1"><p className="font-medium">Classic Runner Sneaker</p><p className="text-sm text-muted-foreground">Black / 42 · SKU CRS-BLK-42 · Qty 1</p></div><span className="font-mono">$89.00</span></div><div className="flex justify-end p-5 text-sm"><div className="w-56 space-y-2"><p className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>$89.00</span></p><p className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>$8.00</span></p><p className="flex justify-between border-t pt-2 font-semibold"><span>Total</span><span className="font-mono">$97.00</span></p></div></div></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Fulfillment timeline</CardTitle></CardHeader><CardContent className="space-y-4">{[["Order placed","Oct 2, 10:42 AM"],["Payment captured","Oct 2, 10:43 AM"],["Shipped","Oct 2, 3:20 PM"],["Delivered","Oct 4, 1:08 PM"]].map(([label,date])=><div key={label} className="flex items-center gap-3 text-sm"><CheckCircle2 className="size-4 text-emerald-600"/><span className="flex-1">{label}</span><span className="text-xs text-muted-foreground">{date}</span></div>)}</CardContent></Card></div><aside className="space-y-4"><Card><CardHeader><CardTitle className="text-base">Customer</CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><p className="font-medium">Maya Chen</p><p className="text-muted-foreground">maya@example.com</p><Badge className="bg-blue-500/10 text-blue-700">Registered customer</Badge></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Delivery address</CardTitle></CardHeader><CardContent className="flex gap-3 text-sm"><MapPin className="size-4 text-muted-foreground"/><p>24 Lakeview Road<br/>Dhaka 1212<br/>Bangladesh</p></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Payment & shipment</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><p className="flex justify-between"><span className="text-muted-foreground">Payment</span><b className="text-emerald-600">Paid · COD</b></p><p className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>Standard delivery</span></p><Button className="w-full" variant="outline"><Truck/> Manage shipment</Button></CardContent></Card></aside></div></div>; }
+import type { Metadata } from "next";
+import { AdminOrderDetailsPage } from "@/modules/order/components/admin/AdminOrderDetailsPage";
+
+export const metadata: Metadata = {
+  title: "Order Details | Admin Console",
+  description: "View comprehensive order details, customer addresses, audit timeline, and fulfillment actions.",
+};
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <AdminOrderDetailsPage orderNumber={id} />;
+}

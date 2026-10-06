@@ -40,16 +40,18 @@ import {
 } from "../couponApi";
 import type { Coupon, CreateCouponInput, DiscountType } from "../coupon.types";
 import { CouponDialog } from "./CouponDialog";
+import { AdminPagination } from "@/components/admin/AdminPagination";
 
 export function CouponsPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
 
   const queryParams = {
     page,
-    limit: 12,
+    limit,
     search: search.trim() || undefined,
     isActive:
       statusFilter === "ACTIVE"
@@ -464,30 +466,18 @@ export function CouponsPage() {
       )}
 
       {/* Pagination */}
-      {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t pt-4">
-          <p className="text-xs text-muted-foreground">
-            Page {page} of {meta.totalPages} ({meta.total} coupons)
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1 || isFetching}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= meta.totalPages || isFetching}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      {meta && (
+        <AdminPagination
+          page={page}
+          limit={limit}
+          total={meta.total}
+          totalPages={meta.totalPages}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          pageSizeOptions={[6, 12, 24, 48]}
+          disabled={isFetching}
+          className="rounded-xl border"
+        />
       )}
 
       {/* Create / Edit Dialog */}
