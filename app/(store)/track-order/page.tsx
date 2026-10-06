@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
@@ -33,7 +33,7 @@ import { useLazyTrackOrderQuery } from "@/modules/order/orderApi";
 import { OrderTimeline } from "@/modules/order/components/store/OrderTimeline";
 import type { OrderTrackData } from "@/modules/order/order.types";
 
-export default function TrackOrderPage() {
+function TrackOrderContent() {
   const searchParams = useSearchParams();
   const orderFromQuery = searchParams.get("orderNumber") || "";
 
@@ -387,5 +387,13 @@ export default function TrackOrderPage() {
         )}
       </StoreContainer>
     </main>
+  );
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense fallback={<div className="container py-12 text-center text-sm text-muted-foreground">Loading tracking portal...</div>}>
+      <TrackOrderContent />
+    </Suspense>
   );
 }

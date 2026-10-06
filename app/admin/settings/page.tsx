@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PaymentMethodsManagement } from "@/modules/payment/components/admin/PaymentMethodsManagement";
+import { NotificationManagement } from "@/modules/notification/components/admin/NotificationManagement";
 
 const tabs = ["General", "Payment Methods", "Profile", "Notifications", "Security"];
 
@@ -48,6 +49,10 @@ export default function SettingsPage() {
         {tab === "Payment Methods" ? (
           <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
             <PaymentMethodsManagement />
+          </section>
+        ) : tab === "Notifications" ? (
+          <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+            <NotificationManagement />
           </section>
         ) : (
           <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
@@ -98,32 +103,6 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {tab === "Notifications" && (
-              <div className="space-y-4">
-                {[
-                  "New order notifications",
-                  "Low inventory alerts",
-                  "Weekly performance summary",
-                ].map((label) => (
-                  <label
-                    key={label}
-                    className="flex items-center justify-between rounded-lg border p-4 cursor-pointer"
-                  >
-                    <span>
-                      <span className="block text-sm font-medium">{label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        Receive updates by email.
-                      </span>
-                    </span>
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="size-4 accent-primary"
-                    />
-                  </label>
-                ))}
-              </div>
-            )}
 
             {tab === "Security" && (
               <div className="space-y-5">

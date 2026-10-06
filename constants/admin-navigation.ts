@@ -72,6 +72,7 @@ export const adminNavigation: AdminNavItem[] = [
     children: [
       { title: "General Settings", href: "/admin/settings" },
       { title: "Payment Methods", href: "/admin/settings/payments" },
+      { title: "Notifications & SMS", href: "/admin/settings/notifications" },
     ],
   },
 ];
