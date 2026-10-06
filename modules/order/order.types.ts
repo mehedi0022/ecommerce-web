@@ -64,6 +64,10 @@ export interface OrderShipment {
   id: number;
   status: string;
   courierName: string | null;
+  courierCode?: string | null;
+  consignmentId?: string | null;
+  codAmount?: string | number | null;
+  courierStatus?: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
   shippedAt: string | null;

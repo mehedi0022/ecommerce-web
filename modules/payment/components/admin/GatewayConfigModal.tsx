@@ -184,9 +184,12 @@ export function GatewayConfigModal({
           {method.code.includes("bkash") && (
             <div className="space-y-3 rounded-xl border bg-muted/30 p-3.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                <Lock className="size-3.5 text-primary" />
-                <span>bKash Checkout API Credentials</span>
+                <Lock className="size-3.5 text-pink-600 dark:text-pink-400" />
+                <span>bKash Tokenized Checkout API Credentials</span>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                bKash Merchant Portal অথবা Sandbox টেস্ট অ্যাকাউন্ট থেকে প্রাপ্ত App Key, App Secret, Username ও Password দিন।
+              </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">

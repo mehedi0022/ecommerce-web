@@ -36,6 +36,7 @@ import {
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { AdminPaymentVerificationCard } from "./AdminPaymentVerificationCard";
+import { AdminBookCourierDialog } from "@/modules/courier/components/admin/AdminBookCourierDialog";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
@@ -65,6 +66,7 @@ export function AdminOrderDetailsPage({
 
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isShipmentDialogOpen, setIsShipmentDialogOpen] = useState(false);
+  const [isBookCourierDialogOpen, setIsBookCourierDialogOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -277,19 +279,18 @@ export function AdminOrderDetailsPage({
               <Button
                 size="sm"
                 className="gap-1.5 h-8 text-xs bg-primary"
-                onClick={() => setIsShipmentDialogOpen(true)}
+                onClick={() => setIsBookCourierDialogOpen(true)}
               >
                 <Truck className="size-3.5" />
-                Assign Courier & Ship
+                Book via Courier API
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs"
-                onClick={() => handleQuickTransition("SHIPPED", "Dispatched without courier integration")}
-                disabled={isTransitioning}
+                className="gap-1.5 h-8 text-xs"
+                onClick={() => setIsShipmentDialogOpen(true)}
               >
-                Mark as Shipped
+                Manual Dispatch
               </Button>
               <Button
                 size="sm"
@@ -736,13 +737,22 @@ export function AdminOrderDetailsPage({
             </CardHeader>
             <CardContent className="p-5 space-y-3 text-xs">
               {order.shipment ? (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Courier:</span>
+                    <span className="text-muted-foreground">Courier Gateway:</span>
                     <span className="font-semibold text-foreground">
                       {order.shipment.courierName || "Standard Courier"}
                     </span>
                   </div>
+
+                  {order.shipment.consignmentId && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Consignment ID:</span>
+                      <span className="font-mono font-bold text-foreground">
+                        {order.shipment.consignmentId}
+                      </span>
+                    </div>
+                  )}
 
                   {order.shipment.trackingNumber && (
                     <div className="flex items-center justify-between">
@@ -753,13 +763,32 @@ export function AdminOrderDetailsPage({
                     </div>
                   )}
 
+                  {order.shipment.codAmount !== undefined &&
+                    order.shipment.codAmount !== null && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">COD Collection:</span>
+                        <span className="font-mono font-bold text-primary">
+                          ৳{(!isNaN(Number(order.shipment.codAmount)) ? Number(order.shipment.codAmount) : 0).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+
+                  {order.shipment.courierStatus && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Courier Status:</span>
+                      <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+                        {order.shipment.courierStatus}
+                      </Badge>
+                    </div>
+                  )}
+
                   {order.shipment.trackingUrl && (
                     <div className="pt-1">
                       <a
                         href={order.shipment.trackingUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium"
+                        className="inline-flex items-center gap-1.5 text-primary hover:underline font-semibold"
                       >
                         Open Live Courier Tracking
                         <ExternalLink className="size-3" />
@@ -767,30 +796,46 @@ export function AdminOrderDetailsPage({
                     </div>
                   )}
 
-                  <div className="border-t pt-2 mt-2">
+                  <div className="border-t pt-2.5 mt-2 flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full h-8 text-xs gap-1.5"
+                      className="flex-1 h-8 text-xs gap-1"
+                      onClick={() => setIsBookCourierDialogOpen(true)}
+                    >
+                      <Truck className="size-3" />
+                      Re-book API
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-muted-foreground"
                       onClick={() => setIsShipmentDialogOpen(true)}
                     >
-                      Update Courier Info
+                      Manual Edit
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-2 space-y-2">
+                <div className="text-center py-2 space-y-2.5">
                   <p className="text-muted-foreground">
                     No courier has been assigned to this order yet.
                   </p>
+                  <Button
+                    size="sm"
+                    className="w-full gap-1.5 h-8 text-xs bg-primary"
+                    onClick={() => setIsBookCourierDialogOpen(true)}
+                  >
+                    <Truck className="size-3.5" />
+                    Book Courier (Steadfast / Pathao)
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="w-full gap-1.5 h-8 text-xs"
                     onClick={() => setIsShipmentDialogOpen(true)}
                   >
-                    <Truck className="size-3.5" />
-                    Assign Courier
+                    Manual Assign Courier
                   </Button>
                 </div>
               )}
@@ -829,6 +874,17 @@ export function AdminOrderDetailsPage({
           open={isShipmentDialogOpen}
           onOpenChange={setIsShipmentDialogOpen}
           orderNumber={order.orderNumber}
+        />
+      )}
+
+      {isBookCourierDialogOpen && (
+        <AdminBookCourierDialog
+          open={isBookCourierDialogOpen}
+          onOpenChange={setIsBookCourierDialogOpen}
+          order={order}
+          onBookingSuccess={() => {
+            void refetch();
+          }}
         />
       )}
 
