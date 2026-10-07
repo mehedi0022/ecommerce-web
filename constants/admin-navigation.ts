@@ -71,6 +71,7 @@ export const adminNavigation: AdminNavItem[] = [
     icon: Settings,
     children: [
       { title: "General Settings", href: "/admin/settings" },
+      { title: "Invoice & Labels", href: "/admin/settings/invoice" },
       { title: "Payment Methods", href: "/admin/settings/payments" },
       { title: "Courier Integration", href: "/admin/settings/courier" },
       { title: "Notifications & SMS", href: "/admin/settings/notifications" },

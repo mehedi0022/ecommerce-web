@@ -29,7 +29,6 @@ import { useLogoutMutation } from "@/modules/auth/authApi";
 import { useRouter } from "next/navigation";
 import { useListCustomerOrdersQuery } from "@/modules/order/orderApi";
 import { OrderCard } from "@/modules/order/components/store/OrderCard";
-import { OrderDetails } from "@/modules/order/components/store/OrderDetails";
 import type { Order } from "@/modules/order/order.types";
 
 const menuItems = [
@@ -48,7 +47,6 @@ export default function CustomerOrdersPage() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const { data: ordersData, isLoading, isFetching, refetch } =
     useListCustomerOrdersQuery();
@@ -260,7 +258,6 @@ export default function CustomerOrdersPage() {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    onViewDetails={setSelectedOrder}
                   />
                 ))}
               </div>
@@ -268,13 +265,6 @@ export default function CustomerOrdersPage() {
           </section>
         </div>
       </StoreContainer>
-
-      {/* Details Dialog */}
-      <OrderDetails
-        order={selectedOrder}
-        open={Boolean(selectedOrder)}
-        onOpenChange={(open) => !open && setSelectedOrder(null)}
-      />
     </main>
   );
 }

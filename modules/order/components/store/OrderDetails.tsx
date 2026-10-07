@@ -14,6 +14,7 @@ import {
   XCircle,
   ExternalLink,
   Printer,
+  RotateCcw,
 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +30,7 @@ import Link from "next/link";
 import { ReviewModal } from "@/modules/review/components/ReviewModal";
 import { OrderTimeline } from "./OrderTimeline";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
+import { CustomerReturnRequestModal } from "@/modules/return/components/customer/CustomerReturnRequestModal";
 import type { Order, OrderItem } from "../../order.types";
 import { useState } from "react";
 
@@ -41,6 +43,7 @@ interface OrderDetailsProps {
 export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
   const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   if (!order) return null;
 
@@ -251,19 +254,32 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
           </div>
 
           {/* Action Row */}
-          <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t">
             <span className="text-xs text-muted-foreground">
-              Need a physical bill or delivery record?
+              Need invoice receipt or item return?
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowInvoiceModal(true)}
-              className="gap-1.5 text-xs font-semibold cursor-pointer"
-            >
-              <Printer className="size-3.5" />
-              Tax Invoice & Slip
-            </Button>
+            <div className="flex items-center gap-2">
+              {order.status === "DELIVERED" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReturnModal(true)}
+                  className="gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10 cursor-pointer"
+                >
+                  <RotateCcw className="size-3.5" />
+                  Return / Exchange
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowInvoiceModal(true)}
+                className="gap-1.5 text-xs font-semibold cursor-pointer"
+              >
+                <Printer className="size-3.5" />
+                Tax Invoice & Slip
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
@@ -274,6 +290,19 @@ export function OrderDetails({ order, open, onOpenChange }: OrderDetailsProps) {
         open={showInvoiceModal}
         onOpenChange={setShowInvoiceModal}
       />
+
+      {/* Return Request Modal */}
+      {showReturnModal && (
+        <CustomerReturnRequestModal
+          open={showReturnModal}
+          onOpenChange={setShowReturnModal}
+          orderNumber={order.orderNumber}
+          orderItems={order.items || []}
+          onSuccess={() => {
+            setShowReturnModal(false);
+          }}
+        />
+      )}
 
       {/* Review Modal */}
       {reviewingItem && (

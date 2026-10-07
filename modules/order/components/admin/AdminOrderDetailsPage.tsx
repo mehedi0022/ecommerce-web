@@ -24,6 +24,7 @@ import {
   Save,
   Loader2,
   RefreshCw,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { AdminPaymentVerificationCard } from "./AdminPaymentVerificationCard";
 import { AdminBookCourierDialog } from "@/modules/courier/components/admin/AdminBookCourierDialog";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
+import { ShippingLabelModal } from "../shipping-label/ShippingLabelModal";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
 interface AdminOrderDetailsPageProps {
@@ -86,6 +88,7 @@ export function AdminOrderDetailsPage({
   const [isShipmentDialogOpen, setIsShipmentDialogOpen] = useState(false);
   const [isBookCourierDialogOpen, setIsBookCourierDialogOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isShippingLabelModalOpen, setIsShippingLabelModalOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<any>(null);
   const [copied, setCopied] = useState(false);
 
@@ -237,6 +240,16 @@ export function AdminOrderDetailsPage({
           >
             <Printer className="size-3.5" />
             Print Order Slip
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsShippingLabelModalOpen(true)}
+            className="gap-1.5 h-8 text-xs border-primary/40 text-primary hover:bg-primary/5 font-semibold"
+          >
+            <Tag className="size-3.5" />
+            Shipping Label (Thermal)
           </Button>
 
           {/* Quick status transitions depending on current state */}
@@ -829,6 +842,15 @@ export function AdminOrderDetailsPage({
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-8 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                      onClick={() => setIsShippingLabelModalOpen(true)}
+                    >
+                      <Tag className="size-3" />
+                      Print Label
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-8 text-xs gap-1"
                       onClick={() => setIsBookCourierDialogOpen(true)}
                     >
@@ -922,6 +944,14 @@ export function AdminOrderDetailsPage({
         open={isInvoiceModalOpen}
         onOpenChange={setIsInvoiceModalOpen}
       />
+
+      {order && (
+        <ShippingLabelModal
+          order={order}
+          open={isShippingLabelModalOpen}
+          onOpenChange={setIsShippingLabelModalOpen}
+        />
+      )}
     </div>
   );
 }

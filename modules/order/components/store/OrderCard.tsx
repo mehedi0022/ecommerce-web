@@ -144,7 +144,7 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
             <Printer className="size-3.5" />
             Invoice
           </button>
-          {onViewDetails && (
+          {onViewDetails ? (
             <button
               type="button"
               onClick={() => onViewDetails(order)}
@@ -156,6 +156,17 @@ export function OrderCard({ order, onViewDetails }: OrderCardProps) {
               Details
               <ChevronRight className="size-3.5" />
             </button>
+          ) : (
+            <Link
+              href={`/account/orders/${order.orderNumber}`}
+              className={cn(
+                buttonVariants({ variant: "default", size: "sm" }),
+                "h-8 text-xs font-semibold gap-1"
+              )}
+            >
+              Details
+              <ChevronRight className="size-3.5" />
+            </Link>
           )}
         </div>
       </div>

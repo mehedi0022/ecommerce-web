@@ -12,17 +12,22 @@ import {
   Package,
   Phone,
   Mail,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { Order } from "../../order.types";
+import { useInvoiceSettings } from "../../invoice-settings/useInvoiceSettings";
+import { InvoiceSettingsModal } from "../../invoice-settings/InvoiceSettingsModal";
+import type { InvoiceSettings } from "../../invoice-settings/invoiceSettings";
 
 export interface OrderInvoiceProps {
   order: Order;
   /** Hide print/download action buttons in pure printable view */
   hideActions?: boolean;
   className?: string;
+  customSettings?: InvoiceSettings;
 }
 
 // ─── Currency Formatter ───────────────────────────────────────────────────────
@@ -90,9 +95,12 @@ function SvgBarcode({ value }: { value: string }) {
 }
 
 export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
-  ({ order, hideActions = false, className }, externalRef) => {
+  ({ order, hideActions = false, className, customSettings }, externalRef) => {
     const internalRef = useRef<HTMLDivElement>(null);
     const printRef = (externalRef as React.RefObject<HTMLDivElement>) || internalRef;
+    const { settings: globalSettings } = useInvoiceSettings();
+    const settings = customSettings || globalSettings;
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false);
 
     // ─── Bulletproof Clean Print Engine (via Hidden Iframe) ───────────────────
     const handlePrint = () => {
@@ -135,14 +143,14 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
             <style>
               @page {
                 size: A4 portrait;
-                margin: 10mm 12mm;
+                margin: 8mm 10mm;
               }
               * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                box-sizing: border-box;
+                box-sizing: border-box !important;
               }
-              body {
+              html, body {
                 background: #ffffff !important;
                 color: #111827 !important;
                 margin: 0 !important;
@@ -206,6 +214,15 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
+                variant="outline"
+                onClick={() => setIsSettingsModalOpen(true)}
+                className="h-8 gap-1.5 text-xs font-semibold cursor-pointer shadow-xs"
+              >
+                <Settings2 className="size-3.5" />
+                Customize Template
+              </Button>
+              <Button
+                size="sm"
                 onClick={handlePrint}
                 className="h-8 gap-1.5 text-xs font-semibold cursor-pointer shadow-xs"
               >
@@ -220,31 +237,41 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
         <div
           ref={printRef}
           className="mx-auto bg-white text-gray-900 p-6 sm:p-10 rounded-xl border shadow-sm print:border-none print:shadow-none print:p-0 print:m-0 w-full max-w-4xl"
-          style={{ minHeight: "297mm", color: "#111827", backgroundColor: "#ffffff" }}
+          style={{ minHeight: "auto", color: "#111827", backgroundColor: "#ffffff" }}
         >
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b pb-6">
             <div>
               <div className="flex items-center gap-2.5">
-                <div className="size-10 rounded-lg bg-black text-white flex items-center justify-center font-black text-xl shadow-xs">
-                  S
-                </div>
+                {settings.logoUrl ? (
+                  <img
+                    src={settings.logoUrl}
+                    alt={settings.storeName}
+                    className="h-10 max-w-[140px] object-contain rounded"
+                  />
+                ) : (
+                  <div className="size-10 rounded-lg bg-black text-white flex items-center justify-center font-black text-xl shadow-xs shrink-0">
+                    {settings.storeName.charAt(0).toUpperCase() || "S"}
+                  </div>
+                )}
                 <div>
                   <h1 className="text-xl font-black tracking-tight text-black">
-                    STORE<span className="text-gray-500">.</span>
+                    {settings.storeName}
                   </h1>
                   <p className="text-[11px] text-gray-500 font-semibold tracking-wide uppercase">
-                    Official Order Invoice & Delivery Packing Slip
+                    {settings.storeTagline}
                   </p>
                 </div>
               </div>
 
               <div className="mt-3 text-xs text-gray-600 space-y-0.5">
                 <p className="font-medium text-gray-800">
-                  Dhaka, Bangladesh
+                  {settings.storeAddress}
                 </p>
-                <p>Support Helpline: +880 1876-346433 | support@ecom.store</p>
-                <p>VAT Reg / BIN: 002948192-0102</p>
+                <p>Support Helpline: {settings.supportPhone} | {settings.supportEmail}</p>
+                {settings.binNumber && (
+                  <p>VAT Reg / BIN: {settings.binNumber}</p>
+                )}
               </div>
             </div>
 
@@ -507,15 +534,14 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
               <p className="font-bold text-gray-900 uppercase tracking-wider text-[11px]">
                 Important Terms & Return Policy:
               </p>
-              <p className="text-[11px] leading-relaxed">
-                1. Please inspect the parcel and verify all items in front of the delivery agent.
-              </p>
-              <p className="text-[11px] leading-relaxed">
-                2. If any discrepancy or damaged product is found, please notify customer support within 24 hours.
-              </p>
-              <p className="text-[11px] leading-relaxed">
-                3. Retain this invoice copy for warranty claims and hassle-free exchange.
-              </p>
+              {settings.termsAndConditions
+                .split("\n")
+                .filter(Boolean)
+                .map((line, idx) => (
+                  <p key={idx} className="text-[11px] leading-relaxed">
+                    {line}
+                  </p>
+                ))}
             </div>
 
             <div className="w-full sm:w-80 space-y-2 text-xs">
@@ -580,25 +606,43 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
           </div>
 
           {/* Signature and Verification Footer */}
-          <div className="mt-12 pt-6 grid grid-cols-2 gap-8 text-xs text-center">
-            <div>
-              <div className="border-b border-gray-400 w-44 mx-auto mb-1.5" />
-              <p className="font-bold text-gray-800">Customer Signature</p>
-              <p className="text-[10px] text-gray-500">Received in good condition</p>
-            </div>
+          {(settings.showCustomerSignature || settings.showAuthorizedSignature) && (
+            <div className="mt-10 pt-4 grid grid-cols-2 gap-8 text-xs text-center">
+              {settings.showCustomerSignature ? (
+                <div>
+                  <div className="border-b border-gray-400 w-44 mx-auto mb-1.5" />
+                  <p className="font-bold text-gray-800">Customer Signature</p>
+                  <p className="text-[10px] text-gray-500">Received in good condition</p>
+                </div>
+              ) : (
+                <div />
+              )}
 
-            <div>
-              <div className="border-b border-gray-400 w-44 mx-auto mb-1.5" />
-              <p className="font-bold text-gray-800">Authorized Signature & Seal</p>
-              <p className="text-[10px] text-gray-500">For Store</p>
+              {settings.showAuthorizedSignature ? (
+                <div>
+                  <div className="border-b border-gray-400 w-44 mx-auto mb-1.5" />
+                  <p className="font-bold text-gray-800">Authorized Signature & Seal</p>
+                  <p className="text-[10px] text-gray-500">For {settings.storeName}</p>
+                </div>
+              ) : (
+                <div />
+              )}
             </div>
-          </div>
+          )}
 
           {/* System Footer */}
-          <div className="mt-10 text-center border-t pt-4 text-[10px] text-gray-400">
-            This is a computer-generated tax invoice and packing slip. No physical stamp required.
-          </div>
+          {settings.footerNote && (
+            <div className="mt-8 text-center border-t pt-3 text-[10px] text-gray-400">
+              {settings.footerNote}
+            </div>
+          )}
         </div>
+
+        {/* Invoice Settings Edit Modal */}
+        <InvoiceSettingsModal
+          open={isSettingsModalOpen}
+          onOpenChange={setIsSettingsModalOpen}
+        />
       </div>
     );
   }

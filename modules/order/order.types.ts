@@ -20,6 +20,19 @@ export interface OrderItemProduct {
   images?: OrderItemProductImage[];
 }
 
+export interface OrderItemReturnItem {
+  id: number;
+  quantity: number;
+  reason: string;
+  restockStatus: string;
+  return?: {
+    id: number;
+    returnNumber: string;
+    status: string;
+    requestedAt?: string;
+  } | null;
+}
+
 export interface OrderItem {
   id: number;
   productId: number;
@@ -33,6 +46,7 @@ export interface OrderItem {
   createdAt: string;
   attributes?: OrderItemAttribute[];
   product?: OrderItemProduct | null;
+  returnItems?: OrderItemReturnItem[];
 }
 
 export interface OrderAddress {
@@ -118,6 +132,13 @@ export interface Order {
   addresses: OrderAddress[];
   statusHistory: OrderStatusHistory[];
   shipment?: OrderShipment | null;
+  returns?: Array<{
+    id: number;
+    returnNumber: string;
+    status: string;
+    requestedAt?: string;
+    createdAt?: string;
+  }>;
 }
 
 export interface OrderListQuery {

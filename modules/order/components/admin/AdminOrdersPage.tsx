@@ -23,6 +23,7 @@ import {
   ArrowUpDown,
   ExternalLink,
   Printer,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import type { Order } from "../../order.types";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
+import { ShippingLabelModal } from "../shipping-label/ShippingLabelModal";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
@@ -61,6 +63,9 @@ export function AdminOrdersPage() {
   const [paymentFilter, setPaymentFilter] = useState<string>("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Selection states for bulk actions
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
+
   // Debounce search query to prevent unnecessary API queries
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -74,6 +79,8 @@ export function AdminOrdersPage() {
   const [statusModalOrder, setStatusModalOrder] = useState<Order | null>(null);
   const [shipmentModalOrder, setShipmentModalOrder] = useState<Order | null>(null);
   const [invoiceModalOrder, setInvoiceModalOrder] = useState<Order | null>(null);
+  const [shippingLabelModalOrder, setShippingLabelModalOrder] = useState<Order | null>(null);
+  const [isBulkShippingLabelOpen, setIsBulkShippingLabelOpen] = useState(false);
 
   const queryParams = {
     page,
@@ -94,6 +101,23 @@ export function AdminOrdersPage() {
     setCopiedId(orderNumber);
     toast.success("Order number copied!");
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedOrderIds.size === orders.length && orders.length > 0) {
+      setSelectedOrderIds(new Set());
+    } else {
+      setSelectedOrderIds(new Set(orders.map((o) => o.id)));
+    }
+  };
+
+  const handleToggleOrder = (id: number) => {
+    setSelectedOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   // Stats calculation
@@ -245,13 +269,52 @@ export function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* Bulk Selection Action Bar */}
+      {selectedOrderIds.size > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary/10 border border-primary/25 p-3 sm:px-4 rounded-xl text-xs">
+          <div className="flex items-center gap-2">
+            <Tag className="size-4 text-primary" />
+            <span className="font-bold text-foreground">
+              {selectedOrderIds.size} {selectedOrderIds.size === 1 ? "order" : "orders"} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => setIsBulkShippingLabelOpen(true)}
+              className="gap-1.5 h-8 text-xs bg-black text-white hover:bg-neutral-800 font-semibold cursor-pointer shadow-xs"
+            >
+              <Printer className="size-3.5" />
+              Print Shipping Labels ({selectedOrderIds.size})
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedOrderIds(new Set())}
+              className="h-8 text-xs cursor-pointer"
+            >
+              Deselect All
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Orders Table */}
       <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b bg-muted/40 font-medium text-muted-foreground">
               <tr>
-                <th className="p-3.5 pl-4">Order # & Date</th>
+                <th className="p-3.5 pl-4 w-9">
+                  <input
+                    type="checkbox"
+                    checked={orders.length > 0 && selectedOrderIds.size === orders.length}
+                    onChange={handleToggleSelectAll}
+                    aria-label="Select all orders"
+                    className="rounded border-input text-primary focus:ring-primary size-4 cursor-pointer"
+                  />
+                </th>
+                <th className="p-3.5">Order # & Date</th>
                 <th className="p-3.5">Customer Details</th>
                 <th className="p-3.5">Products</th>
                 <th className="p-3.5">Total Amount</th>
@@ -264,14 +327,14 @@ export function AdminOrdersPage() {
             <tbody className="divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     <RefreshCw className="mx-auto size-5 animate-spin mb-2" />
                     Loading orders...
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-12 text-center">
+                  <td colSpan={9} className="p-12 text-center">
                     <XCircle className="mx-auto size-8 text-muted-foreground/60 mb-2" />
                     <p className="font-semibold text-sm">No orders found</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -284,10 +347,23 @@ export function AdminOrdersPage() {
                   return (
                     <tr
                       key={order.id}
-                      className="transition-colors hover:bg-muted/30"
+                      className={`transition-colors hover:bg-muted/30 ${
+                        selectedOrderIds.has(order.id) ? "bg-primary/5" : ""
+                      }`}
                     >
+                      {/* Selection Checkbox */}
+                      <td className="p-3.5 pl-4 align-top w-9">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrderIds.has(order.id)}
+                          onChange={() => handleToggleOrder(order.id)}
+                          aria-label={`Select order ${order.orderNumber}`}
+                          className="rounded border-input text-primary focus:ring-primary size-4 cursor-pointer mt-0.5"
+                        />
+                      </td>
+
                       {/* Order Number & Placed Date */}
-                      <td className="p-3.5 pl-4 align-top">
+                      <td className="p-3.5 align-top">
                         <div className="flex items-center gap-1.5">
                           <Link
                             href={`/admin/orders/${order.orderNumber}`}
@@ -506,6 +582,16 @@ export function AdminOrdersPage() {
                           <Button
                             size="icon-sm"
                             variant="ghost"
+                            className="h-7 w-7 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
+                            title="Print Thermal Shipping Label"
+                            onClick={() => setShippingLabelModalOrder(order)}
+                          >
+                            <Tag className="size-3.5" />
+                          </Button>
+
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
                             className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
                             title="Print Tax Invoice & Slip"
                             onClick={() => setInvoiceModalOrder(order)}
@@ -573,6 +659,24 @@ export function AdminOrdersPage() {
         open={Boolean(invoiceModalOrder)}
         onOpenChange={(open) => !open && setInvoiceModalOrder(null)}
       />
+
+      {/* Single Shipping Label Modal */}
+      {shippingLabelModalOrder && (
+        <ShippingLabelModal
+          order={shippingLabelModalOrder}
+          open={Boolean(shippingLabelModalOrder)}
+          onOpenChange={(open) => !open && setShippingLabelModalOrder(null)}
+        />
+      )}
+
+      {/* Bulk Shipping Label Modal */}
+      {isBulkShippingLabelOpen && (
+        <ShippingLabelModal
+          orders={orders.filter((o) => selectedOrderIds.has(o.id))}
+          open={isBulkShippingLabelOpen}
+          onOpenChange={setIsBulkShippingLabelOpen}
+        />
+      )}
     </div>
   );
 }
