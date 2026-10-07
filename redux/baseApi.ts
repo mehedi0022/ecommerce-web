@@ -23,6 +23,7 @@ export const baseApi = createApi({
   tagTypes: [
     "Auth",
     "User",
+    "Role",
     "Product",
     "Category",
     "Brand",

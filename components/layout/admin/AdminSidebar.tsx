@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronLeft, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { adminNavigation } from "@/constants/admin-navigation";
+import { useMeQuery } from "@/modules/auth/authApi";
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -12,8 +13,38 @@ export const AdminSidebar = () => {
     Catalog: true,
   });
   const pathname = usePathname();
+
+  const { data: meData } = useMeQuery();
+  const user = meData?.data;
+  const isSuperAdmin =
+    user?.role?.key === "SUPER_ADMIN" ||
+    (user?.role?.rank !== undefined && user.role.rank >= 8);
+  const userPermissions = new Set(user?.permissions || []);
+
+  const hasAccess = (req?: string | string[]) => {
+    if (isSuperAdmin || !req) return true;
+    if (Array.isArray(req)) {
+      return req.some((p) => userPermissions.has(p));
+    }
+    return userPermissions.has(req);
+  };
+
+  const filteredNavigation = adminNavigation
+    .map((item) => {
+      if (item.children) {
+        const allowedChildren = item.children.filter((child) =>
+          hasAccess(child.requiredPermission)
+        );
+        if (allowedChildren.length === 0) return null;
+        return { ...item, children: allowedChildren };
+      }
+      return hasAccess(item.requiredPermission) ? item : null;
+    })
+    .filter(Boolean) as typeof adminNavigation;
+
   const active = (href: string) =>
     pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
+
   return (
     <aside
       className={cn(
@@ -51,7 +82,7 @@ export const AdminSidebar = () => {
           </p>
         )}
         <nav aria-label="Admin navigation" className="space-y-1">
-          {adminNavigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const Icon = item.icon;
             const groupActive =
               active(item.href) ||

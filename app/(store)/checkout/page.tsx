@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   FileText,
   AlertCircle,
+  AlertTriangle,
   Plus,
   Check,
 } from "lucide-react";
@@ -63,8 +64,10 @@ const INITIAL_ADDRESS: CheckoutAddress = {
   countryCode: "BD",
 };
 
-export default function CheckoutPage() {
+function CheckoutForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const paymentQuery = searchParams.get("payment");
 
   // Queries
   const { data: cartData, isLoading: isCartLoading } = useGetCartQuery();
@@ -74,6 +77,18 @@ export default function CheckoutPage() {
   const { data: savedAddressesData } = useGetSavedAddressesQuery(undefined, {
     skip: !userData?.data,
   });
+
+  useEffect(() => {
+    if (paymentQuery === "cancelled") {
+      toast.warning("অনলাইন পেমেন্ট বাতিল করা হয়েছে। আপনার কার্টের পণ্যগুলো অক্ষত রয়েছে।", {
+        duration: 6000,
+      });
+    } else if (paymentQuery === "failed") {
+      toast.error("পেমেন্ট সম্পন্ন হয়নি। আপনার কার্টের পণ্যগুলো অক্ষত রয়েছে। অনুগ্রহ করে অন্য মাধ্যমে চেষ্টা করুন বা ক্যাশ অন ডেলিভারি বেছে নিন।", {
+        duration: 6000,
+      });
+    }
+  }, [paymentQuery]);
 
   // Mutations
   const [checkoutAuthenticated, { isLoading: isSubmittingAuth }] =
@@ -485,18 +500,23 @@ export default function CheckoutPage() {
           res.data.paymentMethodType === "AUTOMATED_GATEWAY" &&
           res.data.id
         ) {
-          toast.loading("Redirecting to secure payment gateway...");
+          const toastId = toast.loading("Connecting to secure payment gateway...");
           try {
             const initRes = await initiateGateway(res.data.id).unwrap();
             if (initRes.data?.gatewayUrl) {
+              toast.dismiss(toastId);
               window.location.href = initRes.data.gatewayUrl;
               return;
             }
+            throw new Error("Payment gateway did not provide a redirect URL.");
           } catch (initErr: any) {
-            toast.error(
+            toast.dismiss(toastId);
+            const errMsg =
               initErr?.data?.message ||
-                "Failed to connect to payment gateway. Please check your order in order history."
-            );
+              initErr?.message ||
+              "Failed to initialize payment gateway.";
+            toast.error(errMsg);
+            return;
           }
         }
 
@@ -567,18 +587,23 @@ export default function CheckoutPage() {
           res.data.paymentMethodType === "AUTOMATED_GATEWAY" &&
           res.data.id
         ) {
-          toast.loading("Redirecting to secure payment gateway...");
+          const toastId = toast.loading("Connecting to secure payment gateway...");
           try {
             const initRes = await initiateGateway(res.data.id).unwrap();
             if (initRes.data?.gatewayUrl) {
+              toast.dismiss(toastId);
               window.location.href = initRes.data.gatewayUrl;
               return;
             }
+            throw new Error("Payment gateway did not provide a redirect URL.");
           } catch (initErr: any) {
-            toast.error(
+            toast.dismiss(toastId);
+            const errMsg =
               initErr?.data?.message ||
-                "Failed to connect to payment gateway. Please check your order status."
-            );
+              initErr?.message ||
+              "Failed to initialize payment gateway.";
+            toast.error(errMsg);
+            return;
           }
         }
 
@@ -631,6 +656,30 @@ export default function CheckoutPage() {
           <span className="font-semibold text-foreground">Checkout</span>
         </nav>
       </div>
+
+      {paymentQuery === "cancelled" && (
+        <div className="mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3 shadow-xs">
+          <AlertTriangle className="size-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <div>
+            <p className="font-bold">অনলাইন পেমেন্ট বাতিল করা হয়েছে</p>
+            <p className="text-xs mt-0.5 opacity-90">
+              গেটওয়ে থেকে পেমেন্ট বাতিল করা হয়েছে। কোনো অর্ডার তৈরি করা হয়নি এবং আপনার কার্টের সমস্ত পণ্য অক্ষত রয়েছে। আপনি পুনরায় চেষ্টা করতে পারেন অথবা ক্যাশ অন ডেলিভারি বেছে নিতে পারেন।
+            </p>
+          </div>
+        </div>
+      )}
+
+      {paymentQuery === "failed" && (
+        <div className="mb-6 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-rose-800 dark:text-rose-200 text-sm flex items-start gap-3 shadow-xs">
+          <AlertCircle className="size-5 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+          <div>
+            <p className="font-bold">পেমেন্ট সম্পন্ন হয়নি</p>
+            <p className="text-xs mt-0.5 opacity-90">
+              পেমেন্ট গেটওয়েতে ত্রুটি হয়েছে। কোনো অর্ডার তৈরি হয়নি এবং আপনার কার্টের পণ্যগুলো অক্ষত রয়েছে। অনুগ্রহ করে অন্য মাধ্যমে চেষ্টা করুন অথবা ক্যাশ অন ডেলিভারি বেছে নিন।
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-10 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px] lg:items-start">
         {/* ════════════════════════════════════════
@@ -877,5 +926,19 @@ export default function CheckoutPage() {
         </div>
       </div>
     </StoreContainer>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <StoreContainer className="py-12">
+          <div className="h-96 animate-pulse rounded-2xl bg-muted/60" />
+        </StoreContainer>
+      }
+    >
+      <CheckoutForm />
+    </Suspense>
   );
 }

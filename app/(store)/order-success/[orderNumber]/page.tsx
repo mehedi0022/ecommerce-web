@@ -18,6 +18,9 @@ import {
   Banknote,
   ShieldCheck,
   ShoppingBag,
+  AlertTriangle,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { buttonVariants } from "@/components/ui/button";
@@ -29,6 +32,7 @@ import {
   useGetGuestOrderByNumberQuery,
 } from "@/modules/order/orderApi";
 import { useMeQuery } from "@/modules/auth/authApi";
+import { useInitiateGatewayPaymentMutation } from "@/modules/payment/paymentApi";
 import { OrderInvoiceModal } from "@/modules/order/components/invoice/OrderInvoiceModal";
 
 export default function OrderSuccessPage({
@@ -41,6 +45,10 @@ export default function OrderSuccessPage({
   const searchParams = useSearchParams();
   const [copied, setCopied] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+  const paymentQuery = searchParams.get("payment");
+  const [initiateGateway, { isLoading: isRetryingPayment }] =
+    useInitiateGatewayPaymentMutation();
 
   // Check if token is in search params or session storage (for guest order)
   const tokenFromUrl = searchParams.get("token") || "";
@@ -89,25 +97,100 @@ export default function OrderSuccessPage({
     setShowInvoiceModal(true);
   };
 
+  const handleRetryPayment = async () => {
+    if (!order?.id) return;
+    try {
+      const res = await initiateGateway(order.id).unwrap();
+      if (res?.data?.gatewayUrl) {
+        window.location.href = res.data.gatewayUrl;
+      } else {
+        toast.error("পেমেন্ট গেটওয়ে শুরু করা সম্ভব হয়নি।");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "গেটওয়ে সেশন তৈরি করা যায়নি।");
+    }
+  };
+
   const shippingAddress =
     order?.addresses.find((a) => a.type === "SHIPPING") ??
     order?.addresses[0];
 
   return (
     <StoreContainer className="py-10 md:py-16 max-w-4xl">
-      {/* ── Success Banner ──────────────────────────────────────────────── */}
+      {/* ── Status Banner ──────────────────────────────────────────────── */}
       <div className="flex flex-col items-center text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-8 ring-emerald-500/5 mb-4 animate-in zoom-in-75">
-          <CheckCircle2 className="size-10" />
-        </div>
+        {paymentQuery === "cancelled" ? (
+          <>
+            <div className="flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-8 ring-amber-500/5 mb-4 animate-in zoom-in-75">
+              <AlertTriangle className="size-10" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              Order Placed — Payment Cancelled
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground sm:text-base">
+              আপনার অর্ডারটি সংরক্ষণ করা হয়েছে, তবে অনলাইন পেমেন্টটি সম্পন্ন করা হয়নি। আপনি চাইলে এখনই পুনরায় পেমেন্ট করতে পারেন অথবা ডেলিভারির সময় ক্যাশ অন ডেলিভারিতে নিতে পারেন।
+            </p>
+          </>
+        ) : paymentQuery === "failed" || order?.paymentStatus === "FAILED" ? (
+          <>
+            <div className="flex size-16 items-center justify-center rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 ring-8 ring-rose-500/5 mb-4 animate-in zoom-in-75">
+              <AlertCircle className="size-10" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              Payment Incomplete
+            </h1>
+            <p className="mt-2 max-w-lg text-sm text-muted-foreground sm:text-base">
+              পেমেন্ট গেটওয়েতে সমস্যা হওয়ার কারণে লেনদেনটি সম্পন্ন হয়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা ডেলিভারির সময় পরিশোধ করুন।
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-8 ring-emerald-500/5 mb-4 animate-in zoom-in-75">
+              <CheckCircle2 className="size-10" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+              {paymentQuery === "success" || order?.paymentStatus === "PAID"
+                ? "Payment & Order Confirmed!"
+                : "Order Confirmed!"}
+            </h1>
+            <p className="mt-2 max-w-md text-sm text-muted-foreground sm:text-base">
+              {paymentQuery === "success" || order?.paymentStatus === "PAID"
+                ? "আপনার পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে! ধন্যবাদ আমাদের সাথে কেনাকাটার জন্য।"
+                : "Thank you for shopping with us! We have received your order and will begin processing it right away."}
+            </p>
+          </>
+        )}
 
-        <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-          Order Confirmed!
-        </h1>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground sm:text-base">
-          Thank you for shopping with us! We have received your order and will
-          begin processing it right away.
-        </p>
+        {/* Retry Payment Button if online payment not settled */}
+        {(paymentQuery === "cancelled" ||
+          paymentQuery === "failed" ||
+          (order &&
+            order.paymentStatus !== "PAID" &&
+            order.paymentMethod !== "CASH_ON_DELIVERY")) && (
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              disabled={isRetryingPayment || !order?.id}
+              onClick={handleRetryPayment}
+              className={cn(
+                buttonVariants({ size: "default" }),
+                "gap-2 bg-primary font-bold shadow-sm hover:opacity-90 cursor-pointer"
+              )}
+            >
+              {isRetryingPayment ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Connecting Gateway...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="size-4" />
+                  Retry Online Payment (পুনরায় পেমেন্ট করুন)
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Order Number pill */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm shadow-xs">
@@ -236,6 +319,12 @@ export default function OrderSuccessPage({
                   "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
                   order?.paymentStatus === "PAID"
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : order?.paymentStatus === "PARTIALLY_PAID"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : order?.paymentStatus === "FAILED"
+                    ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                    : paymentQuery === "cancelled"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     : order?.paymentStatus === "PENDING"
                     ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     : "bg-muted text-muted-foreground"
@@ -245,6 +334,10 @@ export default function OrderSuccessPage({
                   ? "Paid"
                   : order?.paymentStatus === "PARTIALLY_PAID"
                   ? "Partially Paid"
+                  : order?.paymentStatus === "FAILED"
+                  ? "Payment Failed"
+                  : paymentQuery === "cancelled"
+                  ? "Cancelled"
                   : order?.paymentStatus === "PENDING"
                   ? order?.isAdvanceRequired
                     ? "Advance Awaiting Verification"
@@ -261,7 +354,15 @@ export default function OrderSuccessPage({
                   ? "Cash on Delivery (COD)"
                   : "Online / Mobile Wallet (MFS)"}
               </p>
-              {order?.isAdvanceRequired || order?.paymentMethod === "PARTIAL_COD" ? (
+              {paymentQuery === "cancelled" ? (
+                <p className="text-amber-600 dark:text-amber-400">
+                  অনলাইন পেমেন্ট বাতিল করা হয়েছে। আপনি চাইলে উপরের বোতাম চেপে পুনরায় অনলাইন পেমেন্ট করতে পারেন অথবা ডেলিভারির সময় ক্যাশ অন ডেলিভারি দিতে পারেন।
+                </p>
+              ) : paymentQuery === "failed" || order?.paymentStatus === "FAILED" ? (
+                <p className="text-rose-600 dark:text-rose-400">
+                  গেটওয়েতে পেমেন্ট সম্পন্ন হয়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন অথবা ডেলিভারির সময় পরিশোধ করুন।
+                </p>
+              ) : order?.isAdvanceRequired || order?.paymentMethod === "PARTIAL_COD" ? (
                 <p className="text-muted-foreground">
                   অগ্রিম পরিশোধ আবশ্যক: <strong>৳{Number(order?.advanceAmount || "0").toFixed(2)}</strong> (যাচাই সাপেক্ষে)। ডেলিভারির সময় বাকি <strong className="text-foreground">৳{Number(order?.dueAmount || "0").toFixed(2)}</strong> ক্যাশ অন ডেলিভারি হিসেবে পরিশোধ করবেন।
                 </p>
