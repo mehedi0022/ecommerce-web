@@ -16,6 +16,7 @@ import {
   Phone,
   Mail,
   Globe,
+  Loader2,
 } from "lucide-react";
 import {
   Card,
@@ -126,7 +127,7 @@ const SAMPLE_ORDER: Order = {
 };
 
 export function InvoiceSettingsManagement() {
-  const { settings, updateSettings, resetToDefaults } = useInvoiceSettings();
+  const { settings, updateSettings, resetToDefaults, isSaving, isLoading } = useInvoiceSettings();
   const [formData, setFormData] = useState<InvoiceSettings>(settings);
   const [activePreviewTab, setActivePreviewTab] = useState<"invoice" | "label">("invoice");
   const [previewLabelSize, setPreviewLabelSize] = useState<"A4" | "4x6" | "80mm">("A4");
@@ -140,17 +141,17 @@ export function InvoiceSettingsManagement() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    updateSettings(formData);
-    toast.success("Store invoice and shipping label settings saved successfully!");
+  const handleSave = async () => {
+    await updateSettings(formData);
+    toast.success("Store invoice and shipping label settings saved to database successfully!");
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm("Reset all invoice and label settings to factory defaults?")) {
-      const reset = resetToDefaults();
+      const reset = await resetToDefaults();
       setFormData(reset);
       setPreviewLabelSize(reset.defaultLabelSize);
-      toast.info("Invoice settings reset to default values.");
+      toast.info("Invoice settings reset to default values in database.");
     }
   };
 
@@ -163,7 +164,7 @@ export function InvoiceSettingsManagement() {
             Invoice & Shipping Label Customization
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Update your company branding, logo, return address, BIN, helpline, and delivery terms anytime.
+            Update your company branding, logo, return address, BIN, helpline, and delivery terms in PostgreSQL database.
           </p>
         </div>
 
@@ -173,6 +174,7 @@ export function InvoiceSettingsManagement() {
             variant="outline"
             size="sm"
             onClick={handleReset}
+            disabled={isSaving}
             className="text-xs gap-1.5"
           >
             <RotateCcw className="size-3.5" />
@@ -182,10 +184,15 @@ export function InvoiceSettingsManagement() {
             type="button"
             size="sm"
             onClick={handleSave}
+            disabled={isSaving}
             className="gap-1.5 font-semibold shadow-xs"
           >
-            <Save className="size-3.5" />
-            Save Changes
+            {isSaving ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Save className="size-3.5" />
+            )}
+            {isSaving ? "Saving to DB..." : "Save to Database"}
           </Button>
         </div>
       </div>

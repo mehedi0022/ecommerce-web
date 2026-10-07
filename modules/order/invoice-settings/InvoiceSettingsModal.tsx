@@ -39,7 +39,7 @@ export function InvoiceSettingsModal({
   open,
   onOpenChange,
 }: InvoiceSettingsModalProps) {
-  const { settings, updateSettings, resetToDefaults } = useInvoiceSettings();
+  const { settings, updateSettings, resetToDefaults, isSaving } = useInvoiceSettings();
   const [formData, setFormData] = useState<InvoiceSettings>(settings);
 
   useEffect(() => {
@@ -52,17 +52,17 @@ export function InvoiceSettingsModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    updateSettings(formData);
-    toast.success("Invoice & Shipping settings updated successfully!");
+  const handleSave = async () => {
+    await updateSettings(formData);
+    toast.success("Invoice & Shipping settings saved to database successfully!");
     onOpenChange(false);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (
       confirm("Are you sure you want to reset all invoice settings to default?")
     ) {
-      const reset = resetToDefaults();
+      const reset = await resetToDefaults();
       setFormData(reset);
       toast.info("Invoice settings reset to default values.");
     }

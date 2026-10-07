@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-
 import { StoreFooter } from "@/components/layout/store/StoreFooter";
 import { StoreHeader } from "@/components/layout/store/StoreHeader";
+import { StorefrontPromoPopup } from "@/modules/popup/components/store/StorefrontPromoPopup";
 
 export default function StoreLayout({
   children,
@@ -15,6 +15,8 @@ export default function StoreLayout({
       <main className="flex-1">{children}</main>
 
       <StoreFooter />
+
+      <StorefrontPromoPopup />
     </div>
   );
 }
