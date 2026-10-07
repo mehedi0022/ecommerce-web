@@ -43,6 +43,7 @@ export interface AuthenticatedCheckoutInput {
 
 export interface GuestCheckoutInput {
   customer: CheckoutCustomer;
+  createAccount?: boolean;
   shippingAddress: CheckoutAddress;
   billingSameAsShipping: boolean;
   billingAddress?: CheckoutAddress;

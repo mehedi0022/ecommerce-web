@@ -8,7 +8,7 @@ import { setSession } from "../authSlice";
 import { sessionDestination } from "../redirect";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 
 import { getApiErrorMessage } from "@/lib/api/get-api-error-message";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export function LoginForm() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
       rememberMe: false,
     },
@@ -59,24 +59,24 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-      {/* Email Input */}
+      {/* Identifier Input (Phone or Email) */}
       <div className="space-y-2">
-        <Label htmlFor="email">Email address</Label>
+        <Label htmlFor="identifier">Phone or Email address</Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            placeholder="name@example.com"
+            id="identifier"
+            type="text"
+            autoComplete="username"
+            placeholder="01XXXXXXXXX or name@example.com"
             className="pl-9 h-10"
-            aria-invalid={Boolean(errors.email)}
-            {...register("email")}
+            aria-invalid={Boolean(errors.identifier)}
+            {...register("identifier")}
           />
         </div>
-        {errors.email && (
+        {errors.identifier && (
           <p className="text-xs font-medium text-destructive">
-            {errors.email.message}
+            {errors.identifier.message}
           </p>
         )}
       </div>

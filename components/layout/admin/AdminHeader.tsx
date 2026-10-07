@@ -124,7 +124,7 @@ export const AdminHeader = () => {
             className="flex items-center gap-2.5 rounded-lg p-1 hover:bg-muted/60 transition-colors focus:outline-none"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 font-bold text-primary text-xs ring-2 ring-primary/20">
-              {getInitials(user?.fullName, user?.email)}
+              {getInitials(user?.fullName, user?.email ?? undefined)}
             </div>
             <div className="hidden text-left lg:block">
               <p className="text-xs font-semibold leading-none text-foreground truncate max-w-28">

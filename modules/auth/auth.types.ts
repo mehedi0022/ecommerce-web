@@ -1,15 +1,18 @@
 import type { ApiMessageResponse, ApiResponse } from "@/types/api.types";
 
 export interface LoginInput {
-  email: string;
+  identifier?: string;
+  email?: string;
+  phone?: string;
   password: string;
   rememberMe: boolean;
 }
 
 export interface RegisterInput {
-  userName: string;
   fullName: string;
-  email: string;
+  phone: string;
+  email?: string;
+  userName?: string;
   password: string;
 }
 
@@ -23,12 +26,14 @@ export interface AuthRole {
 
 export interface PublicUser {
   id: number;
-  email: string;
+  email: string | null;
+  phone: string | null;
   userName: string | null;
   fullName: string | null;
   roleId: number;
   role: AuthRole;
   isActive: boolean;
+  mustChangePassword?: boolean;
   emailVerifiedAt: string | null;
   createdAt: string;
   updatedAt: string;

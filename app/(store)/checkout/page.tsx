@@ -123,6 +123,7 @@ function CheckoutForm() {
     email: "",
     phone: "",
   });
+  const [createAccount, setCreateAccount] = useState<boolean>(false);
 
   const [shippingAddress, setShippingAddress] =
     useState<CheckoutAddress>(INITIAL_ADDRESS);
@@ -558,6 +559,7 @@ function CheckoutForm() {
             email: customer.email?.trim() || undefined,
             phone: customer.phone.trim(),
           },
+          createAccount,
           shippingAddress: guestAddress,
           billingSameAsShipping,
           billingAddress: billingSameAsShipping ? undefined : billingAddress,
@@ -701,6 +703,8 @@ function CheckoutForm() {
               user={user}
               customer={customer}
               onChangeCustomer={setCustomer}
+              createAccount={createAccount}
+              onChangeCreateAccount={setCreateAccount}
             />
           </section>
 

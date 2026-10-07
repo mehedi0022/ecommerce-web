@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   User,
   Mail,
+  Phone,
   Lock,
   Eye,
   EyeOff,
@@ -36,9 +36,10 @@ export function RegisterForm() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      userName: "",
       fullName: "",
+      phone: "",
       email: "",
+      userName: "",
       password: "",
     },
   });
@@ -46,7 +47,13 @@ export function RegisterForm() {
   const onSubmit = async (values: RegisterFormValues) => {
     setServerError(null);
     try {
-      await registerUser(values).unwrap();
+      await registerUser({
+        fullName: values.fullName.trim(),
+        phone: values.phone.trim(),
+        email: values.email?.trim() || undefined,
+        userName: values.userName?.trim() || undefined,
+        password: values.password,
+      }).unwrap();
       router.replace("/login");
     } catch (error) {
       setServerError(
@@ -62,7 +69,9 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       {/* Full Name */}
       <div className="space-y-1.5">
-        <Label htmlFor="fullName">Full name</Label>
+        <Label htmlFor="fullName">
+          Full name <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -81,30 +90,39 @@ export function RegisterForm() {
         )}
       </div>
 
-      {/* Username */}
+      {/* Phone Number */}
       <div className="space-y-1.5">
-        <Label htmlFor="userName">Username</Label>
+        <Label htmlFor="phone">
+          Phone number <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
-          <AtSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            id="userName"
-            type="text"
-            placeholder="janedoe"
+            id="phone"
+            type="tel"
+            placeholder="01XXXXXXXXX"
             className="pl-9 h-10"
-            aria-invalid={Boolean(errors.userName)}
-            {...register("userName")}
+            aria-invalid={Boolean(errors.phone)}
+            {...register("phone")}
           />
         </div>
-        {errors.userName && (
+        {errors.phone ? (
           <p className="text-xs font-medium text-destructive">
-            {errors.userName.message}
+            {errors.phone.message}
+          </p>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            We will use this phone number for order updates and verification.
           </p>
         )}
       </div>
 
-      {/* Email */}
+      {/* Email (Optional) */}
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email address</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="email">Email address</Label>
+          <span className="text-xs text-muted-foreground">Optional</span>
+        </div>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -123,9 +141,35 @@ export function RegisterForm() {
         )}
       </div>
 
+      {/* Username (Optional) */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="userName">Username</Label>
+          <span className="text-xs text-muted-foreground">Optional</span>
+        </div>
+        <div className="relative">
+          <AtSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="userName"
+            type="text"
+            placeholder="janedoe"
+            className="pl-9 h-10"
+            aria-invalid={Boolean(errors.userName)}
+            {...register("userName")}
+          />
+        </div>
+        {errors.userName && (
+          <p className="text-xs font-medium text-destructive">
+            {errors.userName.message}
+          </p>
+        )}
+      </div>
+
       {/* Password */}
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">
+          Password <span className="text-destructive">*</span>
+        </Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input

@@ -1,7 +1,12 @@
 import { z } from "zod";
 
+export const BD_PHONE_REGEX = /^(?:\+?880|0)?1[3-9]\d{8}$/;
+
 export const loginSchema = z.object({
-  email: z.email("Please enter a valid email address"),
+  identifier: z
+    .string()
+    .trim()
+    .min(1, "Phone number or email is required"),
 
   password: z.string().min(1, "Password is required"),
 
@@ -9,14 +14,33 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  userName: z.string().trim().min(1, "Username is required"),
+  fullName: z.string().trim().min(2, "Full name must be at least 2 characters"),
 
-  fullName: z.string().trim().min(1, "Full name is required"),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required")
+    .regex(
+      BD_PHONE_REGEX,
+      "Please enter a valid Bangladeshi phone number (e.g. 01XXXXXXXXX or +8801XXXXXXXXX)",
+    ),
 
-  email: z.email("Please enter a valid email address"),
+  email: z
+    .string()
+    .trim()
+    .email("Please enter a valid email address")
+    .optional()
+    .or(z.literal("")),
+
+  userName: z
+    .string()
+    .trim()
+    .min(3, "Username must be at least 3 characters")
+    .optional()
+    .or(z.literal("")),
 
   password: z
-    .string("Password is required")
+    .string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Must contain at least one uppercase letter")
     .regex(/[a-z]/, "Must contain at least one lowercase letter")
