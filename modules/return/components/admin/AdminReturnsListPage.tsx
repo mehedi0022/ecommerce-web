@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGetAdminReturnsQuery } from "../../returnApi";
 import type { Return, ReturnStatus } from "../../return.types";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
 const STATUS_BADGE: Record<ReturnStatus, { label: string; className: string }> = {
   REQUESTED: {
@@ -225,7 +226,7 @@ export function AdminReturnsListPage() {
                       <th className="py-3 px-4 font-semibold">Return ID</th>
                       <th className="py-3 px-4 font-semibold">Order</th>
                       <th className="py-3 px-4 font-semibold">Customer</th>
-                      <th className="py-3 px-4 font-semibold">Items</th>
+                      <th className="py-3 px-4 font-semibold">Returned Products</th>
                       <th className="py-3 px-4 font-semibold">Status</th>
                       <th className="py-3 px-4 font-semibold">Date</th>
                       <th className="py-3 px-4 font-semibold text-right">Action</th>
@@ -263,10 +264,53 @@ export function AdminReturnsListPage() {
                               {ret.order?.customerPhone}
                             </p>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="font-medium">
-                              {ret.items?.length || 0} product(s)
-                            </span>
+                          <td className="py-3 px-4 max-w-[240px]">
+                            {ret.items && ret.items.length > 0 ? (
+                              <div className="flex items-start gap-2.5">
+                                {(() => {
+                                  const first = ret.items[0];
+                                  const img =
+                                    first.orderItem?.product?.images?.find(
+                                      (i: any) => i.isPrimary
+                                    )?.imageUrl ||
+                                    first.orderItem?.product?.images?.[0]?.imageUrl;
+
+                                  return (
+                                    <div className="size-10 shrink-0 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center relative">
+                                      {img ? (
+                                        <img
+                                          src={mediaUrl(img)}
+                                          alt={first.orderItem?.productName || "Product"}
+                                          className="size-full object-cover"
+                                        />
+                                      ) : (
+                                        <Package className="size-4 text-muted-foreground/60" />
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+                                <div className="min-w-0 flex-1">
+                                  <p
+                                    className="font-medium text-foreground text-xs truncate"
+                                    title={ret.items[0].orderItem?.productName}
+                                  >
+                                    {ret.items[0].orderItem?.productName || "Product"}
+                                  </p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                                    <span>Qty: {ret.items[0].quantity}</span>
+                                    {ret.items.length > 1 && (
+                                      <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0 text-[10px] font-medium text-muted-foreground border">
+                                        +{ret.items.length - 1} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground italic text-[11px]">
+                                No items
+                              </span>
+                            )}
                           </td>
                           <td className="py-3 px-4">
                             <Badge

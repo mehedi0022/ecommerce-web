@@ -21,7 +21,8 @@ export function eligibleParents(categories: Category[], id?: number) {
 }
 export function mediaUrl(value: string | null | undefined) {
   if (!value) return "";
-  if (/^https?:\/\//i.test(value) || value.startsWith("blob:")) return value;
-  if (value.startsWith("/") && !value.startsWith("//")) return `${(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1").replace(/\/api\/v1\/?$/, "")}${value}`;
-  return "";
+  if (/^https?:\/\//i.test(value) || value.startsWith("blob:") || value.startsWith("data:")) return value;
+  const path = value.startsWith("/") ? value : `/${value}`;
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1").replace(/\/api\/v1\/?$/, "");
+  return `${base}${path}`;
 }

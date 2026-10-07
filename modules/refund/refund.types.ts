@@ -21,18 +21,61 @@ export interface RefundStatusHistory {
   createdAt: string;
 }
 
+export interface RefundItemSummary {
+  id: number;
+  productName: string;
+  sku: string;
+  quantity: number;
+  unitPrice: string | number;
+  product?: {
+    id: number;
+    name: string;
+    images?: Array<{
+      id: number;
+      imageUrl: string;
+      isPrimary: boolean;
+      sortOrder: number;
+    }>;
+  };
+}
+
+export interface RefundReturnItemSummary {
+  id: number;
+  quantity: number;
+  reason?: string;
+  orderItem?: {
+    id: number;
+    productName: string;
+    sku: string;
+    quantity: number;
+    unitPrice: string | number;
+    product?: {
+      id: number;
+      name: string;
+      images?: Array<{
+        id: number;
+        imageUrl: string;
+        isPrimary: boolean;
+        sortOrder: number;
+      }>;
+    };
+  };
+}
+
 export interface RefundOrderSummary {
   id: number;
   orderNumber: string;
   customerName: string;
   customerPhone: string;
   customerEmail: string | null;
+  items?: RefundItemSummary[];
 }
 
 export interface RefundReturnSummary {
   id: number;
   returnNumber: string;
   status: string;
+  items?: RefundReturnItemSummary[];
 }
 
 export interface Refund {
@@ -58,8 +101,10 @@ export interface Refund {
 }
 
 export interface CreateRefundInput {
+  orderId?: number;
+  returnId?: number | null;
   amount: number;
-  method?: RefundMethod;
+  method: RefundMethod;
   reason?: string;
   note?: string;
 }

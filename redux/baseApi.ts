@@ -29,6 +29,7 @@ export const baseApi = createApi({
     "Brand",
     "Attribute",
     "Inventory",
+    "InventoryMovement",
     "Cart",
     "Wishlist",
     "Address",

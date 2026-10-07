@@ -48,6 +48,7 @@ import {
   useInspectAdminReturnItemMutation,
 } from "../../returnApi";
 import { AdminCreateRefundModal } from "@/modules/refund/components/admin/AdminCreateRefundModal";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type {
   ReturnStatus,
   ReturnItem,
@@ -343,14 +344,36 @@ export function AdminReturnDetailsPage({ returnNumber }: AdminReturnDetailsPageP
                 {ret.items?.map((item) => (
                   <div key={item.id} className="p-3.5 space-y-2 text-xs">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-foreground text-sm">
-                          {item.orderItem?.productName || "Product"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          SKU: {item.orderItem?.sku || "N/A"} &bull; Unit Price: ৳
-                          {Number(item.orderItem?.unitPrice || 0).toLocaleString()}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        {(() => {
+                          const img =
+                            item.orderItem?.product?.images?.find((i: any) => i.isPrimary)
+                              ?.imageUrl ||
+                            item.orderItem?.product?.images?.[0]?.imageUrl;
+
+                          return (
+                            <div className="size-12 shrink-0 rounded-lg border bg-background overflow-hidden flex items-center justify-center relative">
+                              {img ? (
+                                <img
+                                  src={mediaUrl(img)}
+                                  alt={item.orderItem?.productName || "Product"}
+                                  className="size-full object-cover"
+                                />
+                              ) : (
+                                <Package className="size-5 text-muted-foreground/60" />
+                              )}
+                            </div>
+                          );
+                        })()}
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {item.orderItem?.productName || "Product"}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            SKU: {item.orderItem?.sku || "N/A"} &bull; Unit Price: ৳
+                            {Number(item.orderItem?.unitPrice || 0).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">

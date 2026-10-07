@@ -35,6 +35,16 @@ export interface ReturnOrderItem {
   unitPrice: string | number;
   quantity: number;
   variantId: number | null;
+  product?: {
+    id: number;
+    name: string;
+    images?: Array<{
+      id: number;
+      imageUrl: string;
+      isPrimary: boolean;
+      sortOrder: number;
+    }>;
+  };
 }
 
 export interface ReturnItem {

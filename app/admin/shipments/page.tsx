@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   CheckCircle2,
   Eye,
-  MapPin,
   Package,
   Search,
   Truck,
@@ -15,13 +14,15 @@ import {
   ExternalLink,
   RefreshCw,
   Clock,
-  AlertCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { useListAdminOrdersQuery } from "@/modules/order/orderApi";
 import { ShippingLabelModal } from "@/modules/order/components/shipping-label/ShippingLabelModal";
+import { AdminPagination } from "@/components/admin/AdminPagination";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { Order } from "@/modules/order/order.types";
 
 const statusStyle: Record<string, string> = {
@@ -34,6 +35,8 @@ const statusStyle: Record<string, string> = {
 };
 
 export default function ShipmentsPage() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
@@ -43,12 +46,14 @@ export default function ShipmentsPage() {
   const [isBulkShippingLabelOpen, setIsBulkShippingLabelOpen] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useListAdminOrdersQuery({
-    limit: 50,
+    page,
+    limit,
     search: search.trim() || undefined,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
   });
 
   const orders = data?.data ?? [];
+  const meta = data?.meta;
 
   const handleToggleSelectAll = () => {
     if (selectedOrderIds.size === orders.length && orders.length > 0) {
@@ -67,18 +72,18 @@ export default function ShipmentsPage() {
     });
   };
 
-  // Stats
-  const totalShipments = orders.length;
+  // Stats calculation
+  const totalShipments = meta?.total ?? orders.length;
   const inTransit = orders.filter((o) => o.status === "SHIPPED").length;
   const processing = orders.filter((o) => o.status === "PROCESSING").length;
   const delivered = orders.filter((o) => o.status === "DELIVERED").length;
 
   return (
-    <div className="container mx-auto space-y-6">
+    <div className="space-y-6">
       {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <nav className="mb-2 text-xs text-muted-foreground flex items-center gap-1.5">
+          <nav className="mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
             <Link href="/admin" className="hover:text-foreground">
               Dashboard
             </Link>
@@ -89,7 +94,7 @@ export default function ShipmentsPage() {
             <Truck className="size-6 text-primary" />
             Shipments & Courier Dispatch
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
             Manage parcel fulfillments, track courier status, and print thermal parcel shipping labels.
           </p>
         </div>
@@ -117,65 +122,89 @@ export default function ShipmentsPage() {
             </Button>
           )}
         </div>
-      </header>
+      </div>
 
-      {/* ── Stat Counters ────────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <button
-          type="button"
-          onClick={() => setStatusFilter("ALL")}
-          className={`rounded-xl border bg-card p-4 text-left shadow-2xs transition hover:border-primary/40 ${
+      {/* ── Metric KPI Cards ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Card
+          onClick={() => {
+            setStatusFilter("ALL");
+            setPage(1);
+          }}
+          className={`shadow-none cursor-pointer transition hover:border-primary/40 ${
             statusFilter === "ALL" ? "border-primary ring-1 ring-primary/20" : ""
           }`}
         >
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>All Orders / Parcels</span>
-            <Package className="size-4" />
-          </div>
-          <b className="mt-2 block text-2xl font-black">{totalShipments}</b>
-        </button>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+              <Package className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">All Shipments</p>
+              <p className="text-xl font-bold">{totalShipments}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("PROCESSING")}
-          className={`rounded-xl border bg-card p-4 text-left shadow-2xs transition hover:border-primary/40 ${
-            statusFilter === "PROCESSING" ? "border-primary ring-1 ring-primary/20" : ""
+        <Card
+          onClick={() => {
+            setStatusFilter("PROCESSING");
+            setPage(1);
+          }}
+          className={`shadow-none cursor-pointer transition hover:border-blue-500/40 ${
+            statusFilter === "PROCESSING" ? "border-blue-500 ring-1 ring-blue-500/20" : ""
           }`}
         >
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Ready for Courier Handover</span>
-            <Clock className="size-4 text-blue-600" />
-          </div>
-          <b className="mt-2 block text-2xl font-black text-blue-600">{processing}</b>
-        </button>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600">
+              <Clock className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Ready to Dispatch</p>
+              <p className="text-xl font-bold text-blue-600">{processing}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("SHIPPED")}
-          className={`rounded-xl border bg-card p-4 text-left shadow-2xs transition hover:border-primary/40 ${
-            statusFilter === "SHIPPED" ? "border-primary ring-1 ring-primary/20" : ""
+        <Card
+          onClick={() => {
+            setStatusFilter("SHIPPED");
+            setPage(1);
+          }}
+          className={`shadow-none cursor-pointer transition hover:border-violet-500/40 ${
+            statusFilter === "SHIPPED" ? "border-violet-500 ring-1 ring-violet-500/20" : ""
           }`}
         >
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>In Transit / Shipped</span>
-            <Truck className="size-4 text-violet-600" />
-          </div>
-          <b className="mt-2 block text-2xl font-black text-violet-600">{inTransit}</b>
-        </button>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-600">
+              <Truck className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">In Transit</p>
+              <p className="text-xl font-bold text-violet-600">{inTransit}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("DELIVERED")}
-          className={`rounded-xl border bg-card p-4 text-left shadow-2xs transition hover:border-primary/40 ${
-            statusFilter === "DELIVERED" ? "border-primary ring-1 ring-primary/20" : ""
+        <Card
+          onClick={() => {
+            setStatusFilter("DELIVERED");
+            setPage(1);
+          }}
+          className={`shadow-none cursor-pointer transition hover:border-emerald-500/40 ${
+            statusFilter === "DELIVERED" ? "border-emerald-500 ring-1 ring-emerald-500/20" : ""
           }`}
         >
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Delivered Parcels</span>
-            <CheckCircle2 className="size-4 text-emerald-600" />
-          </div>
-          <b className="mt-2 block text-2xl font-black text-emerald-600">{delivered}</b>
-        </button>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600">
+              <CheckCircle2 className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Delivered</p>
+              <p className="text-xl font-bold text-emerald-600">{delivered}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* ── Bulk Action Banner (when rows selected) ───────────────────────── */}
@@ -215,7 +244,10 @@ export default function ShipmentsPage() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Search by order #, recipient name, phone, or tracking..."
               className="h-9 pl-9 text-xs"
             />
@@ -224,8 +256,11 @@ export default function ShipmentsPage() {
           <div className="flex items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 rounded-lg border bg-background px-3 text-xs font-medium"
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium cursor-pointer"
             >
               <option value="ALL">All Order Statuses</option>
               <option value="PROCESSING">Processing / Ready to Ship</option>
@@ -249,7 +284,8 @@ export default function ShipmentsPage() {
                     className="rounded border-input text-primary focus:ring-primary size-4 cursor-pointer"
                   />
                 </th>
-                <th className="p-3.5">Order Reference</th>
+                <th className="p-3.5">Order</th>
+                <th className="p-3.5">Products / Items</th>
                 <th className="p-3.5">Recipient & Destination</th>
                 <th className="p-3.5">Courier & Tracking</th>
                 <th className="p-3.5">Payment / COD</th>
@@ -260,14 +296,14 @@ export default function ShipmentsPage() {
             <tbody className="divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
                     <RefreshCw className="mx-auto size-5 animate-spin mb-2" />
                     Loading parcel shipments...
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center">
+                  <td colSpan={8} className="p-12 text-center">
                     <XCircle className="mx-auto size-8 text-muted-foreground/60 mb-2" />
                     <p className="font-semibold text-sm">No shipments found</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -331,8 +367,58 @@ export default function ShipmentsPage() {
                         </p>
                       </td>
 
+                      {/* Products / Items */}
+                      <td className="p-3.5 align-top max-w-[240px]">
+                        {order.items && order.items.length > 0 ? (
+                          <div className="flex items-start gap-2.5">
+                            {(() => {
+                              const firstItem = order.items[0];
+                              const img =
+                                firstItem.product?.images?.find(
+                                  (i: any) => i.isPrimary
+                                )?.imageUrl ||
+                                firstItem.product?.images?.[0]?.imageUrl;
+
+                              return (
+                                <div className="size-10 shrink-0 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center relative">
+                                  {img ? (
+                                    <img
+                                      src={mediaUrl(img)}
+                                      alt={firstItem.productName}
+                                      className="size-full object-cover"
+                                    />
+                                  ) : (
+                                    <Package className="size-4 text-muted-foreground/60" />
+                                  )}
+                                </div>
+                              );
+                            })()}
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className="font-medium text-foreground text-xs truncate"
+                                title={order.items[0].productName}
+                              >
+                                {order.items[0].productName}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                                <span>Qty: {order.items[0].quantity}</span>
+                                {order.items.length > 1 && (
+                                  <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0 text-[10px] font-medium text-muted-foreground border">
+                                    +{order.items.length - 1} more
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic text-[11px]">
+                            No items
+                          </span>
+                        )}
+                      </td>
+
                       {/* Recipient & Destination */}
-                      <td className="p-3.5 align-top max-w-[220px]">
+                      <td className="p-3.5 align-top max-w-[200px]">
                         <p className="font-semibold text-foreground truncate">
                           {shippingAddr?.fullName || order.customerName}
                         </p>
@@ -441,11 +527,16 @@ export default function ShipmentsPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
-          <span>
-            Showing <b className="text-foreground">{orders.length}</b> orders / shipments
-          </span>
-        </div>
+        {/* Admin Pagination */}
+        <AdminPagination
+          page={page}
+          limit={limit}
+          total={meta?.total ?? orders.length}
+          totalPages={meta?.totalPages ?? 1}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+          disabled={isLoading || isFetching}
+        />
       </section>
 
       {/* ── Single Shipping Label Modal ────────────────────────────────────── */}

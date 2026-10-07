@@ -13,7 +13,9 @@ import {
   SlidersHorizontal,
   ExternalLink,
   Loader2,
+  Package,
 } from "lucide-react";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -234,6 +236,7 @@ export function AdminRefundsListPage() {
                     <tr>
                       <th className="py-3 px-4 font-semibold">Refund ID</th>
                       <th className="py-3 px-4 font-semibold">Order</th>
+                      <th className="py-3 px-4 font-semibold">Product / Items</th>
                       <th className="py-3 px-4 font-semibold">Return</th>
                       <th className="py-3 px-4 font-semibold">Amount</th>
                       <th className="py-3 px-4 font-semibold">Method</th>
@@ -265,6 +268,73 @@ export function AdminRefundsListPage() {
                             ) : (
                               "N/A"
                             )}
+                          </td>
+                          <td className="py-3 px-4 max-w-[220px]">
+                            {(() => {
+                              const returnItem = rf.return?.items?.[0];
+                              const orderItem = rf.order?.items?.[0];
+
+                              const productName =
+                                returnItem?.orderItem?.productName ||
+                                orderItem?.productName ||
+                                "Product";
+                              const quantity =
+                                returnItem?.quantity || orderItem?.quantity || 1;
+                              const img =
+                                returnItem?.orderItem?.product?.images?.find(
+                                  (i: any) => i.isPrimary
+                                )?.imageUrl ||
+                                returnItem?.orderItem?.product?.images?.[0]?.imageUrl ||
+                                orderItem?.product?.images?.find(
+                                  (i: any) => i.isPrimary
+                                )?.imageUrl ||
+                                orderItem?.product?.images?.[0]?.imageUrl;
+
+                              const totalLines =
+                                rf.return?.items?.length ||
+                                rf.order?.items?.length ||
+                                0;
+
+                              if (!returnItem && !orderItem) {
+                                return (
+                                  <span className="text-muted-foreground italic text-[11px]">
+                                    N/A
+                                  </span>
+                                );
+                              }
+
+                              return (
+                                <div className="flex items-start gap-2.5">
+                                  <div className="size-10 shrink-0 rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center relative">
+                                    {img ? (
+                                      <img
+                                        src={mediaUrl(img)}
+                                        alt={productName}
+                                        className="size-full object-cover"
+                                      />
+                                    ) : (
+                                      <Package className="size-4 text-muted-foreground/60" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className="font-medium text-foreground text-xs truncate"
+                                      title={productName}
+                                    >
+                                      {productName}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
+                                      <span>Qty: {quantity}</span>
+                                      {totalLines > 1 && (
+                                        <span className="inline-flex items-center rounded-full bg-muted px-1.5 py-0 text-[10px] font-medium text-muted-foreground border">
+                                          +{totalLines - 1} more
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-4 font-mono text-muted-foreground">
                             {rf.return ? (
