@@ -1,18 +1,25 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronLeft, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { adminNavigation } from "@/constants/admin-navigation";
 import { useMeQuery } from "@/modules/auth/authApi";
+import { useGetAdminOrderStatusCountsQuery } from "@/modules/order/orderApi";
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [groups, setGroups] = useState<Record<string, boolean>>({
     Catalog: true,
+    Orders: true,
   });
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentStatus = searchParams?.get("status");
+
+  const { data: countsData } = useGetAdminOrderStatusCountsQuery();
+  const statusCounts = (countsData?.data || {}) as Record<string, number>;
 
   const { data: meData } = useMeQuery();
   const user = meData?.data;
@@ -41,6 +48,17 @@ export const AdminSidebar = () => {
       return hasAccess(item.requiredPermission) ? item : null;
     })
     .filter(Boolean) as typeof adminNavigation;
+
+  const isChildActive = (href: string) => {
+    if (href.includes("?status=")) {
+      const targetStatus = href.split("?status=")[1];
+      return pathname === "/admin/orders" && currentStatus === targetStatus;
+    }
+    if (href === "/admin/orders") {
+      return pathname === "/admin/orders" && (!currentStatus || currentStatus === "ALL");
+    }
+    return pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
+  };
 
   const active = (href: string) =>
     pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
@@ -139,30 +157,55 @@ export const AdminSidebar = () => {
                     {!collapsed && item.title}
                   </span>
                   {!collapsed && (
-                    <ChevronDown
-                      className={cn(
-                        "size-4 transition-transform",
-                        expanded && "rotate-180",
+                    <div className="flex items-center gap-2">
+                      {item.title === "Orders" && statusCounts["ALL"] !== undefined && (
+                        <span className="rounded-full bg-primary/15 text-primary px-1.5 py-0.2 text-[10px] font-bold tabular-nums">
+                          {statusCounts["ALL"]}
+                        </span>
                       )}
-                    />
+                      <ChevronDown
+                        className={cn(
+                          "size-4 transition-transform",
+                          expanded && "rotate-180",
+                        )}
+                      />
+                    </div>
                   )}
                 </button>
                 {!collapsed && expanded && (
                   <div className="ml-5 mt-1 space-y-0.5 border-l border-border/70 pl-3">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={cn(
-                          "block rounded-lg px-3 py-2 text-xs font-medium transition-colors",
-                          active(child.href)
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                        )}
-                      >
-                        {child.title}
-                      </Link>
-                    ))}
+                    {item.children.map((child) => {
+                      const count = child.badgeKey ? statusCounts[child.badgeKey] : undefined;
+                      const isSelected = isChildActive(child.href);
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={cn(
+                            "flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+                            isSelected
+                              ? "bg-primary text-primary-foreground shadow-sm"
+                              : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                          )}
+                        >
+                          <span>{child.title}</span>
+                          {typeof count === "number" && (
+                            <span
+                              className={cn(
+                                "rounded-full px-1.5 py-0.2 text-[10px] font-bold tabular-nums",
+                                isSelected
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
+                                  : count > 0
+                                  ? "bg-primary/10 text-primary font-semibold"
+                                  : "bg-muted text-muted-foreground/70",
+                              )}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>

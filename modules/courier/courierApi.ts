@@ -41,7 +41,6 @@ export const courierApi = baseApi.injectEndpoints({
       query: (code) => `/courier/providers/${code}/balance`,
     }),
 
-    // ─── Order Courier Actions ────────────────────────────────
     bookCourierOrder: builder.mutation<
       ApiResponse<BookCourierOrderResult>,
       { orderNumber: string; data?: BookCourierOrderInput }
@@ -50,6 +49,18 @@ export const courierApi = baseApi.injectEndpoints({
         url: `/courier/orders/${orderNumber}/book`,
         method: "POST",
         body: data || {},
+      }),
+      invalidatesTags: ["Order", "Shipment"],
+    }),
+
+    bulkBookCourierOrders: builder.mutation<
+      ApiResponse<import("./types").BulkBookCourierResult>,
+      import("./types").BulkBookCourierInput
+    >({
+      query: (body) => ({
+        url: "/courier/orders/bulk-book",
+        method: "POST",
+        body,
       }),
       invalidatesTags: ["Order", "Shipment"],
     }),
@@ -101,6 +112,7 @@ export const {
   useUpdateCourierProviderMutation,
   useLazyCheckCourierBalanceQuery,
   useBookCourierOrderMutation,
+  useBulkBookCourierOrdersMutation,
   useTrackCourierOrderQuery,
   useLazyTrackCourierOrderQuery,
   useLazyGetCourierStoresQuery,

@@ -61,6 +61,28 @@ export const orderApi = baseApi.injectEndpoints({
       providesTags: ["Order"],
     }),
 
+    getAdminOrderStatusCounts: builder.query<
+      {
+        success: boolean;
+        message: string;
+        data: {
+          ALL: number;
+          PENDING: number;
+          CONFIRMED: number;
+          PROCESSING: number;
+          READY_TO_SHIP: number;
+          SHIPPED: number;
+          DELIVERED: number;
+          CANCELLED: number;
+          RETURNED: number;
+        };
+      },
+      void
+    >({
+      query: () => "/admin/orders/counts",
+      providesTags: ["Order"],
+    }),
+
     getAdminOrder: builder.query<OrderResponse, string>({
       query: (orderNumber) => `/admin/orders/${orderNumber}`,
       providesTags: ["Order"],
@@ -123,6 +145,7 @@ export const {
   useTrackOrderQuery,
   useLazyTrackOrderQuery,
   useListAdminOrdersQuery,
+  useGetAdminOrderStatusCountsQuery,
   useGetAdminOrderQuery,
   useTransitionOrderStatusMutation,
   useUpdateAdminOrderMutation,

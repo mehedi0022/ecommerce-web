@@ -48,6 +48,29 @@ export interface BookCourierOrderResult {
   courierStatus?: string;
   booking?: any;
   shipment?: any;
+  isDuplicate?: boolean;
+}
+
+export interface BulkBookCourierInput {
+  orderNumbers: string[];
+  courierCode?: string;
+  customNote?: string;
+  itemWeightKg?: number;
+}
+
+export interface BulkBookCourierResult {
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: Array<{
+    orderNumber: string;
+    success: boolean;
+    consignmentId?: string;
+    trackingCode?: string;
+    trackingUrl?: string | null;
+    courierName?: string;
+    error?: string;
+  }>;
 }
 
 export interface CourierTrackingResult {

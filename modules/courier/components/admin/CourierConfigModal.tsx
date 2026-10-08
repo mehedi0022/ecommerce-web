@@ -32,6 +32,9 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  Webhook,
+  Copy,
+  Check,
 } from "lucide-react";
 
 interface CourierConfigModalProps {
@@ -52,6 +55,7 @@ export function CourierConfigModal({
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [pathaoStores, setPathaoStores] = useState<any[]>([]);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -65,6 +69,9 @@ export function CourierConfigModal({
     username: "",
     password: "",
     storeId: "",
+    // Webhook settings (Steadfast & Pathao)
+    webhookSecret: "",
+    webhookIntegrationSecret: "",
   });
 
   const handleFetchStores = async () => {
@@ -99,6 +106,8 @@ export function CourierConfigModal({
         username: provider.settings?.username || "",
         password: "",
         storeId: provider.settings?.storeId != null ? String(provider.settings.storeId) : "",
+        webhookSecret: provider.settings?.webhookSecret || "",
+        webhookIntegrationSecret: provider.settings?.webhookIntegrationSecret || "",
       });
       setShowAdvanced(Boolean(provider.apiUrl));
     }
@@ -109,6 +118,20 @@ export function CourierConfigModal({
   const normalizedCode = (provider.code || "").toLowerCase().trim();
   const isSteadfast = normalizedCode === "steadfast";
   const isPathao = normalizedCode === "pathao";
+
+  const webhookUrl =
+    typeof window !== "undefined" && provider
+      ? `${window.location.origin}/api/v1/courier/webhooks/${provider.code.toLowerCase()}`
+      : `/api/v1/courier/webhooks/${provider.code.toLowerCase()}`;
+
+  const handleCopyWebhookUrl = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(webhookUrl);
+      setCopiedUrl(true);
+      toast.success("Webhook URL copied to clipboard!");
+      setTimeout(() => setCopiedUrl(false), 2000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,10 +146,33 @@ export function CourierConfigModal({
         ...(provider.settings || {}),
       };
 
+      if (isSteadfast) {
+        if (form.webhookSecret.trim()) {
+          settingsPayload.webhookSecret = form.webhookSecret.trim();
+        } else if (provider.settings?.webhookSecret && form.webhookSecret === "") {
+          delete settingsPayload.webhookSecret;
+        }
+      }
+
       if (isPathao) {
         if (form.username.trim()) settingsPayload.username = form.username.trim();
         if (form.password.trim()) settingsPayload.password = form.password.trim();
         if (form.storeId.trim()) settingsPayload.storeId = form.storeId.trim();
+
+        if (form.webhookSecret.trim()) {
+          settingsPayload.webhookSecret = form.webhookSecret.trim();
+        } else if (provider.settings?.webhookSecret && form.webhookSecret === "") {
+          delete settingsPayload.webhookSecret;
+        }
+
+        if (form.webhookIntegrationSecret.trim()) {
+          settingsPayload.webhookIntegrationSecret = form.webhookIntegrationSecret.trim();
+        } else if (
+          provider.settings?.webhookIntegrationSecret &&
+          form.webhookIntegrationSecret === ""
+        ) {
+          delete settingsPayload.webhookIntegrationSecret;
+        }
       }
 
       const updatePayload: Record<string, any> = {
@@ -286,6 +332,56 @@ export function CourierConfigModal({
                   value={form.apiSecret}
                   onChange={(e) => setForm({ ...form, apiSecret: e.target.value })}
                 />
+              </div>
+
+              {/* Steadfast Webhook Configuration */}
+              <div className="p-3 bg-muted/20 border rounded-lg space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                  <Webhook className="size-3.5 text-blue-600" />
+                  Steadfast Webhook Integration & Security
+                </div>
+
+                {/* Webhook Listener URL */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Webhook Listener URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={webhookUrl}
+                      className="bg-muted/50 font-mono text-[11px]"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-3 shrink-0 text-xs gap-1"
+                      onClick={handleCopyWebhookUrl}
+                    >
+                      {copiedUrl ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
+                      {copiedUrl ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Copy and save this URL in your Steadfast merchant dashboard under Webhook settings.
+                  </p>
+                </div>
+
+                {/* Webhook Secret Token */}
+                <div className="space-y-1">
+                  <Label htmlFor="st-webhookSecret" className="text-xs flex items-center gap-1">
+                    <Lock className="size-3.5 text-primary" />
+                    Webhook Secret Token (Bearer Token)
+                  </Label>
+                  <Input
+                    id="st-webhookSecret"
+                    placeholder="Enter webhook secret token (or fallback to STEADFAST_WEBHOOK_SECRET env)"
+                    value={form.webhookSecret}
+                    onChange={(e) => setForm({ ...form, webhookSecret: e.target.value })}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Steadfast sends this token in <code>Authorization: Bearer &lt;token&gt;</code> on delivery updates.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -487,10 +583,74 @@ export function CourierConfigModal({
                       </a>{" "}
                       &rarr; <strong>Settings / Stores</strong> (or <strong>Manage Stores</strong>). Copy the numeric Store ID.
                     </li>
-                    <li>
-                      <em>(Sandbox Testing Note: Use Store ID <strong>148668</strong> for the default sandbox account)</em>
-                    </li>
                   </ul>
+                </div>
+              </div>
+
+              {/* Section 4: Webhook Integration & Secrets */}
+              <div className="p-3.5 bg-muted/20 border rounded-lg space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                  <Webhook className="size-3.5 text-rose-600" />
+                  4. Pathao Webhook Integration & Secrets
+                </div>
+
+                {/* Webhook Listener URL */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Webhook Listener URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={webhookUrl}
+                      className="bg-muted/50 font-mono text-[11px]"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 px-3 shrink-0 text-xs gap-1"
+                      onClick={handleCopyWebhookUrl}
+                    >
+                      {copiedUrl ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
+                      {copiedUrl ? "Copied" : "Copy"}
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Enter this URL in Pathao Merchant Developer portal &rarr; Webhook Integration.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <Label htmlFor="pt-webhookSecret" className="text-xs flex items-center gap-1">
+                      <Lock className="size-3.5 text-primary" />
+                      Webhook Secret (Signature)
+                    </Label>
+                    <Input
+                      id="pt-webhookSecret"
+                      placeholder="Enter webhook secret (or PATHAO_WEBHOOK_SECRET env)"
+                      value={form.webhookSecret}
+                      onChange={(e) => setForm({ ...form, webhookSecret: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Verified against <code>X-Pathao-Signature</code> on status events.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="pt-webhookIntegrationSecret" className="text-xs flex items-center gap-1">
+                      <KeyRound className="size-3.5 text-primary" />
+                      Integration Secret (Handshake)
+                    </Label>
+                    <Input
+                      id="pt-webhookIntegrationSecret"
+                      placeholder="Enter integration secret (or PATHAO_WEBHOOK_INTEGRATION_SECRET env)"
+                      value={form.webhookIntegrationSecret}
+                      onChange={(e) => setForm({ ...form, webhookIntegrationSecret: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Returned in <code>X-Pathao-Merchant-Webhook-Integration-Secret</code> on handshake.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -622,7 +782,7 @@ export function CourierConfigModal({
                   onChange={(e) => setForm({ ...form, apiUrl: e.target.value })}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Leave empty to automatically use the official production endpoint.
+                  Leave empty to automatically use the official {form.isLive ? "Production (api-hermes.pathao.com)" : "Sandbox (courier-api-sandbox.pathao.com)"} endpoint.
                 </p>
               </div>
             )}

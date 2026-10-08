@@ -515,6 +515,61 @@ export function AdminOrderDetailsPage({
             </CardContent>
           </Card>
 
+          {/* Returns & Inspection Card */}
+          {order.returns && order.returns.length > 0 && (
+            <Card className="border-orange-500/30 bg-orange-500/5 shadow-none">
+              <CardHeader className="border-b border-orange-500/20 py-3 px-5">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                    <RotateCcw className="size-4" />
+                    Customer Return / Parcel Inspection ({order.returns.length})
+                  </CardTitle>
+                  <Badge
+                    variant="outline"
+                    className="border-orange-500/40 text-orange-700 dark:text-orange-300 bg-orange-500/10 text-[10px] font-bold uppercase"
+                  >
+                    {order.returns[0].status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 space-y-3 text-xs">
+                {order.returns.map((ret: any) => (
+                  <div
+                    key={ret.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg border bg-background/80"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-foreground">
+                          #{ret.returnNumber}
+                        </span>
+                        <Badge variant="secondary" className="text-[10px] uppercase">
+                          {ret.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Created: {new Date(ret.requestedAt || ret.createdAt).toLocaleDateString()} &bull;{" "}
+                        {ret.status === "RECEIVED"
+                          ? "Awaiting physical warehouse inspection & restock decision"
+                          : "Inspection completed"}
+                      </p>
+                    </div>
+
+                    <Link href={`/admin/returns/${ret.returnNumber}`}>
+                      <Button
+                        size="sm"
+                        className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white font-medium cursor-pointer"
+                      >
+                        <RotateCcw className="size-3" />
+                        Inspect & Restock Return
+                      </Button>
+                    </Link>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Timeline & Status History */}
           <Card className="shadow-none">
             <CardHeader className="border-b py-3 px-5">
@@ -824,6 +879,16 @@ export function AdminOrderDetailsPage({
                         Open Live Courier Tracking
                         <ExternalLink className="size-3" />
                       </a>
+                    </div>
+                  )}
+
+                  {order.shipment.lastDispatchError && (
+                    <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive flex items-start gap-2 mt-2">
+                      <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold">Last Dispatch Issue:</p>
+                        <p className="text-[11px] mt-0.5">{order.shipment.lastDispatchError}</p>
+                      </div>
                     </div>
                   )}
 

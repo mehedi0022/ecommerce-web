@@ -36,9 +36,10 @@ import type { OrderTrackData } from "@/modules/order/order.types";
 function TrackOrderContent() {
   const searchParams = useSearchParams();
   const orderFromQuery = searchParams.get("orderNumber") || "";
+  const phoneFromQuery = searchParams.get("phone") || "";
 
   const [orderNumber, setOrderNumber] = useState(orderFromQuery);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState(phoneFromQuery);
   const [hasSearched, setHasSearched] = useState(false);
   const [orderResult, setOrderResult] = useState<OrderTrackData | null>(null);
 
@@ -53,25 +54,34 @@ function TrackOrderContent() {
       return;
     }
 
+    const cleanPhone = phoneNumber.trim();
+    if (!cleanPhone) {
+      toast.error("Please enter the recipient phone number to verify and track your order");
+      return;
+    }
+
     setHasSearched(true);
     try {
       const res = await triggerTrack({
         orderNumber: cleanNumber,
-        phone: phoneNumber.trim() || undefined,
+        phone: cleanPhone,
       }).unwrap();
       setOrderResult(res.data);
     } catch (err: any) {
       setOrderResult(null);
       toast.error(
-        err?.data?.message || err?.message || "Order not found. Please verify the order number."
+        err?.data?.message || err?.message || "No order found matching the provided details."
       );
     }
   };
 
-  // Auto trigger if orderNumber was in query params
+  // Auto trigger if both orderNumber and phone were provided in query params
   useEffect(() => {
-    if (orderFromQuery) {
-      triggerTrack({ orderNumber: orderFromQuery.trim() })
+    if (orderFromQuery && phoneFromQuery) {
+      triggerTrack({
+        orderNumber: orderFromQuery.trim(),
+        phone: phoneFromQuery.trim(),
+      })
         .unwrap()
         .then((res) => {
           setOrderResult(res.data);
@@ -81,7 +91,7 @@ function TrackOrderContent() {
           setHasSearched(true);
         });
     }
-  }, [orderFromQuery, triggerTrack]);
+  }, [orderFromQuery, phoneFromQuery, triggerTrack]);
 
   return (
     <main className="min-h-[calc(100vh-5rem)] bg-muted/30 py-8 sm:py-16">
@@ -131,9 +141,10 @@ function TrackOrderContent() {
                   <Phone className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="tel"
-                    placeholder="Phone number (optional)"
+                    placeholder="Recipient phone (e.g. 017XXXXXXXX)"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
                     className="h-12 pl-10 text-sm rounded-xl"
                   />
                 </div>
@@ -141,7 +152,7 @@ function TrackOrderContent() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isLoading || !orderNumber.trim()}
+                  disabled={isLoading || !orderNumber.trim() || !phoneNumber.trim()}
                   className="h-12 px-7 text-sm font-bold gap-2 rounded-xl shadow-xs"
                 >
                   <Search className="size-4" />
@@ -152,7 +163,7 @@ function TrackOrderContent() {
               <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <HelpCircle className="size-3.5 text-muted-foreground shrink-0" />
                 <span>
-                  You can find your order number in the SMS confirmation or on your order receipt screen.
+                  For customer security, enter your Order Number and the matching recipient phone number used during checkout.
                 </span>
               </p>
             </form>

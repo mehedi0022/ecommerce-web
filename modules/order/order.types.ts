@@ -84,6 +84,7 @@ export interface OrderShipment {
   courierStatus?: string | null;
   trackingNumber: string | null;
   trackingUrl: string | null;
+  lastDispatchError?: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
 }
@@ -101,7 +102,9 @@ export interface Order {
     | "PROCESSING"
     | "SHIPPED"
     | "DELIVERED"
-    | "CANCELLED";
+    | "CANCELLED"
+    | "RETURNED"
+    | string;
   paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | "PARTIAL_COD" | string;
   paymentStatus: "UNPAID" | "PENDING" | "PAID" | "PARTIALLY_PAID" | "FAILED" | "REFUNDED" | string;
   couponId: number | null;

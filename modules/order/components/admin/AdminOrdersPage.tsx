@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ShoppingBag,
@@ -24,27 +25,61 @@ import {
   ExternalLink,
   Printer,
   Tag,
+  MoreVertical,
+  Send,
+  Ban,
+  CheckCheck,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { useListAdminOrdersQuery } from "../../orderApi";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import {
+  useListAdminOrdersQuery,
+  useTransitionOrderStatusMutation,
+  useGetAdminOrderStatusCountsQuery,
+} from "../../orderApi";
 import type { Order } from "../../order.types";
 import { AdminOrderStatusDialog } from "./AdminOrderStatusDialog";
 import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
+import { AdminBookCourierDialog } from "@/modules/courier/components/admin/AdminBookCourierDialog";
+import { AdminBulkCourierDispatchModal } from "@/modules/courier/components/admin/AdminBulkCourierDispatchModal";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { ShippingLabelModal } from "../shipping-label/ShippingLabelModal";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
+export const STATUS_TABS = [
+  { key: "ALL", label: "All Orders" },
+  { key: "PENDING", label: "Pending" },
+  { key: "CONFIRMED", label: "Confirmed" },
+  { key: "PROCESSING", label: "Processing" },
+  { key: "READY_TO_SHIP", label: "Ready to Ship" },
+  { key: "SHIPPED", label: "Shipped" },
+  { key: "DELIVERED", label: "Delivered" },
+  { key: "CANCELLED", label: "Cancelled" },
+  { key: "RETURNED", label: "Returned / Failed" },
+];
+
 const statusStyle: Record<string, string> = {
   PENDING: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   CONFIRMED: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20",
   PROCESSING: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  READY_TO_SHIP: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20",
   SHIPPED: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20",
   DELIVERED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
   CANCELLED: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
+  RETURNED: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
 };
 
 const paymentStyle: Record<string, string> = {
@@ -55,13 +90,37 @@ const paymentStyle: Record<string, string> = {
 };
 
 export function AdminOrdersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams?.get("status") || "ALL";
+
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>(urlStatus);
   const [paymentFilter, setPaymentFilter] = useState<string>("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Sync state with URL parameter if user navigated via sidebar menu
+  useEffect(() => {
+    const s = searchParams?.get("status") || "ALL";
+    setStatusFilter(s);
+    setPage(1);
+  }, [searchParams]);
+
+  const updateStatusFilter = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    setPage(1);
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    if (newStatus === "ALL") {
+      params.delete("status");
+    } else {
+      params.set("status", newStatus);
+    }
+    const q = params.toString();
+    router.push(q ? `/admin/orders?${q}` : "/admin/orders");
+  };
 
   // Selection states for bulk actions
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
@@ -77,10 +136,16 @@ export function AdminOrdersPage() {
 
   // Modal States
   const [statusModalOrder, setStatusModalOrder] = useState<Order | null>(null);
+  const [statusModalTarget, setStatusModalTarget] = useState<any>(null);
   const [shipmentModalOrder, setShipmentModalOrder] = useState<Order | null>(null);
+  const [bookCourierModalOrder, setBookCourierModalOrder] = useState<Order | null>(null);
   const [invoiceModalOrder, setInvoiceModalOrder] = useState<Order | null>(null);
+  const [isBulkInvoiceOpen, setIsBulkInvoiceOpen] = useState(false);
   const [shippingLabelModalOrder, setShippingLabelModalOrder] = useState<Order | null>(null);
   const [isBulkShippingLabelOpen, setIsBulkShippingLabelOpen] = useState(false);
+  const [isBulkCourierModalOpen, setIsBulkCourierModalOpen] = useState(false);
+
+  const [transitionStatusMutation] = useTransitionOrderStatusMutation();
 
   const queryParams = {
     page,
@@ -120,12 +185,41 @@ export function AdminOrdersPage() {
     });
   };
 
-  // Stats calculation
-  const totalOrders = meta?.total ?? orders.length;
-  const pendingOrders = orders.filter((o) => o.status === "PENDING").length;
-  const processingOrders = orders.filter((o) => o.status === "PROCESSING").length;
-  const shippedOrders = orders.filter((o) => o.status === "SHIPPED").length;
-  const deliveredOrders = orders.filter((o) => o.status === "DELIVERED").length;
+  const handleBulkConfirm = async () => {
+    const selectedOrders = orders.filter((o) => selectedOrderIds.has(o.id));
+    const pendingOrders = selectedOrders.filter((o) => o.status === "PENDING");
+    if (pendingOrders.length === 0) {
+      toast.error("None of the selected orders are in PENDING status");
+      return;
+    }
+
+    let successCount = 0;
+    for (const ord of pendingOrders) {
+      try {
+        await transitionStatusMutation({
+          orderNumber: ord.orderNumber,
+          data: { status: "CONFIRMED", note: "Bulk confirmed by admin" },
+        }).unwrap();
+        successCount++;
+      } catch (err: any) {
+        console.error("Bulk confirm error for", ord.orderNumber, err);
+      }
+    }
+
+    toast.success(`Confirmed ${successCount} orders successfully!`);
+    void refetch();
+    setSelectedOrderIds(new Set());
+  };
+
+  const { data: countsData } = useGetAdminOrderStatusCountsQuery();
+  const statusCounts = (countsData?.data || {}) as Record<string, number>;
+
+  // Stats calculation from live counts
+  const totalOrders = statusCounts.ALL ?? meta?.total ?? orders.length;
+  const pendingOrders = statusCounts.PENDING ?? 0;
+  const processingOrders = statusCounts.PROCESSING ?? 0;
+  const shippedOrders = statusCounts.SHIPPED ?? 0;
+  const deliveredOrders = statusCounts.DELIVERED ?? 0;
 
   return (
     <div className="space-y-6">
@@ -217,6 +311,41 @@ export function AdminOrdersPage() {
         </Card>
       </div>
 
+      {/* Grouped Status Navigation Tabs with Live Counts */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        {STATUS_TABS.map((tab) => {
+          const isActive = statusFilter === tab.key;
+          const count = statusCounts[tab.key] ?? 0;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => updateStatusFilter(tab.key)}
+              className={cn(
+                "inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                  : "bg-card text-muted-foreground hover:bg-muted/70 hover:text-foreground border-border/70"
+              )}
+            >
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  "text-[10px] font-bold px-1.5 py-0.2 rounded-full transition-colors",
+                  isActive
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : count > 0
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filter and Search Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
         <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[280px]">
@@ -237,19 +366,18 @@ export function AdminOrdersPage() {
             <Filter className="size-3.5 text-muted-foreground" />
             <select
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
+              onChange={(e) => updateStatusFilter(e.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <option value="ALL">All Order Statuses</option>
               <option value="PENDING">Pending Only</option>
               <option value="CONFIRMED">Confirmed</option>
               <option value="PROCESSING">Processing</option>
+              <option value="READY_TO_SHIP">Ready to Ship</option>
               <option value="SHIPPED">Shipped</option>
               <option value="DELIVERED">Delivered</option>
               <option value="CANCELLED">Cancelled</option>
+              <option value="RETURNED">Returned / Failed</option>
             </select>
           </div>
 
@@ -278,20 +406,56 @@ export function AdminOrdersPage() {
               {selectedOrderIds.size} {selectedOrderIds.size === 1 ? "order" : "orders"} selected
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            {/* Bulk Confirm (active if any selected orders are PENDING) */}
+            {orders.some((o) => selectedOrderIds.has(o.id) && o.status === "PENDING") && (
+              <Button
+                size="sm"
+                onClick={handleBulkConfirm}
+                className="gap-1.5 h-8 text-xs bg-sky-600 hover:bg-sky-700 text-white font-medium cursor-pointer"
+              >
+                <CheckCheck className="size-3.5" />
+                Bulk Confirm
+              </Button>
+            )}
+
+            {/* Bulk Send to Courier */}
             <Button
               size="sm"
-              onClick={() => setIsBulkShippingLabelOpen(true)}
-              className="gap-1.5 h-8 text-xs bg-black text-white hover:bg-neutral-800 font-semibold cursor-pointer shadow-xs"
+              onClick={() => setIsBulkCourierModalOpen(true)}
+              className="gap-1.5 h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-medium cursor-pointer"
             >
-              <Printer className="size-3.5" />
-              Print Shipping Labels ({selectedOrderIds.size})
+              <Send className="size-3.5" />
+              Bulk Send to Courier ({selectedOrderIds.size})
             </Button>
+
+            {/* Bulk Print Labels */}
             <Button
               size="sm"
               variant="outline"
+              onClick={() => setIsBulkShippingLabelOpen(true)}
+              className="gap-1.5 h-8 text-xs font-semibold cursor-pointer"
+            >
+              <Tag className="size-3.5" />
+              Print Labels
+            </Button>
+
+            {/* Bulk Print Invoices */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsBulkInvoiceOpen(true)}
+              className="gap-1.5 h-8 text-xs font-semibold cursor-pointer"
+            >
+              <Printer className="size-3.5" />
+              Print Invoices
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={() => setSelectedOrderIds(new Set())}
-              className="h-8 text-xs cursor-pointer"
+              className="h-8 text-xs cursor-pointer text-muted-foreground"
             >
               Deselect All
             </Button>
@@ -498,14 +662,37 @@ export function AdminOrdersPage() {
 
                       {/* Order Status */}
                       <td className="p-3.5 align-top">
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] font-bold ${
-                            statusStyle[order.status] || ""
-                          }`}
-                        >
-                          {order.status}
-                        </Badge>
+                        {order.shipment?.status === "RETURNED" || (order.returns && order.returns.length > 0) ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-bold bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20"
+                          >
+                            RETURNED
+                          </Badge>
+                        ) : order.shipment?.status === "FAILED" ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
+                          >
+                            FAILED
+                          </Badge>
+                        ) : order.shipment?.status === "READY_TO_SHIP" && order.status !== "SHIPPED" && order.status !== "DELIVERED" ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20"
+                          >
+                            READY TO SHIP
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-bold ${
+                              statusStyle[order.status] || ""
+                            }`}
+                          >
+                            {order.status}
+                          </Badge>
+                        )}
                       </td>
 
                       {/* Courier Shipment */}
@@ -567,48 +754,155 @@ export function AdminOrdersPage() {
                       {/* Actions */}
                       <td className="p-3.5 pr-4 align-top text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {order.status !== "DELIVERED" &&
-                            order.status !== "CANCELLED" && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs px-2.5"
-                                onClick={() => setStatusModalOrder(order)}
-                              >
-                                Update Status
-                              </Button>
-                            )}
-
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            className="h-7 w-7 text-primary hover:text-primary hover:bg-primary/10 cursor-pointer"
-                            title="Print Thermal Shipping Label"
-                            onClick={() => setShippingLabelModalOrder(order)}
-                          >
-                            <Tag className="size-3.5" />
-                          </Button>
-
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Print Tax Invoice & Slip"
-                            onClick={() => setInvoiceModalOrder(order)}
-                          >
-                            <Printer className="size-3.5" />
-                          </Button>
-
-                          <Link href={`/admin/orders/${order.orderNumber}`}>
+                          {/* Contextual Quick Action Button */}
+                          {order.status === "PENDING" ? (
                             <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="h-7 w-7"
-                              title="View Full Order Details"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs px-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 hover:text-sky-800 border-sky-200"
+                              onClick={async () => {
+                                try {
+                                  await transitionStatusMutation({
+                                    orderNumber: order.orderNumber,
+                                    data: { status: "CONFIRMED", note: "Confirmed by admin" },
+                                  }).unwrap();
+                                  toast.success(`Order #${order.orderNumber} confirmed!`);
+                                  void refetch();
+                                } catch (err: any) {
+                                  toast.error(err?.data?.message || "Failed to confirm order");
+                                }
+                              }}
                             >
-                              <Eye className="size-3.5" />
+                              <Check className="size-3 mr-1" />
+                              Confirm
                             </Button>
-                          </Link>
+                          ) : (order.status === "CONFIRMED" || order.status === "PROCESSING") && !order.shipment ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs px-2.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                              onClick={() => setBookCourierModalOrder(order)}
+                            >
+                              <Send className="size-3 mr-1" />
+                              Send Courier
+                            </Button>
+                          ) : null}
+
+                          {/* Row Actions Dropdown Menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              aria-label={`Open actions for order ${order.orderNumber}`}
+                              className="inline-flex size-7 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                            >
+                              <MoreVertical className="size-3.5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 text-xs">
+                              <DropdownMenuLabel>Order #{order.orderNumber}</DropdownMenuLabel>
+
+                              {/* Confirm Order (if PENDING) */}
+                              {order.status === "PENDING" && (
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    try {
+                                      await transitionStatusMutation({
+                                        orderNumber: order.orderNumber,
+                                        data: { status: "CONFIRMED", note: "Confirmed by admin" },
+                                      }).unwrap();
+                                      toast.success(`Order #${order.orderNumber} confirmed!`);
+                                      void refetch();
+                                    } catch (err: any) {
+                                      toast.error(err?.data?.message || "Failed to confirm order");
+                                    }
+                                  }}
+                                >
+                                  <Check className="size-3.5 mr-2 text-sky-600" />
+                                  Confirm Order
+                                </DropdownMenuItem>
+                              )}
+
+                              {/* Send to Courier (Steadfast / Pathao) */}
+                              {["PENDING", "CONFIRMED", "PROCESSING"].includes(order.status) && (
+                                <DropdownMenuItem onClick={() => setBookCourierModalOrder(order)}>
+                                  <Send className="size-3.5 mr-2 text-primary" />
+                                  Send to Courier
+                                </DropdownMenuItem>
+                              )}
+
+                              {/* Manual Assign Courier Shipment */}
+                              <DropdownMenuItem onClick={() => setShipmentModalOrder(order)}>
+                                <Truck className="size-3.5 mr-2 text-muted-foreground" />
+                                Manual Shipment...
+                              </DropdownMenuItem>
+
+                              {/* Update Status Modal */}
+                              {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+                                <DropdownMenuItem onClick={() => setStatusModalOrder(order)}>
+                                  <Clock className="size-3.5 mr-2 text-muted-foreground" />
+                                  Update Status...
+                                </DropdownMenuItem>
+                              )}
+
+                              <DropdownMenuSeparator />
+
+                              {/* Print Shipping Label */}
+                              <DropdownMenuItem onClick={() => setShippingLabelModalOrder(order)}>
+                                <Tag className="size-3.5 mr-2 text-muted-foreground" />
+                                Print Shipping Label
+                              </DropdownMenuItem>
+
+                              {/* Print Tax Invoice */}
+                              <DropdownMenuItem onClick={() => setInvoiceModalOrder(order)}>
+                                <Printer className="size-3.5 mr-2 text-muted-foreground" />
+                                Print Tax Invoice
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              {/* View Order Details */}
+                              <DropdownMenuItem onClick={() => router.push(`/admin/orders/${order.orderNumber}`)}>
+                                <Eye className="size-3.5 mr-2 text-muted-foreground" />
+                                View Full Details
+                              </DropdownMenuItem>
+
+                              {/* Inspect Return (if returned) */}
+                              {order.returns && order.returns.length > 0 && (
+                                <DropdownMenuItem
+                                  onClick={() => router.push(`/admin/returns/${order.returns![0].returnNumber}`)}
+                                  className="text-orange-600 dark:text-orange-400 font-medium"
+                                >
+                                  <RotateCcw className="size-3.5 mr-2" />
+                                  Inspect Return #{order.returns[0].returnNumber}
+                                </DropdownMenuItem>
+                              )}
+
+                              {/* Cancel Order */}
+                              {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={async () => {
+                                      if (confirm(`Are you sure you want to cancel order #${order.orderNumber}?`)) {
+                                        try {
+                                          await transitionStatusMutation({
+                                            orderNumber: order.orderNumber,
+                                            data: { status: "CANCELLED", note: "Cancelled by admin from orders list" },
+                                          }).unwrap();
+                                          toast.success(`Order #${order.orderNumber} cancelled`);
+                                          void refetch();
+                                        } catch (err: any) {
+                                          toast.error(err?.data?.message || "Failed to cancel order");
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <Ban className="size-3.5 mr-2" />
+                                    Cancel Order
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
@@ -644,7 +938,7 @@ export function AdminOrdersPage() {
         />
       )}
 
-      {/* Courier Shipment Dialog */}
+      {/* Courier Shipment Dialog (Manual) */}
       {shipmentModalOrder && (
         <AdminOrderShipmentDialog
           open={!!shipmentModalOrder}
@@ -653,12 +947,47 @@ export function AdminOrdersPage() {
         />
       )}
 
-      {/* Invoice Modal */}
+      {/* Single Courier Dispatch Dialog (Steadfast / Pathao API) */}
+      {bookCourierModalOrder && (
+        <AdminBookCourierDialog
+          open={!!bookCourierModalOrder}
+          onOpenChange={(open) => !open && setBookCourierModalOrder(null)}
+          order={bookCourierModalOrder}
+          onBookingSuccess={() => {
+            void refetch();
+            setBookCourierModalOrder(null);
+          }}
+        />
+      )}
+
+      {/* Bulk Courier Dispatch Modal */}
+      {isBulkCourierModalOpen && (
+        <AdminBulkCourierDispatchModal
+          open={isBulkCourierModalOpen}
+          onOpenChange={setIsBulkCourierModalOpen}
+          selectedOrders={orders.filter((o) => selectedOrderIds.has(o.id))}
+          onDispatchComplete={() => {
+            void refetch();
+            setSelectedOrderIds(new Set());
+          }}
+        />
+      )}
+
+      {/* Single Invoice Modal */}
       <OrderInvoiceModal
         order={invoiceModalOrder}
         open={Boolean(invoiceModalOrder)}
         onOpenChange={(open) => !open && setInvoiceModalOrder(null)}
       />
+
+      {/* Bulk Invoice Modal */}
+      {isBulkInvoiceOpen && (
+        <OrderInvoiceModal
+          orders={orders.filter((o) => selectedOrderIds.has(o.id))}
+          open={isBulkInvoiceOpen}
+          onOpenChange={setIsBulkInvoiceOpen}
+        />
+      )}
 
       {/* Single Shipping Label Modal */}
       {shippingLabelModalOrder && (

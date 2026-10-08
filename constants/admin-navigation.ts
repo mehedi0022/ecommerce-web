@@ -14,6 +14,7 @@ export type AdminNavChild = {
   title: string;
   href: string;
   requiredPermission?: string | string[];
+  badgeKey?: string;
 };
 
 export type AdminNavItem = {
@@ -48,20 +49,37 @@ export const adminNavigation: AdminNavItem[] = [
     ],
   },
   {
-    title: "Sales",
+    title: "Orders",
     href: "/admin/orders",
     icon: ShoppingBag,
     requiredPermission: [
       "orders:read:any",
       "orders:manage",
+    ],
+    children: [
+      { title: "All Orders", href: "/admin/orders", badgeKey: "ALL", requiredPermission: "orders:read:any" },
+      { title: "Pending", href: "/admin/orders?status=PENDING", badgeKey: "PENDING", requiredPermission: "orders:read:any" },
+      { title: "Confirmed", href: "/admin/orders?status=CONFIRMED", badgeKey: "CONFIRMED", requiredPermission: "orders:read:any" },
+      { title: "Processing", href: "/admin/orders?status=PROCESSING", badgeKey: "PROCESSING", requiredPermission: "orders:read:any" },
+      { title: "Ready to Ship", href: "/admin/orders?status=READY_TO_SHIP", badgeKey: "READY_TO_SHIP", requiredPermission: "orders:read:any" },
+      { title: "Shipped", href: "/admin/orders?status=SHIPPED", badgeKey: "SHIPPED", requiredPermission: "orders:read:any" },
+      { title: "Delivered", href: "/admin/orders?status=DELIVERED", badgeKey: "DELIVERED", requiredPermission: "orders:read:any" },
+      { title: "Cancelled", href: "/admin/orders?status=CANCELLED", badgeKey: "CANCELLED", requiredPermission: "orders:read:any" },
+      { title: "Returned / Failed", href: "/admin/orders?status=RETURNED", badgeKey: "RETURNED", requiredPermission: "orders:read:any" },
+    ],
+  },
+  {
+    title: "Fulfillment & Sales",
+    href: "/admin/shipments",
+    icon: Truck,
+    requiredPermission: [
       "shipments:manage",
       "returns:read",
       "refunds:read",
       "coupons:manage",
     ],
     children: [
-      { title: "Orders", href: "/admin/orders", requiredPermission: "orders:read:any" },
-      { title: "Shipments", href: "/admin/shipments", requiredPermission: "shipments:manage" },
+      { title: "Shipments & Courier", href: "/admin/shipments", requiredPermission: "shipments:manage" },
       { title: "Returns", href: "/admin/returns", requiredPermission: "returns:read" },
       { title: "Refunds", href: "/admin/refunds", requiredPermission: "refunds:read" },
       { title: "Coupons", href: "/admin/coupons", requiredPermission: "coupons:manage" },
