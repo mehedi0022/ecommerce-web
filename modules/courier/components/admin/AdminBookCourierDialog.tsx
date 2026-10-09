@@ -91,6 +91,7 @@ export function AdminBookCourierDialog({
           itemWeightKg: Number(weight) || 0.5,
           note: note.trim() || undefined,
           customNote: note.trim() || undefined,
+          forceRebook: true,
         },
       }).unwrap();
 

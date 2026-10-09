@@ -56,7 +56,9 @@ function TrackOrderContent() {
 
     const cleanPhone = phoneNumber.trim();
     if (!cleanPhone) {
-      toast.error("Please enter the recipient phone number to verify and track your order");
+      toast.error(
+        "Please enter the recipient phone number to verify and track your order",
+      );
       return;
     }
 
@@ -70,7 +72,9 @@ function TrackOrderContent() {
     } catch (err: any) {
       setOrderResult(null);
       toast.error(
-        err?.data?.message || err?.message || "No order found matching the provided details."
+        err?.data?.message ||
+          err?.message ||
+          "No order found matching the provided details.",
       );
     }
   };
@@ -96,18 +100,6 @@ function TrackOrderContent() {
   return (
     <main className="min-h-[calc(100vh-5rem)] bg-muted/30 py-8 sm:py-16">
       <StoreContainer className="max-w-4xl">
-        {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-6 flex items-center gap-2 text-xs text-muted-foreground"
-        >
-          <Link href="/" className="hover:text-foreground">
-            Home
-          </Link>
-          <span>/</span>
-          <span className="font-medium text-foreground">Track Order</span>
-        </nav>
-
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="text-center max-w-xl mx-auto mb-10">
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4 shadow-xs">
@@ -117,7 +109,8 @@ function TrackOrderContent() {
             Track Your Order
           </h1>
           <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-            Check the live delivery status of your order anytime without needing an account. Just enter your Order Reference Number below.
+            Check the live delivery status of your order anytime without needing
+            an account. Just enter your Order Reference Number below.
           </p>
         </div>
 
@@ -152,7 +145,9 @@ function TrackOrderContent() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isLoading || !orderNumber.trim() || !phoneNumber.trim()}
+                  disabled={
+                    isLoading || !orderNumber.trim() || !phoneNumber.trim()
+                  }
                   className="h-12 px-7 text-sm font-bold gap-2 rounded-xl shadow-xs"
                 >
                   <Search className="size-4" />
@@ -163,7 +158,8 @@ function TrackOrderContent() {
               <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <HelpCircle className="size-3.5 text-muted-foreground shrink-0" />
                 <span>
-                  For customer security, enter your Order Number and the matching recipient phone number used during checkout.
+                  For customer security, enter your Order Number and the
+                  matching recipient phone number used during checkout.
                 </span>
               </p>
             </form>
@@ -199,8 +195,8 @@ function TrackOrderContent() {
                         orderResult.status === "DELIVERED"
                           ? "default"
                           : orderResult.status === "CANCELLED"
-                          ? "destructive"
-                          : "secondary"
+                            ? "destructive"
+                            : "secondary"
                       }
                       className="text-xs font-bold"
                     >
@@ -210,13 +206,18 @@ function TrackOrderContent() {
                 </div>
 
                 <div className="text-left sm:text-right">
-                  <span className="text-xs text-muted-foreground">Placed by</span>
+                  <span className="text-xs text-muted-foreground">
+                    Placed by
+                  </span>
                   <p className="text-sm font-bold text-foreground">
                     {orderResult.customerName}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
                     {orderResult.placedAt
-                      ? format(new Date(orderResult.placedAt), "dd MMMM yyyy, hh:mm a")
+                      ? format(
+                          new Date(orderResult.placedAt),
+                          "dd MMMM yyyy, hh:mm a",
+                        )
                       : ""}
                   </p>
                 </div>
@@ -246,7 +247,9 @@ function TrackOrderContent() {
                 </div>
                 <div className="text-xs space-y-1.5 text-muted-foreground">
                   <p>
-                    <span className="font-semibold text-foreground">Destination:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      Destination:
+                    </span>{" "}
                     {orderResult.deliveryDistrict}, Bangladesh
                   </p>
                   <p>
@@ -254,7 +257,9 @@ function TrackOrderContent() {
                     {orderResult.shippingZoneName || "Bangladesh"}
                   </p>
                   <p>
-                    <span className="font-semibold text-foreground">Delivery Method:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      Delivery Method:
+                    </span>{" "}
                     {orderResult.shippingMethodName || "Standard Delivery"}
                   </p>
                 </div>
@@ -268,11 +273,15 @@ function TrackOrderContent() {
                 </div>
                 <div className="text-xs space-y-1 text-muted-foreground">
                   <p>
-                    <span className="font-semibold text-foreground">Items:</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      Items:
+                    </span>{" "}
                     {orderResult.itemCount} items
                   </p>
                   <div className="pt-2 flex items-baseline justify-between border-t mt-2">
-                    <span className="font-semibold text-foreground">Total Payable (COD):</span>
+                    <span className="font-semibold text-foreground">
+                      Total Payable (COD):
+                    </span>
                     <span className="text-xl font-black text-primary">
                       ৳{Number(orderResult.grandTotal).toFixed(2)}
                     </span>
@@ -318,12 +327,16 @@ function TrackOrderContent() {
                           </p>
                         )}
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          Qty: {item.quantity} × ৳{Number(item.unitPrice).toFixed(2)}
+                          Qty: {item.quantity} × ৳
+                          {Number(item.unitPrice).toFixed(2)}
                         </p>
                         {item.attributes && item.attributes.length > 0 && (
                           <p className="text-[10px] text-muted-foreground">
                             {item.attributes
-                              .map((a) => `${a.attributeName}: ${a.attributeValue}`)
+                              .map(
+                                (a) =>
+                                  `${a.attributeName}: ${a.attributeValue}`,
+                              )
                               .join(", ")}
                           </p>
                         )}
@@ -349,7 +362,10 @@ function TrackOrderContent() {
               Order Not Found
             </h3>
             <p className="mt-1.5 text-xs text-muted-foreground max-w-sm mx-auto">
-              We couldn&apos;t find any order matching &ldquo;<span className="font-mono font-medium">{orderNumber}</span>&rdquo;. Please double check your order number or phone number and try again.
+              We couldn&apos;t find any order matching &ldquo;
+              <span className="font-mono font-medium">{orderNumber}</span>
+              &rdquo;. Please double check your order number or phone number and
+              try again.
             </p>
             <Button
               variant="outline"
@@ -365,36 +381,7 @@ function TrackOrderContent() {
             </Button>
           </div>
         ) : (
-          /* ══════════════════════════════════════════════════════════════════
-              INITIAL EMPTY STATE (BEFORE SEARCH)
-          ══════════════════════════════════════════════════════════════════ */
-          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground mb-4">
-              <Package className="size-7" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground">
-              No Tracking Search Yet
-            </h3>
-            <p className="mt-1.5 text-xs text-muted-foreground max-w-sm mx-auto">
-              Enter your Order Reference Number in the input field above to view real-time delivery status, timeline, and item receipts.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/products"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs font-semibold gap-1.5")}
-              >
-                <ShoppingBag className="size-3.5" />
-                Browse Catalog
-              </Link>
-              <Link
-                href="/account/orders"
-                className={cn(buttonVariants({ size: "sm" }), "text-xs font-semibold gap-1.5")}
-              >
-                Sign In to View All Orders
-                <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
-          </div>
+          <></>
         )}
       </StoreContainer>
     </main>
@@ -403,7 +390,13 @@ function TrackOrderContent() {
 
 export default function TrackOrderPage() {
   return (
-    <Suspense fallback={<div className="container py-12 text-center text-sm text-muted-foreground">Loading tracking portal...</div>}>
+    <Suspense
+      fallback={
+        <div className="container py-12 text-center text-sm text-muted-foreground">
+          Loading tracking portal...
+        </div>
+      }
+    >
       <TrackOrderContent />
     </Suspense>
   );

@@ -823,115 +823,146 @@ export function AdminOrderDetailsPage({
             </CardHeader>
             <CardContent className="p-5 space-y-3 text-xs">
               {order.shipment ? (
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Courier Gateway:</span>
-                    <span className="font-semibold text-foreground">
-                      {order.shipment.courierName || "Standard Courier"}
-                    </span>
-                  </div>
+                (() => {
+                  const normCourier = String(order.shipment.courierStatus ?? "").toLowerCase();
+                  const isPickupCancelled =
+                    order.shipment.status === "CANCELLED" ||
+                    normCourier.includes("cancel") ||
+                    normCourier === "cancelled_by_admin";
 
-                  {order.shipment.consignmentId && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Consignment ID:</span>
-                      <span className="font-mono font-bold text-foreground">
-                        {order.shipment.consignmentId}
-                      </span>
-                    </div>
-                  )}
+                  return (
+                    <div className="space-y-2.5">
+                      {isPickupCancelled && (
+                        <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 p-2.5 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2">
+                          <AlertTriangle className="size-4 shrink-0 mt-0.5 text-rose-600" />
+                          <div className="flex-1">
+                            <p className="font-semibold">Courier Pickup Cancelled</p>
+                            <p className="text-[11px] mt-0.5 leading-relaxed">
+                              Courier pickup was cancelled before departure. The order has been reverted to CONFIRMED. Click <strong>Re-book</strong> below to dispatch with another courier.
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                  {order.shipment.trackingNumber && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Tracking ID:</span>
-                      <span className="font-mono font-bold text-foreground">
-                        {order.shipment.trackingNumber}
-                      </span>
-                    </div>
-                  )}
-
-                  {order.shipment.codAmount !== undefined &&
-                    order.shipment.codAmount !== null && (
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">COD Collection:</span>
-                        <span className="font-mono font-bold text-primary">
-                          ৳{(!isNaN(Number(order.shipment.codAmount)) ? Number(order.shipment.codAmount) : 0).toLocaleString()}
+                        <span className="text-muted-foreground">Courier Gateway:</span>
+                        <span className="font-semibold text-foreground">
+                          {order.shipment.courierName || "Standard Courier"}
                         </span>
                       </div>
-                    )}
 
-                  {order.shipment.courierStatus && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Courier Status:</span>
-                      <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                        {order.shipment.courierStatus}
-                      </Badge>
-                    </div>
-                  )}
+                      {order.shipment.consignmentId && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Consignment ID:</span>
+                          <span className="font-mono font-bold text-foreground">
+                            {order.shipment.consignmentId}
+                          </span>
+                        </div>
+                      )}
 
-                  {order.shipment.trackingUrl && (
-                    <div className="pt-1">
-                      <a
-                        href={order.shipment.trackingUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-primary hover:underline font-semibold"
-                      >
-                        Open Live Courier Tracking
-                        <ExternalLink className="size-3" />
-                      </a>
-                    </div>
-                  )}
+                      {order.shipment.trackingNumber && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Tracking ID:</span>
+                          <span className="font-mono font-bold text-foreground">
+                            {order.shipment.trackingNumber}
+                          </span>
+                        </div>
+                      )}
 
-                  {order.shipment.lastDispatchError && (
-                    <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive flex items-start gap-2 mt-2">
-                      <AlertTriangle className="size-4 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold">Last Dispatch Issue:</p>
-                        <p className="text-[11px] mt-0.5">{order.shipment.lastDispatchError}</p>
+                      {order.shipment.codAmount !== undefined &&
+                        order.shipment.codAmount !== null && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">COD Collection:</span>
+                            <span className="font-mono font-bold text-primary">
+                              ৳{(!isNaN(Number(order.shipment.codAmount)) ? Number(order.shipment.codAmount) : 0).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+
+                      {order.shipment.courierStatus && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Courier Status:</span>
+                          <Badge
+                            variant="secondary"
+                            className={`text-[10px] uppercase font-semibold ${
+                              isPickupCancelled
+                                ? "bg-rose-500/10 text-rose-700 border-rose-500/20"
+                                : ""
+                            }`}
+                          >
+                            {isPickupCancelled ? "PICKUP CANCELLED" : order.shipment.courierStatus}
+                          </Badge>
+                        </div>
+                      )}
+
+                      {order.shipment.trackingUrl && (
+                        <div className="pt-1">
+                          <a
+                            href={order.shipment.trackingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 text-primary hover:underline font-semibold"
+                          >
+                            Open Live Courier Tracking
+                            <ExternalLink className="size-3" />
+                          </a>
+                        </div>
+                      )}
+
+                      {order.shipment.lastDispatchError && (
+                        <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-xs text-destructive flex items-start gap-2 mt-2">
+                          <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-semibold">Last Dispatch Issue:</p>
+                            <p className="text-[11px] mt-0.5">{order.shipment.lastDispatchError}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-2.5 mt-2 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs gap-1 flex-1 text-primary hover:text-primary font-medium"
+                          disabled={isSyncingCourier}
+                          onClick={handleSyncCourierStatus}
+                          title="Fetch live delivery status from courier API"
+                        >
+                          <RefreshCw className={`size-3 ${isSyncingCourier ? "animate-spin" : ""}`} />
+                          {isSyncingCourier ? "Syncing..." : "Sync Status"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5"
+                          onClick={() => setIsShippingLabelModalOpen(true)}
+                        >
+                          <Tag className="size-3" />
+                          Print Label
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={isPickupCancelled ? "default" : "outline"}
+                          className={`h-8 text-xs gap-1 ${
+                            isPickupCancelled ? "bg-primary text-primary-foreground font-semibold hover:bg-primary/90" : ""
+                          }`}
+                          onClick={() => setIsBookCourierDialogOpen(true)}
+                        >
+                          <Truck className="size-3" />
+                          Re-book
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs text-muted-foreground"
+                          onClick={() => setIsShipmentDialogOpen(true)}
+                        >
+                          Edit
+                        </Button>
                       </div>
                     </div>
-                  )}
-
-                  <div className="border-t pt-2.5 mt-2 flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs gap-1 flex-1 text-primary hover:text-primary font-medium"
-                      disabled={isSyncingCourier}
-                      onClick={handleSyncCourierStatus}
-                      title="Fetch live delivery status from courier API"
-                    >
-                      <RefreshCw className={`size-3 ${isSyncingCourier ? "animate-spin" : ""}`} />
-                      {isSyncingCourier ? "Syncing..." : "Sync Status"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/5"
-                      onClick={() => setIsShippingLabelModalOpen(true)}
-                    >
-                      <Tag className="size-3" />
-                      Print Label
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-xs gap-1"
-                      onClick={() => setIsBookCourierDialogOpen(true)}
-                    >
-                      <Truck className="size-3" />
-                      Re-book
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-xs text-muted-foreground"
-                      onClick={() => setIsShipmentDialogOpen(true)}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </div>
+                  );
+                })()
               ) : (
                 <div className="text-center py-2 space-y-2.5">
                   <p className="text-muted-foreground">

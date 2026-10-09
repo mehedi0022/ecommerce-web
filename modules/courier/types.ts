@@ -35,6 +35,7 @@ export interface BookCourierOrderInput {
   itemWeightKg?: number;
   note?: string;
   customNote?: string;
+  forceRebook?: boolean;
 }
 
 export interface BookCourierOrderResult {

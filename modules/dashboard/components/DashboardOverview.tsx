@@ -82,13 +82,41 @@ function ProductThumb({
 }
 
 const statusColors: Record<string, { bg: string; text: string; icon: any }> = {
-  PENDING: { bg: "bg-amber-500/10", text: "text-amber-700 dark:text-amber-400", icon: Clock3 },
-  CONFIRMED: { bg: "bg-blue-500/10", text: "text-blue-700 dark:text-blue-400", icon: CheckCircle2 },
-  PROCESSING: { bg: "bg-indigo-500/10", text: "text-indigo-700 dark:text-indigo-400", icon: Package },
-  SHIPPED: { bg: "bg-violet-500/10", text: "text-violet-700 dark:text-violet-400", icon: Truck },
-  DELIVERED: { bg: "bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400", icon: Boxes },
-  CANCELLED: { bg: "bg-rose-500/10", text: "text-rose-700 dark:text-rose-400", icon: XCircle },
-  RETURNED: { bg: "bg-zinc-500/10", text: "text-zinc-700 dark:text-zinc-400", icon: RefreshCw },
+  PENDING: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-700 dark:text-amber-400",
+    icon: Clock3,
+  },
+  CONFIRMED: {
+    bg: "bg-blue-500/10",
+    text: "text-blue-700 dark:text-blue-400",
+    icon: CheckCircle2,
+  },
+  PROCESSING: {
+    bg: "bg-indigo-500/10",
+    text: "text-indigo-700 dark:text-indigo-400",
+    icon: Package,
+  },
+  SHIPPED: {
+    bg: "bg-violet-500/10",
+    text: "text-violet-700 dark:text-violet-400",
+    icon: Truck,
+  },
+  DELIVERED: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-700 dark:text-emerald-400",
+    icon: Boxes,
+  },
+  CANCELLED: {
+    bg: "bg-rose-500/10",
+    text: "text-rose-700 dark:text-rose-400",
+    icon: XCircle,
+  },
+  RETURNED: {
+    bg: "bg-zinc-500/10",
+    text: "text-zinc-700 dark:text-zinc-400",
+    icon: RefreshCw,
+  },
 };
 
 export function DashboardOverview() {
@@ -96,10 +124,8 @@ export function DashboardOverview() {
   const [chartMetric, setChartMetric] = useState<"sales" | "orders">("sales");
 
   // Fetch live dashboard analytics with 30-second background polling
-  const { data, isLoading, isFetching, refetch } = useGetDashboardAnalyticsQuery(
-    { period },
-    { pollingInterval: 30000 },
-  );
+  const { data, isLoading, isFetching, refetch } =
+    useGetDashboardAnalyticsQuery({ period }, { pollingInterval: 30000 });
 
   const analytics = data?.data;
   const metrics = analytics?.metrics;
@@ -138,7 +164,8 @@ export function DashboardOverview() {
             </span>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Real-time store performance, fulfillment workload, and stock telemetry.
+            Real-time store performance, fulfillment workload, and stock
+            telemetry.
           </p>
         </div>
 
@@ -153,7 +180,10 @@ export function DashboardOverview() {
             title="Refresh analytics data"
           >
             <RefreshCw
-              className={cn("size-3.5", isFetching && "animate-spin text-primary")}
+              className={cn(
+                "size-3.5",
+                isFetching && "animate-spin text-primary",
+              )}
             />
             {isFetching ? "Syncing..." : "Refresh"}
           </Button>
@@ -194,7 +224,9 @@ export function DashboardOverview() {
                   Total Revenue
                 </p>
                 <p className="mt-2 text-2xl font-bold tracking-tight text-foreground font-mono">
-                  {isLoading ? "..." : (metrics?.sales.formattedValue ?? "৳0.00")}
+                  {isLoading
+                    ? "..."
+                    : (metrics?.sales.formattedValue ?? "৳0.00")}
                 </p>
               </div>
               <span className="rounded-xl bg-primary/10 p-2.5 text-primary">
@@ -216,7 +248,9 @@ export function DashboardOverview() {
                   <ArrowDownRight className="size-3.5" />
                 )}
                 {Math.abs(metrics?.sales.changePercentage ?? 0)}%
-                <span className="font-normal text-muted-foreground ml-1">vs prev</span>
+                <span className="font-normal text-muted-foreground ml-1">
+                  vs prev
+                </span>
               </span>
               <span className="text-muted-foreground text-[11px] font-mono">
                 AOV: {metrics?.sales.formattedAov ?? "৳0.00"}
@@ -256,7 +290,9 @@ export function DashboardOverview() {
                   <ArrowDownRight className="size-3.5" />
                 )}
                 {Math.abs(metrics?.orders.changePercentage ?? 0)}%
-                <span className="font-normal text-muted-foreground ml-1">vs prev</span>
+                <span className="font-normal text-muted-foreground ml-1">
+                  vs prev
+                </span>
               </span>
               <span className="text-muted-foreground text-[11px]">
                 {metrics?.orders.activeOrdersCount ?? 0} active in fulfillment
@@ -274,7 +310,9 @@ export function DashboardOverview() {
                   Customer Growth
                 </p>
                 <p className="mt-2 text-2xl font-bold tracking-tight text-foreground font-mono">
-                  {isLoading ? "..." : (metrics?.customers.formattedValue ?? "0")}
+                  {isLoading
+                    ? "..."
+                    : (metrics?.customers.formattedValue ?? "0")}
                 </p>
               </div>
               <span className="rounded-xl bg-violet-500/10 p-2.5 text-violet-600 dark:text-violet-400">
@@ -296,7 +334,9 @@ export function DashboardOverview() {
                   <ArrowDownRight className="size-3.5" />
                 )}
                 {Math.abs(metrics?.customers.changePercentage ?? 0)}%
-                <span className="font-normal text-muted-foreground ml-1">vs prev</span>
+                <span className="font-normal text-muted-foreground ml-1">
+                  vs prev
+                </span>
               </span>
               <span className="text-muted-foreground text-[11px]">
                 {metrics?.customers.totalCustomers ?? 0} total registered
@@ -346,9 +386,12 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-base font-bold">Performance Trend</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Performance Trend
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Revenue & order volume generated across {period === "today" ? "today" : `the last ${period}`}
+                Revenue & order volume generated across{" "}
+                {period === "today" ? "today" : `the last ${period}`}
               </p>
             </div>
 
@@ -379,7 +422,7 @@ export function DashboardOverview() {
             </div>
           </CardHeader>
           <CardContent className="pt-2">
-            <div className="h-64 w-full">
+            <div className="h-94 w-full">
               {salesTrend.length === 0 || isLoading ? (
                 <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                   Loading telemetry trend...
@@ -391,9 +434,23 @@ export function DashboardOverview() {
                     margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="primaryFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.0} />
+                      <linearGradient
+                        id="primaryFill"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.25}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.0}
+                        />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -412,6 +469,8 @@ export function DashboardOverview() {
                       tickLine={false}
                       axisLine={false}
                       tick={{ fontSize: 11 }}
+                      tickCount={7}
+                      domain={[0, "auto"]}
                       tickFormatter={(value) =>
                         chartMetric === "sales"
                           ? `৳${value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}`
@@ -454,7 +513,9 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-base font-bold">Fulfillment Pipeline</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Fulfillment Pipeline
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Current order lifecycle status & workload
               </p>
@@ -470,14 +531,53 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent className="space-y-3 pt-2">
             {[
-              { key: "PENDING", label: "Pending Confirmation", count: statusCounts.pending, color: "text-amber-600 bg-amber-500/10", border: "border-amber-500/20" },
-              { key: "CONFIRMED", label: "Confirmed", count: statusCounts.confirmed, color: "text-blue-600 bg-blue-500/10", border: "border-blue-500/20" },
-              { key: "PROCESSING", label: "Packaging & Processing", count: statusCounts.processing, color: "text-indigo-600 bg-indigo-500/10", border: "border-indigo-500/20" },
-              { key: "SHIPPED", label: "Dispatched / Courier Transit", count: statusCounts.shipped, color: "text-violet-600 bg-violet-500/10", border: "border-violet-500/20" },
-              { key: "DELIVERED", label: "Delivered Successfully", count: statusCounts.delivered, color: "text-emerald-600 bg-emerald-500/10", border: "border-emerald-500/20" },
-              { key: "CANCELLED", label: "Cancelled / Failed", count: statusCounts.cancelled, color: "text-rose-600 bg-rose-500/10", border: "border-rose-500/20" },
+              {
+                key: "PENDING",
+                label: "Pending Confirmation",
+                count: statusCounts.pending,
+                color: "text-amber-600 bg-amber-500/10",
+                border: "border-amber-500/20",
+              },
+              {
+                key: "CONFIRMED",
+                label: "Confirmed",
+                count: statusCounts.confirmed,
+                color: "text-blue-600 bg-blue-500/10",
+                border: "border-blue-500/20",
+              },
+              {
+                key: "PROCESSING",
+                label: "Packaging & Processing",
+                count: statusCounts.processing,
+                color: "text-indigo-600 bg-indigo-500/10",
+                border: "border-indigo-500/20",
+              },
+              {
+                key: "SHIPPED",
+                label: "Dispatched / Courier Transit",
+                count: statusCounts.shipped,
+                color: "text-violet-600 bg-violet-500/10",
+                border: "border-violet-500/20",
+              },
+              {
+                key: "DELIVERED",
+                label: "Delivered Successfully",
+                count: statusCounts.delivered,
+                color: "text-emerald-600 bg-emerald-500/10",
+                border: "border-emerald-500/20",
+              },
+              {
+                key: "CANCELLED",
+                label: "Cancelled / Failed",
+                count: statusCounts.cancelled,
+                color: "text-rose-600 bg-rose-500/10",
+                border: "border-rose-500/20",
+              },
             ].map((step) => {
-              const totalOrders = Math.max(1, Object.values(statusCounts).reduce((a, b) => a + b, 0));
+              const totalOrders = Math.max(
+                1,
+                Object.values(statusCounts).reduce((a, b) => a + b, 0),
+              );
               const pct = ((step.count / totalOrders) * 100).toFixed(0);
 
               return (
@@ -499,7 +599,9 @@ export function DashboardOverview() {
                       <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
                         {step.label}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">{pct}% of orders</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {pct}% of orders
+                      </p>
                     </div>
                   </div>
                   <ChevronRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -516,7 +618,9 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base font-bold">Recent Live Orders</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Recent Live Orders
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Latest customer transactions placed through the storefront
               </p>
@@ -556,7 +660,10 @@ export function DashboardOverview() {
                       };
 
                       return (
-                        <tr key={o.id} className="hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={o.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
                           <td className="px-5 py-3.5">
                             <Link
                               href={`/admin/orders/${o.id}`}
@@ -565,25 +672,32 @@ export function DashboardOverview() {
                               {o.orderNumber}
                             </Link>
                             <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                              {new Date(o.createdAt).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {new Date(o.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </p>
                           </td>
                           <td className="px-5 py-3.5">
-                            <p className="font-semibold text-foreground">{o.customerName}</p>
-                            <p className="text-[11px] text-muted-foreground">{o.customerPhone}</p>
+                            <p className="font-semibold text-foreground">
+                              {o.customerName}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {o.customerPhone}
+                            </p>
                           </td>
                           <td className="px-5 py-3.5">
                             <span className="font-medium text-foreground">
                               {o.paymentMethod === "CASH_ON_DELIVERY"
                                 ? "Cash on Delivery"
                                 : o.paymentMethod === "PARTIAL_COD"
-                                ? "Partial COD"
-                                : "Online Payment"}
+                                  ? "Partial COD"
+                                  : "Online Payment"}
                             </span>
                             <p
                               className={cn(
@@ -591,15 +705,21 @@ export function DashboardOverview() {
                                 o.paymentStatus === "PAID"
                                   ? "text-emerald-600"
                                   : o.paymentStatus === "PARTIALLY_PAID"
-                                  ? "text-blue-600"
-                                  : "text-amber-600",
+                                    ? "text-blue-600"
+                                    : "text-amber-600",
                               )}
                             >
                               {o.paymentStatus}
                             </p>
                           </td>
                           <td className="px-5 py-3.5">
-                            <Badge className={cn("font-semibold text-[10px]", stConfig.bg, stConfig.text)}>
+                            <Badge
+                              className={cn(
+                                "font-semibold text-[10px]",
+                                stConfig.bg,
+                                stConfig.text,
+                              )}
+                            >
                               {o.status}
                             </Badge>
                           </td>
@@ -630,7 +750,9 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base font-bold">Stock Attention</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Stock Attention
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Products nearing exhaustion requiring restocking
               </p>
@@ -705,7 +827,9 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base font-bold">Top Selling Products</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Top Selling Products
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Highest volume products ordered in selected period
               </p>
@@ -767,7 +891,9 @@ export function DashboardOverview() {
         <Card className="shadow-xs border-border/80">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base font-bold">Payment Methods Breakdown</CardTitle>
+              <CardTitle className="text-base font-bold">
+                Payment Methods Breakdown
+              </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Distribution of transactions by payment gateway & mode
               </p>
@@ -804,7 +930,9 @@ export function DashboardOverview() {
                   <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(2, pm.percentage))}%` }}
+                      style={{
+                        width: `${Math.min(100, Math.max(2, pm.percentage))}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -817,7 +945,9 @@ export function DashboardOverview() {
       {/* ── ROW 5: Quick Management Actions ──────────────────────────────── */}
       <Card className="shadow-xs border-border/80">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold">Quick Operations</CardTitle>
+          <CardTitle className="text-base font-bold">
+            Quick Operations
+          </CardTitle>
           <p className="text-xs text-muted-foreground">
             Fast access to frequent store and catalog management tasks
           </p>
@@ -831,7 +961,9 @@ export function DashboardOverview() {
               <Plus className="size-5" />
             </div>
             <span className="text-xs font-semibold">New Product</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">Add to catalog</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              Add to catalog
+            </span>
           </Link>
 
           <Link
@@ -842,7 +974,9 @@ export function DashboardOverview() {
               <ShoppingBag className="size-5" />
             </div>
             <span className="text-xs font-semibold">Orders</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">Fulfillment & dispatch</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              Fulfillment & dispatch
+            </span>
           </Link>
 
           <Link
@@ -853,7 +987,9 @@ export function DashboardOverview() {
               <Warehouse className="size-5" />
             </div>
             <span className="text-xs font-semibold">Inventory</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">Stock & movements</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              Stock & movements
+            </span>
           </Link>
 
           <Link
@@ -864,7 +1000,9 @@ export function DashboardOverview() {
               <Users className="size-5" />
             </div>
             <span className="text-xs font-semibold">Customers</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">User directory</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              User directory
+            </span>
           </Link>
 
           <Link
@@ -875,7 +1013,9 @@ export function DashboardOverview() {
               <Truck className="size-5" />
             </div>
             <span className="text-xs font-semibold">Couriers</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">Steadfast & Pathao</span>
+            <span className="text-[10px] text-muted-foreground mt-0.5">
+              Steadfast & Pathao
+            </span>
           </Link>
         </CardContent>
       </Card>

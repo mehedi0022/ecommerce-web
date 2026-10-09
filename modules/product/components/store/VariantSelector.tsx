@@ -193,7 +193,7 @@ export function VariantSelector({
                 {v.sku}
                 {v.price && (
                   <span className="ml-1.5 opacity-75 font-normal">
-                    (${Number(v.price).toFixed(2)})
+                    (৳{Number(v.price).toFixed(2)})
                   </span>
                 )}
               </button>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ShoppingCart,
@@ -24,6 +24,8 @@ import {
   User,
   PackageCheck,
   Award,
+  Zap,
+  Loader2,
 } from "lucide-react";
 
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
@@ -52,26 +54,48 @@ import type { ProductVariant } from "@/modules/product/types";
 
 function Breadcrumb({ name, category }: { name: string; category?: string }) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground">
-      <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+    <nav
+      aria-label="Breadcrumb"
+      className="flex items-center gap-1.5 text-xs text-muted-foreground"
+    >
+      <Link href="/" className="hover:text-foreground transition-colors">
+        Home
+      </Link>
       <ChevronRight className="size-3" />
-      <Link href="/products" className="hover:text-foreground transition-colors">Products</Link>
+      <Link
+        href="/products"
+        className="hover:text-foreground transition-colors"
+      >
+        Products
+      </Link>
       {category && (
         <>
           <ChevronRight className="size-3" />
-          <Link href={`/category/${category}`} className="hover:text-foreground transition-colors capitalize">
+          <Link
+            href={`/category/${category}`}
+            className="hover:text-foreground transition-colors capitalize"
+          >
             {category}
           </Link>
         </>
       )}
       <ChevronRight className="size-3" />
-      <span className="text-foreground font-medium line-clamp-1 max-w-[180px]">{name}</span>
+      <span className="text-foreground font-medium line-clamp-1 max-w-[180px]">
+        {name}
+      </span>
     </nav>
   );
 }
 
-function StarRating({ rating = 0, size = "sm" }: { rating?: number; size?: "sm" | "md" | "lg" }) {
-  const iconSize = size === "lg" ? "size-5" : size === "md" ? "size-4" : "size-3.5";
+function StarRating({
+  rating = 0,
+  size = "sm",
+}: {
+  rating?: number;
+  size?: "sm" | "md" | "lg";
+}) {
+  const iconSize =
+    size === "lg" ? "size-5" : size === "md" ? "size-4" : "size-3.5";
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
@@ -81,7 +105,7 @@ function StarRating({ rating = 0, size = "sm" }: { rating?: number; size?: "sm" 
             iconSize,
             s <= Math.round(rating)
               ? "fill-amber-400 text-amber-400"
-              : "fill-muted text-muted-foreground/25"
+              : "fill-muted text-muted-foreground/25",
           )}
         />
       ))}
@@ -89,7 +113,15 @@ function StarRating({ rating = 0, size = "sm" }: { rating?: number; size?: "sm" 
   );
 }
 
-function RatingSummaryBadge({ count = 0, rating = 0, onClick }: { count?: number; rating?: number; onClick?: () => void }) {
+function RatingSummaryBadge({
+  count = 0,
+  rating = 0,
+  onClick,
+}: {
+  count?: number;
+  rating?: number;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
@@ -97,7 +129,9 @@ function RatingSummaryBadge({ count = 0, rating = 0, onClick }: { count?: number
       className="flex items-center gap-2 hover:opacity-80 transition-opacity text-left cursor-pointer group"
     >
       <StarRating rating={rating} size="md" />
-      <span className="text-sm font-semibold">{rating ? rating.toFixed(1) : "No ratings yet"}</span>
+      <span className="text-sm font-semibold">
+        {rating ? rating.toFixed(1) : "No ratings yet"}
+      </span>
       <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors">
         ({count} {count === 1 ? "review" : "reviews"})
       </span>
@@ -109,7 +143,11 @@ function TrustBadges() {
   const items = [
     { icon: Truck, title: "Free shipping", desc: "On orders over $50" },
     { icon: RotateCcw, title: "Easy returns", desc: "30-day return policy" },
-    { icon: ShieldCheck, title: "Secure payment", desc: "SSL encrypted checkout" },
+    {
+      icon: ShieldCheck,
+      title: "Secure payment",
+      desc: "SSL encrypted checkout",
+    },
   ];
   return (
     <div className="grid grid-cols-3 divide-x divide-border rounded-xl border bg-muted/30 text-center">
@@ -148,18 +186,29 @@ export default function ProductDetailsPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug ?? "";
 
-  const { data, isLoading, isError } = useGetPublicProductBySlugQuery(slug, { skip: !slug });
+  const { data, isLoading, isError } = useGetPublicProductBySlugQuery(slug, {
+    skip: !slug,
+  });
   const product = data?.data;
 
-  const [activeTab, setActiveTab] = useState<"description" | "reviews" | "specs">("description");
-  const [reviewSort, setReviewSort] = useState<"newest" | "oldest" | "highest" | "lowest">("newest");
-  const { data: ratingData } = useGetProductRatingSummaryQuery(slug, { skip: !slug });
-  const { data: reviewsData, isLoading: isReviewsLoading } = useGetProductReviewsQuery(
-    { slug, page: 1, limit: 20, sort: reviewSort },
-    { skip: !slug }
-  );
+  const [activeTab, setActiveTab] = useState<
+    "description" | "reviews" | "specs"
+  >("description");
+  const [reviewSort, setReviewSort] = useState<
+    "newest" | "oldest" | "highest" | "lowest"
+  >("newest");
+  const { data: ratingData } = useGetProductRatingSummaryQuery(slug, {
+    skip: !slug,
+  });
+  const { data: reviewsData, isLoading: isReviewsLoading } =
+    useGetProductReviewsQuery(
+      { slug, page: 1, limit: 20, sort: reviewSort },
+      { skip: !slug },
+    );
 
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null,
+  );
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -173,18 +222,22 @@ export default function ProductDetailsPage() {
   const reviewCount = ratingSummary?.reviewCount ?? reviewsList.length;
 
   // Related products
-  const primaryCategory = product?.categories.find((c) => c.isPrimary) ?? product?.categories[0];
+  const primaryCategory =
+    product?.categories.find((c) => c.isPrimary) ?? product?.categories[0];
   const { data: relatedData } = useListPublicProductsQuery(
     { limit: 4, categoryId: primaryCategory?.categoryId },
-    { skip: !product }
+    { skip: !product },
   );
-  const relatedProducts = (relatedData?.data ?? []).filter(
-    (p) => p.id !== product?.id
-  ).slice(0, 4);
+  const relatedProducts = (relatedData?.data ?? [])
+    .filter((p) => p.id !== product?.id)
+    .slice(0, 4);
 
   // Init selected variant from product
-  const activeVariant = selectedVariant ??
-    (product?.variants?.find((v) => v.isActive) ?? product?.variants?.[0] ?? null);
+  const activeVariant =
+    selectedVariant ??
+    product?.variants?.find((v) => v.isActive) ??
+    product?.variants?.[0] ??
+    null;
 
   const price = activeVariant ? Number(activeVariant.price) : null;
   const compareAt = activeVariant?.compareAtPrice
@@ -195,6 +248,8 @@ export default function ProductDetailsPage() {
       ? Math.round(((compareAt - price) / compareAt) * 100)
       : null;
 
+  const router = useRouter();
+  const [isDirectBuying, setIsDirectBuying] = useState(false);
   const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
 
   const handleAddToCart = useCallback(async () => {
@@ -212,9 +267,25 @@ export default function ProductDetailsPage() {
     }
   }, [activeVariant?.id, quantity, addToCart]);
 
+  const handleBuyNow = useCallback(async () => {
+    if (!activeVariant?.id) {
+      toast.error("Please select an available variant");
+      return;
+    }
+    try {
+      setIsDirectBuying(true);
+      await addToCart({ variantId: activeVariant.id, quantity }).unwrap();
+      toast.success("Proceeding to checkout...");
+      router.push("/checkout");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to proceed to checkout");
+      setIsDirectBuying(false);
+    }
+  }, [activeVariant?.id, quantity, addToCart, router]);
+
   const images = useMemo(() => {
-    return [...(product?.images ?? [])].sort(
-      (a, b) => (a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder)
+    return [...(product?.images ?? [])].sort((a, b) =>
+      a.isPrimary ? -1 : b.isPrimary ? 1 : a.sortOrder - b.sortOrder,
     );
   }, [product?.images]);
 
@@ -225,10 +296,14 @@ export default function ProductDetailsPage() {
   const activeVariantImageId = useMemo(() => {
     if (!activeVariant?.attributeValues?.length) return null;
     const variantAttrIds = new Set(
-      activeVariant.attributeValues.map((av) => av.attributeValue?.id).filter(Boolean)
+      activeVariant.attributeValues
+        .map((av) => av.attributeValue?.id)
+        .filter(Boolean),
     );
     const match = images.find((img) =>
-      img.attributeValues?.some((iav) => variantAttrIds.has(iav.attributeValueId))
+      img.attributeValues?.some((iav) =>
+        variantAttrIds.has(iav.attributeValueId),
+      ),
     );
     return match?.id ?? null;
   }, [activeVariant, images]);
@@ -242,9 +317,13 @@ export default function ProductDetailsPage() {
       <StoreContainer className="py-20 text-center">
         <p className="text-2xl font-bold">Product not found</p>
         <p className="mt-2 text-muted-foreground">
-          The product you&apos;re looking for doesn&apos;t exist or has been removed.
+          The product you&apos;re looking for doesn&apos;t exist or has been
+          removed.
         </p>
-        <Link href="/products" className={buttonVariants({ className: "mt-6" })}>
+        <Link
+          href="/products"
+          className={buttonVariants({ className: "mt-6" })}
+        >
           Browse Products
         </Link>
       </StoreContainer>
@@ -308,7 +387,10 @@ export default function ProductDetailsPage() {
                   </Badge>
                 )}
                 {!product.isCodAvailable && !product.requiresAdvancePayment && (
-                  <Badge variant="outline" className="w-fit text-destructive border-destructive text-[11px] font-medium">
+                  <Badge
+                    variant="outline"
+                    className="w-fit text-destructive border-destructive text-[11px] font-medium"
+                  >
                     ক্যাশ অন ডেলিভারি প্রযোজ্য নয়
                   </Badge>
                 )}
@@ -363,7 +445,9 @@ export default function ProductDetailsPage() {
               <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2.5 text-xs text-emerald-800 dark:text-emerald-300">
                 <Truck className="size-4 shrink-0 text-emerald-600" />
                 <span>
-                  <strong>ফ্রি ডেলিভারি:</strong> এই পণ্যটিতে কোনো ডেলিভারি চার্জ প্রযোজ্য নয় (পুরো অর্ডারে সব ফ্রি শিপিং পণ্য থাকলে শিপিং সম্পূর্ণ ফ্রি)।
+                  <strong>ফ্রি ডেলিভারি:</strong> এই পণ্যটিতে কোনো ডেলিভারি
+                  চার্জ প্রযোজ্য নয় (পুরো অর্ডারে সব ফ্রি শিপিং পণ্য থাকলে
+                  শিপিং সম্পূর্ণ ফ্রি)।
                 </span>
               </div>
             )}
@@ -374,7 +458,12 @@ export default function ProductDetailsPage() {
                   <span>⚡</span> আংশিক অগ্রিম পেমেন্ট পলিসি
                 </p>
                 <p className="leading-relaxed">
-                  এই অর্ডারের জন্য <strong>৳{product.advancePaymentAmount ?? "ডেলিভারি চার্জ"}</strong> অগ্রিম পেমেন্ট আবশ্যক। পণ্য হাতে পাওয়ার পর বাকি টাকা <strong>ক্যাশ অন ডেলিভারি (COD)</strong> হিসেবে পরিশোধ করবেন।
+                  এই অর্ডারের জন্য{" "}
+                  <strong>
+                    ৳{product.advancePaymentAmount ?? "ডেলিভারি চার্জ"}
+                  </strong>{" "}
+                  অগ্রিম পেমেন্ট আবশ্যক। পণ্য হাতে পাওয়ার পর বাকি টাকা{" "}
+                  <strong>ক্যাশ অন ডেলিভারি (COD)</strong> হিসেবে পরিশোধ করবেন।
                 </p>
               </div>
             )}
@@ -395,104 +484,140 @@ export default function ProductDetailsPage() {
 
             {/* ── Quantity ── */}
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Quantity</span>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center rounded-lg border bg-muted/30">
+              <span className="text-sm font-semibold text-foreground">
+                Quantity
+              </span>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center rounded-xl border border-border/80 bg-muted/30 shadow-2xs">
                   <button
                     type="button"
                     aria-label="Decrease quantity"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="flex size-10 items-center justify-center rounded-l-lg transition hover:bg-muted"
+                    className="flex size-10 items-center justify-center rounded-l-xl transition hover:bg-muted border-r border-border/50 cursor-pointer"
                   >
                     <Minus className="size-3.5" />
                   </button>
-                  <span className="w-12 text-center text-sm font-semibold">{quantity}</span>
+                  <span className="w-12 text-center text-sm font-bold text-foreground">
+                    {quantity}
+                  </span>
                   <button
                     type="button"
                     aria-label="Increase quantity"
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="flex size-10 items-center justify-center rounded-r-lg transition hover:bg-muted"
+                    className="flex size-10 items-center justify-center rounded-r-xl transition hover:bg-muted border-l border-border/50 cursor-pointer"
                   >
                     <Plus className="size-3.5" />
                   </button>
                 </div>
-                <span className="text-xs text-muted-foreground">
+
+                <span className="text-xs text-muted-foreground ml-auto">
                   {activeVariant?.sku ? `SKU: ${activeVariant.sku}` : ""}
                 </span>
               </div>
             </div>
 
-            {/* ── CTA buttons ── */}
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={!activeVariant || addedToCart || isAddingToCart}
-                className={cn(
-                  "h-12 flex-1 gap-2 text-base font-bold transition-all",
-                  addedToCart && "bg-emerald-600 hover:bg-emerald-600"
-                )}
-              >
-                {addedToCart ? (
-                  <>
-                    <Check className="size-5" />
-                    Added to Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="size-5" />
-                    Add to Cart
-                  </>
-                )}
-              </Button>
-
-              <button
-                type="button"
-                aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                onClick={() => toggleWishlist(product)}
-                className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border transition-all",
-                  wishlisted
-                    ? "border-rose-300 bg-rose-50 text-rose-500 dark:bg-rose-950/30"
-                    : "border-border bg-background hover:bg-muted"
-                )}
-              >
-                <Heart
-                  className={cn("size-5", wishlisted && "fill-rose-500 text-rose-500")}
-                />
-              </button>
-
-              <button
-                type="button"
-                aria-label="Share product"
-                onClick={() => {
-                  if (typeof navigator !== "undefined" && navigator.share) {
-                    navigator.share({ title: product.name, url: window.location.href });
+            {/* ── CTA Action Buttons ── */}
+            <div className="flex flex-col gap-3 pt-2">
+              {/* Dual Action Buttons (Add to Cart + Buy Now) */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Add to Cart button */}
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  onClick={handleAddToCart}
+                  disabled={
+                    !activeVariant ||
+                    addedToCart ||
+                    isAddingToCart ||
+                    isDirectBuying
                   }
-                }}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-background transition hover:bg-muted"
-              >
-                <Share2 className="size-5" />
-              </button>
-            </div>
+                  className={cn(
+                    "h-12 sm:h-13 flex-1 gap-2.5 text-base font-bold rounded-xl border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer shadow-xs",
+                    addedToCart &&
+                      "border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20",
+                  )}
+                >
+                  {isAddingToCart ? (
+                    <Loader2 className="size-5 animate-spin text-primary" />
+                  ) : addedToCart ? (
+                    <>
+                      <Check className="size-5 text-emerald-600" />
+                      <span>Added to Cart</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="size-5 text-primary" />
+                      <span>Add to Cart</span>
+                    </>
+                  )}
+                </Button>
 
-            {/* Buy now */}
-            <Link
-              href="/checkout"
-              className={buttonVariants({ variant: "outline", size: "lg", className: "h-12 w-full text-base font-bold" })}
-            >
-              Buy Now
-            </Link>
+                {/* Direct Buy Now button */}
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleBuyNow}
+                  disabled={!activeVariant || isDirectBuying || isAddingToCart}
+                  className="h-12 sm:h-13 flex-1 gap-2.5 text-base font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  {isDirectBuying ? (
+                    <>
+                      <Loader2 className="size-5 animate-spin" />
+                      <span>Processing Order...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="size-5 fill-current" />
+                      <span>Buy Now</span>
+                    </>
+                  )}
+                </Button>
+              </div>
 
-            {/* Coupon hint */}
-            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-2.5 text-sm">
-              <Tag className="size-4 text-primary shrink-0" />
-              <span className="text-muted-foreground">
-                Have a coupon? Apply it at{" "}
-                <Link href="/checkout" className="text-primary font-semibold hover:underline">
-                  checkout
-                </Link>
-              </span>
+              {/* Utility Row: Wishlist & Share */}
+              <div className="flex items-center gap-3 pt-0.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toggleWishlist(product)}
+                  className={cn(
+                    "flex-1 h-10 rounded-xl text-xs sm:text-sm font-semibold border-border/70 hover:bg-muted gap-2 transition-all cursor-pointer",
+                    wishlisted &&
+                      "text-rose-500 border-rose-200 bg-rose-50/50 dark:bg-rose-950/20",
+                  )}
+                >
+                  <Heart
+                    className={cn(
+                      "size-4",
+                      wishlisted && "fill-rose-500 text-rose-500",
+                    )}
+                  />
+                  <span>{wishlisted ? "Wishlisted" : "Add to Wishlist"}</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (typeof navigator !== "undefined" && navigator.share) {
+                      navigator.share({
+                        title: product.name,
+                        url: window.location.href,
+                      });
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Product link copied to clipboard!");
+                    }
+                  }}
+                  className="flex-1 h-10 rounded-xl text-xs sm:text-sm font-semibold border-border/70 hover:bg-muted text-muted-foreground hover:text-foreground gap-2 transition-all cursor-pointer"
+                >
+                  <Share2 className="size-4" />
+                  <span>Share Product</span>
+                </Button>
+              </div>
             </div>
 
             {/* Trust badges */}
@@ -511,7 +636,7 @@ export default function ProductDetailsPage() {
                     >
                       {c.category.name}
                     </Link>
-                  ) : null
+                  ) : null,
                 )}
               </div>
             )}
@@ -532,7 +657,7 @@ export default function ProductDetailsPage() {
                   "relative flex items-center gap-2 pb-3.5 text-sm font-semibold transition-colors whitespace-nowrap",
                   activeTab === "description"
                     ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <FileText className="size-4" />
@@ -546,7 +671,7 @@ export default function ProductDetailsPage() {
                   "relative flex items-center gap-2 pb-3.5 text-sm font-semibold transition-colors whitespace-nowrap",
                   activeTab === "reviews"
                     ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <Star className="size-4" />
@@ -563,7 +688,7 @@ export default function ProductDetailsPage() {
                   "relative flex items-center gap-2 pb-3.5 text-sm font-semibold transition-colors whitespace-nowrap",
                   activeTab === "specs"
                     ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <SlidersHorizontal className="size-4" />
@@ -596,8 +721,12 @@ export default function ProductDetailsPage() {
                 <div className="flex items-start gap-3 rounded-xl border bg-card p-4 shadow-2xs">
                   <Award className="size-5 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-semibold">Authentic Guaranteed</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">100% genuine sourced pieces.</p>
+                    <h4 className="text-sm font-semibold">
+                      Authentic Guaranteed
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      100% genuine sourced pieces.
+                    </p>
                   </div>
                 </div>
 
@@ -605,7 +734,9 @@ export default function ProductDetailsPage() {
                   <PackageCheck className="size-5 text-primary shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-sm font-semibold">Carefully Packed</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Protected and quality-checked.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Protected and quality-checked.
+                    </p>
                   </div>
                 </div>
 
@@ -613,7 +744,9 @@ export default function ProductDetailsPage() {
                   <Truck className="size-5 text-primary shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-sm font-semibold">Tracked Dispatch</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Real-time status updates.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Real-time status updates.
+                    </p>
                   </div>
                 </div>
 
@@ -621,7 +754,9 @@ export default function ProductDetailsPage() {
                   <RotateCcw className="size-5 text-primary shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-sm font-semibold">30-Day Guarantee</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">Simple hassle-free returns.</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Simple hassle-free returns.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -635,8 +770,12 @@ export default function ProductDetailsPage() {
                 {/* Rating Overview Card */}
                 <div className="flex flex-col gap-6 rounded-2xl border bg-card p-6 shadow-2xs">
                   <div>
-                    <h3 className="text-base font-bold tracking-tight">Customer Rating</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Based on verified purchases</p>
+                    <h3 className="text-base font-bold tracking-tight">
+                      Customer Rating
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Based on verified purchases
+                    </p>
                   </div>
 
                   <div className="flex items-baseline gap-3">
@@ -646,7 +785,8 @@ export default function ProductDetailsPage() {
                     <div className="flex flex-col">
                       <StarRating rating={averageRating} size="md" />
                       <span className="text-xs text-muted-foreground mt-1">
-                        {reviewCount} total {reviewCount === 1 ? "review" : "reviews"}
+                        {reviewCount} total{" "}
+                        {reviewCount === 1 ? "review" : "reviews"}
                       </span>
                     </div>
                   </div>
@@ -654,27 +794,44 @@ export default function ProductDetailsPage() {
                   {/* Distribution breakdown */}
                   <div className="space-y-2 text-xs">
                     {[5, 4, 3, 2, 1].map((stars) => {
-                      const count = ratingSummary?.distribution?.[String(stars) as "1"] ?? 0;
-                      const pct = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
+                      const count =
+                        ratingSummary?.distribution?.[String(stars) as "1"] ??
+                        0;
+                      const pct =
+                        reviewCount > 0
+                          ? Math.round((count / reviewCount) * 100)
+                          : 0;
                       return (
                         <div key={stars} className="flex items-center gap-2">
-                          <span className="w-5 font-semibold text-muted-foreground">{stars}★</span>
+                          <span className="w-5 font-semibold text-muted-foreground">
+                            {stars}★
+                          </span>
                           <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                             <div
                               className="h-full rounded-full bg-amber-400 transition-all duration-300"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <span className="w-8 text-right text-muted-foreground">{count}</span>
+                          <span className="w-8 text-right text-muted-foreground">
+                            {count}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
 
                   <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
-                    <p className="font-semibold text-foreground mb-1">Want to review this product?</p>
-                    <p>Verified buyers can submit reviews directly from their delivered orders in the account area.</p>
-                    <Link href="/account/orders" className="mt-2 inline-block font-semibold text-primary hover:underline">
+                    <p className="font-semibold text-foreground mb-1">
+                      Want to review this product?
+                    </p>
+                    <p>
+                      Verified buyers can submit reviews directly from their
+                      delivered orders in the account area.
+                    </p>
+                    <Link
+                      href="/account/orders"
+                      className="mt-2 inline-block font-semibold text-primary hover:underline"
+                    >
                       View My Orders →
                     </Link>
                   </div>
@@ -688,7 +845,9 @@ export default function ProductDetailsPage() {
                       Customer Feedback ({reviewsList.length})
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground hidden sm:inline">Sort by:</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">
+                        Sort by:
+                      </span>
                       <select
                         value={reviewSort}
                         onChange={(e) => setReviewSort(e.target.value as any)}
@@ -710,29 +869,43 @@ export default function ProductDetailsPage() {
                   ) : reviewsList.length > 0 ? (
                     <div className="space-y-4">
                       {reviewsList.map((rev) => (
-                        <div key={rev.id} className="rounded-2xl border bg-card p-5 shadow-2xs">
+                        <div
+                          key={rev.id}
+                          className="rounded-2xl border bg-card p-5 shadow-2xs"
+                        >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex items-center gap-3">
                               <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                                {rev.user?.fullName?.charAt(0) || rev.user?.userName?.charAt(0) || "U"}
+                                {rev.user?.fullName?.charAt(0) ||
+                                  rev.user?.userName?.charAt(0) ||
+                                  "U"}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-semibold text-foreground">
-                                    {rev.user?.fullName || rev.user?.userName || "Verified Customer"}
+                                    {rev.user?.fullName ||
+                                      rev.user?.userName ||
+                                      "Verified Customer"}
                                   </span>
                                   {rev.isVerifiedPurchase && (
-                                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
-                                      <CheckCircle2 className="size-3 mr-0.5" /> Verified Buyer
+                                    <Badge
+                                      variant="outline"
+                                      className="border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                    >
+                                      <CheckCircle2 className="size-3 mr-0.5" />{" "}
+                                      Verified Buyer
                                     </Badge>
                                   )}
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                  {new Date(rev.createdAt).toLocaleDateString(undefined, {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
+                                  {new Date(rev.createdAt).toLocaleDateString(
+                                    undefined,
+                                    {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    },
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -740,7 +913,9 @@ export default function ProductDetailsPage() {
                           </div>
 
                           {rev.title && (
-                            <h4 className="mt-3 text-sm font-semibold text-foreground">{rev.title}</h4>
+                            <h4 className="mt-3 text-sm font-semibold text-foreground">
+                              {rev.title}
+                            </h4>
                           )}
                           {rev.comment && (
                             <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
@@ -753,9 +928,12 @@ export default function ProductDetailsPage() {
                   ) : (
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-14 text-center">
                       <MessageSquare className="size-10 text-muted-foreground/40 mb-3" />
-                      <h4 className="text-base font-bold text-foreground">No customer reviews yet</h4>
+                      <h4 className="text-base font-bold text-foreground">
+                        No customer reviews yet
+                      </h4>
                       <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                        Be the first to share your experience with this item once your order is delivered.
+                        Be the first to share your experience with this item
+                        once your order is delivered.
                       </p>
                     </div>
                   )}
@@ -778,26 +956,47 @@ export default function ProductDetailsPage() {
                   </div>
                   <dl className="divide-y text-sm">
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Product Name</dt>
-                      <dd className="font-semibold text-foreground text-right">{product.name}</dd>
-                    </div>
-                    <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Brand</dt>
-                      <dd className="font-semibold text-foreground text-right">{product.brand?.name || "Independent Brand"}</dd>
-                    </div>
-                    <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Model / Item Code</dt>
-                      <dd className="font-mono text-xs font-semibold text-foreground text-right">{activeVariant?.sku || "PRD-2026-X1"}</dd>
-                    </div>
-                    <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Category</dt>
+                      <dt className="text-muted-foreground font-medium">
+                        Product Name
+                      </dt>
                       <dd className="font-semibold text-foreground text-right">
-                        {product.categories.map((c) => c.category?.name).filter(Boolean).join(", ") || "Fashion & Lifestyle"}
+                        {product.name}
                       </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Origin</dt>
-                      <dd className="font-semibold text-foreground text-right">Imported (Designed in EU)</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Brand
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        {product.brand?.name || "Independent Brand"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between py-2.5">
+                      <dt className="text-muted-foreground font-medium">
+                        Model / Item Code
+                      </dt>
+                      <dd className="font-mono text-xs font-semibold text-foreground text-right">
+                        {activeVariant?.sku || "PRD-2026-X1"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between py-2.5">
+                      <dt className="text-muted-foreground font-medium">
+                        Category
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        {product.categories
+                          .map((c) => c.category?.name)
+                          .filter(Boolean)
+                          .join(", ") || "Fashion & Lifestyle"}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between py-2.5">
+                      <dt className="text-muted-foreground font-medium">
+                        Origin
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Imported (Designed in EU)
+                      </dd>
                     </div>
                   </dl>
                 </div>
@@ -812,24 +1011,44 @@ export default function ProductDetailsPage() {
                   </div>
                   <dl className="divide-y text-sm">
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Primary Material</dt>
-                      <dd className="font-semibold text-foreground text-right">100% Organic Combed Cotton</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Primary Material
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        100% Organic Combed Cotton
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Fabric Finish</dt>
-                      <dd className="font-semibold text-foreground text-right">Pre-shrunk, Bio-washed</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Fabric Finish
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Pre-shrunk, Bio-washed
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Stitching</dt>
-                      <dd className="font-semibold text-foreground text-right">Reinforced Double Needle</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Stitching
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Reinforced Double Needle
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Fit & Silhouette</dt>
-                      <dd className="font-semibold text-foreground text-right">True to size / Regular Fit</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Fit & Silhouette
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        True to size / Regular Fit
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Breathability</dt>
-                      <dd className="font-semibold text-foreground text-right">High Airflow Weave</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Breathability
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        High Airflow Weave
+                      </dd>
                     </div>
                   </dl>
                 </div>
@@ -844,20 +1063,36 @@ export default function ProductDetailsPage() {
                   </div>
                   <dl className="divide-y text-sm">
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Net Weight</dt>
-                      <dd className="font-semibold text-foreground text-right">Approx. 380g</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Net Weight
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Approx. 380g
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Package Dimensions</dt>
-                      <dd className="font-semibold text-foreground text-right">30cm × 22cm × 5cm</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Package Dimensions
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        30cm × 22cm × 5cm
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Packaging Type</dt>
-                      <dd className="font-semibold text-foreground text-right">Eco-Friendly Recyclable Box</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Packaging Type
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Eco-Friendly Recyclable Box
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Included in Box</dt>
-                      <dd className="font-semibold text-foreground text-right">Product, Tag & Care Card</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Included in Box
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Product, Tag & Care Card
+                      </dd>
                     </div>
                   </dl>
                 </div>
@@ -872,27 +1107,44 @@ export default function ProductDetailsPage() {
                   </div>
                   <dl className="divide-y text-sm">
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Washing</dt>
-                      <dd className="font-semibold text-foreground text-right">Machine wash cold (30°C)</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Washing
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Machine wash cold (30°C)
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Drying</dt>
-                      <dd className="font-semibold text-foreground text-right">Tumble dry low / Air dry</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Drying
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        Tumble dry low / Air dry
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Manufacturer Warranty</dt>
-                      <dd className="font-semibold text-foreground text-right">12 Months Limited</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Manufacturer Warranty
+                      </dt>
+                      <dd className="font-semibold text-foreground text-right">
+                        12 Months Limited
+                      </dd>
                     </div>
                     <div className="flex justify-between py-2.5">
-                      <dt className="text-muted-foreground font-medium">Return Period</dt>
-                      <dd className="font-semibold text-emerald-600 text-right">30-Day Hassle-Free Returns</dd>
+                      <dt className="text-muted-foreground font-medium">
+                        Return Period
+                      </dt>
+                      <dd className="font-semibold text-emerald-600 text-right">
+                        30-Day Hassle-Free Returns
+                      </dd>
                     </div>
                   </dl>
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground text-center pt-2">
-                * Note: Specifications and material measurements are subject to standard manufacturing tolerances (±2%).
+                * Note: Specifications and material measurements are subject to
+                standard manufacturing tolerances (±2%).
               </p>
             </div>
           )}
@@ -905,8 +1157,12 @@ export default function ProductDetailsPage() {
           <div className="mt-20 border-t pt-14">
             <div className="mb-8 flex items-end justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-primary">You might also like</p>
-                <h2 className="mt-1 text-2xl font-bold tracking-tight">Related Products</h2>
+                <p className="text-sm font-medium text-primary">
+                  You might also like
+                </p>
+                <h2 className="mt-1 text-2xl font-bold tracking-tight">
+                  Related Products
+                </h2>
               </div>
               <Link
                 href="/products"

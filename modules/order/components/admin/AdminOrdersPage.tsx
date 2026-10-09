@@ -662,37 +662,14 @@ export function AdminOrdersPage() {
 
                       {/* Order Status */}
                       <td className="p-3.5 align-top">
-                        {order.shipment?.status === "RETURNED" || (order.returns && order.returns.length > 0) ? (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] font-bold bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20"
-                          >
-                            RETURNED
-                          </Badge>
-                        ) : order.shipment?.status === "FAILED" ? (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20"
-                          >
-                            FAILED
-                          </Badge>
-                        ) : order.shipment?.status === "READY_TO_SHIP" && order.status !== "SHIPPED" && order.status !== "DELIVERED" ? (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20"
-                          >
-                            READY TO SHIP
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] font-bold ${
-                              statusStyle[order.status] || ""
-                            }`}
-                          >
-                            {order.status}
-                          </Badge>
-                        )}
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-bold ${
+                            statusStyle[order.status] || ""
+                          }`}
+                        >
+                          {order.status}
+                        </Badge>
                       </td>
 
                       {/* Courier Shipment */}
@@ -731,6 +708,14 @@ export function AdminOrdersPage() {
                             ) : (
                               <p className="text-[10px] text-muted-foreground italic">
                                 No tracking ID
+                              </p>
+                            )}
+                            {order.shipment.lastDispatchError && (
+                              <p
+                                className="text-[10px] text-destructive truncate max-w-[160px]"
+                                title={order.shipment.lastDispatchError}
+                              >
+                                Error: {order.shipment.lastDispatchError}
                               </p>
                             )}
                           </div>
@@ -776,16 +761,48 @@ export function AdminOrdersPage() {
                               <Check className="size-3 mr-1" />
                               Confirm
                             </Button>
-                          ) : (order.status === "CONFIRMED" || order.status === "PROCESSING") && !order.shipment ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs px-2.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
-                              onClick={() => setBookCourierModalOrder(order)}
-                            >
-                              <Send className="size-3 mr-1" />
-                              Send Courier
-                            </Button>
+                          ) : ["CONFIRMED", "PROCESSING"].includes(order.status) ? (
+                            (() => {
+                              const normCourier = String(order.shipment?.courierStatus || "").toLowerCase();
+                              const isRebookable =
+                                Boolean(order.shipment) &&
+                                (order.shipment?.status === "CANCELLED" ||
+                                  order.shipment?.status === "FAILED" ||
+                                  normCourier.includes("cancel") ||
+                                  normCourier.includes("fail") ||
+                                  normCourier === "cancelled_by_admin");
+
+                              if (isRebookable) {
+                                return (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 border-amber-500/30"
+                                    onClick={() => setBookCourierModalOrder(order)}
+                                    title="Courier pickup was cancelled or failed. Click to re-book."
+                                  >
+                                    <Truck className="size-3 mr-1" />
+                                    Re-book
+                                  </Button>
+                                );
+                              }
+
+                              if (!order.shipment || !order.shipment.consignmentId) {
+                                return (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                                    onClick={() => setBookCourierModalOrder(order)}
+                                  >
+                                    <Send className="size-3 mr-1" />
+                                    Send Courier
+                                  </Button>
+                                );
+                              }
+
+                              return null;
+                            })()
                           ) : null}
 
                           {/* Row Actions Dropdown Menu */}
@@ -817,14 +834,6 @@ export function AdminOrdersPage() {
                                 >
                                   <Check className="size-3.5 mr-2 text-sky-600" />
                                   Confirm Order
-                                </DropdownMenuItem>
-                              )}
-
-                              {/* Send to Courier (Steadfast / Pathao) */}
-                              {["PENDING", "CONFIRMED", "PROCESSING"].includes(order.status) && (
-                                <DropdownMenuItem onClick={() => setBookCourierModalOrder(order)}>
-                                  <Send className="size-3.5 mr-2 text-primary" />
-                                  Send to Courier
                                 </DropdownMenuItem>
                               )}
 
