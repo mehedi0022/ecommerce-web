@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Ruler } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ProductVariant, ProductAttributeValue } from "../../types";
 
@@ -8,6 +9,7 @@ interface VariantSelectorProps {
   variants: ProductVariant[];
   selectedVariantId: number | null;
   onSelect: (variant: ProductVariant) => void;
+  onOpenSizeChart?: () => void;
 }
 
 // ─── Colour chip detection ───────────────────────────────────────────────────
@@ -40,6 +42,7 @@ export function VariantSelector({
   variants,
   selectedVariantId,
   onSelect,
+  onOpenSizeChart,
 }: VariantSelectorProps) {
   const activeVariants = useMemo(
     () => variants.filter((v) => v.isActive),
@@ -216,12 +219,25 @@ export function VariantSelector({
 
         return (
           <div key={attrName} className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">{attrName}:</span>
-              {selectedValue && (
-                <span className="text-sm font-medium text-foreground capitalize">
-                  {selectedValue.value}
-                </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">{attrName}:</span>
+                {selectedValue && (
+                  <span className="text-sm font-medium text-foreground capitalize">
+                    {selectedValue.value}
+                  </span>
+                )}
+              </div>
+
+              {attrName.toLowerCase().includes("size") && onOpenSizeChart && (
+                <button
+                  type="button"
+                  onClick={onOpenSizeChart}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                >
+                  <Ruler className="size-3.5" />
+                  <span>Size Guide</span>
+                </button>
               )}
             </div>
 

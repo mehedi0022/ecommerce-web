@@ -2,6 +2,7 @@ import { baseApi } from "@/redux/baseApi";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/api.types";
 import type { Category } from "@/modules/category/types";
 import type { Brand } from "@/modules/brand/types";
+import type { SizeChart } from "@/modules/size-chart/types";
 import type { Attribute, AttributeValue } from "@/modules/attribute/types";
 import type { Product, ProductImage, ProductVariant } from "./types";
 import type { AttributeOption, EditorInitial, InventorySnapshot } from "./editor.types";
@@ -9,9 +10,9 @@ import type { AttributeOption, EditorInitial, InventorySnapshot } from "./editor
 export const editorApi = baseApi.injectEndpoints({
   endpoints: b => ({
     uploadDescriptionImage: b.mutation<ApiResponse<{ url: string }>, File>({ query: file => { const body = new FormData(); body.append("image", file); return { url: "/products/description-images", method: "POST", body }; } }),
-    editorOptions: b.query<{ categories: Category[]; brands: Brand[] }, void>({
+    editorOptions: b.query<{ categories: Category[]; brands: Brand[]; sizeCharts: SizeChart[] }, void>({
       async queryFn(_arg, _api, _extra, query) {
-        const result: { categories: Category[]; brands: Brand[] } = { categories: [], brands: [] };
+        const result: { categories: Category[]; brands: Brand[]; sizeCharts: SizeChart[] } = { categories: [], brands: [], sizeCharts: [] };
         for (const resource of ["categories", "brands"] as const) {
           for (let page = 1; ; page++) {
             const response = await query({ url: `/${resource}`, params: { status: "ACTIVE", limit: 100, page } });
@@ -21,9 +22,13 @@ export const editorApi = baseApi.injectEndpoints({
             if (page >= data.meta.totalPages) break;
           }
         }
+        const sizeChartsRes = await query({ url: "/size-charts/public" });
+        if (!sizeChartsRes.error && sizeChartsRes.data) {
+          result.sizeCharts = (sizeChartsRes.data as ApiResponse<SizeChart[]>).data || [];
+        }
         return { data: result };
       },
-      providesTags: ["Category", "Brand"],
+      providesTags: ["Category", "Brand", "SizeChart"],
     }),
     editorAttributes: b.query<AttributeOption[], number>({
       async queryFn(categoryId, _api, _extra, query) {

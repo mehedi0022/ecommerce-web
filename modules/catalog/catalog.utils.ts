@@ -23,6 +23,17 @@ export function mediaUrl(value: string | null | undefined) {
   if (!value) return "";
   if (/^https?:\/\//i.test(value) || value.startsWith("blob:") || value.startsWith("data:")) return value;
   const path = value.startsWith("/") ? value : `/${value}`;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1").replace(/\/api\/v1\/?$/, "");
+  let base = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1").replace(/\/api\/v1\/?$/, "");
+
+  if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
+    try {
+      const parsed = new URL(base);
+      if (parsed.hostname === "localhost") {
+        parsed.hostname = window.location.hostname;
+        base = parsed.origin;
+      }
+    } catch {}
+  }
+
   return `${base}${path}`;
 }

@@ -3,6 +3,8 @@ import type {
   ApiResponse,
   PaginatedApiResponse,
 } from "@/types/api.types";
+import type { SizeChart } from "@/modules/size-chart/types";
+
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
 export interface ProductCategory {
   category?: { id: number; name: string; slug: string };
@@ -43,6 +45,9 @@ export interface Product {
   slug: string;
   shortDescription: string | null;
   description: string | null;
+  specifications?: string | null;
+  sizeChartId?: number | null;
+  sizeChart?: SizeChart | null;
   brandId: number | null;
   status: ProductStatus;
   isFeatured: boolean;
@@ -60,6 +65,8 @@ export interface ProductInput {
   name: string;
   shortDescription?: string | null;
   description?: string | null;
+  specifications?: string | null;
+  sizeChartId?: number | null;
   brandId?: number | null;
   status?: ProductStatus;
   isFeatured?: boolean;

@@ -12,6 +12,7 @@ export function validateEditor(form: EditorForm, attributes: AttributeOption[], 
   if (form.name.trim().length > 250) errors.name = "Use 250 characters or fewer.";
   if (form.shortDescription.length > 500) errors.shortDescription = "Use 500 characters or fewer.";
   if (form.description.length > 10000) errors.description = "Use 10,000 characters or fewer.";
+  if (form.specifications && form.specifications.length > 15000) errors.specifications = "Use 15,000 characters or fewer.";
   if (form.requiresAdvancePayment && form.advancePaymentAmount) {
     if (!money(form.advancePaymentAmount) || Number(form.advancePaymentAmount) <= 0) {
       errors.advancePaymentAmount = "Enter a valid advance amount (e.g. 150.00).";
@@ -79,8 +80,13 @@ export async function saveEditor(
   if (journal.needsReview) throw new Error("The last request could not be confirmed. Review the saved product before making another save.");
   const rows = form.variants.filter(variantEntered);
   const details: ProductInput = {
-    name: form.name.trim(), shortDescription: form.shortDescription.trim() || null, description: form.description.trim() || null,
-    brandId: form.brandId ? Number(form.brandId) : null, isFeatured: form.isFeatured,
+    name: form.name.trim(),
+    shortDescription: form.shortDescription.trim() || null,
+    description: form.description.trim() || null,
+    specifications: form.specifications.trim() || null,
+    sizeChartId: form.sizeChartId ? Number(form.sizeChartId) : null,
+    brandId: form.brandId ? Number(form.brandId) : null,
+    isFeatured: form.isFeatured,
     isFreeShipping: form.isFreeShipping ?? false,
     isCodAvailable: form.isCodAvailable ?? true,
     requiresAdvancePayment: form.requiresAdvancePayment ?? false,

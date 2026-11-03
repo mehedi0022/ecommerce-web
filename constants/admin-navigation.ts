@@ -45,6 +45,7 @@ export const adminNavigation: AdminNavItem[] = [
       { title: "Brands", href: "/admin/brands", requiredPermission: "brands:read:any" },
       { title: "Attributes", href: "/admin/attributes", requiredPermission: "attributes:read:any" },
       { title: "Variants", href: "/admin/variants", requiredPermission: "products:read:any" },
+      { title: "Size Charts", href: "/admin/size-charts", requiredPermission: "products:read:any" },
       { title: "Inventory", href: "/admin/inventory", requiredPermission: "inventory:read:any" },
     ],
   },

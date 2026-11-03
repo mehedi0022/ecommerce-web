@@ -21,15 +21,18 @@ import {
   Package,
   Plus,
   RotateCcw,
+  Ruler,
   Save,
   Star,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
   getApiErrorMessage,
   getApiValidationDetails,
@@ -144,12 +147,16 @@ function Editor({ initial }: { initial?: EditorInitial }) {
   const [dragging, setDragging] = useState(false);
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [descriptionBusy, setDescriptionBusy] = useState(false);
+  const [specificationsBusy, setSpecificationsBusy] = useState(false);
   const [uploadDescription] = useUploadDescriptionImageMutation();
   const [journalView, setJournalView] = useState(() => newJournal(initial));
   const journal = useRef(newJournal(initial));
   const saveLock = useRef(false);
   const previews = useRef(new Set<string>());
   const options = useEditorOptionsQuery();
+  const selectedChart = options.data?.sizeCharts?.find(
+    (c) => String(c.id) === form.sizeChartId,
+  );
   const attributes = useEditorAttributesQuery(Number(form.primaryCategoryId), {
     skip: !form.primaryCategoryId,
   });
@@ -337,6 +344,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
       saveLock.current ||
       journal.current.needsReview ||
       descriptionBusy ||
+      specificationsBusy ||
       cropQueue.length
     )
       return;
@@ -487,6 +495,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
     saving ||
     Boolean(journalView.needsReview) ||
     descriptionBusy ||
+    specificationsBusy ||
     cropQueue.length > 0;
 
   return (
@@ -829,8 +838,144 @@ function Editor({ initial }: { initial?: EditorInitial }) {
           </Section>
 
           <Section
-            id="shipping-payment"
+            id="specifications"
             number="02"
+            title="Product specifications"
+            description="Add technical details, material composition, warranty, or tabular specs."
+          >
+            <Field
+              name="specifications"
+              label="Specifications"
+              optional
+              error={errors.specifications}
+              hint="Use tables, lists, and headings to present technical details clearly."
+            >
+              <RichTextEditor
+                imageTitle={`${form.name} Specifications`}
+                imageKind="product"
+                id="specifications"
+                value={form.specifications}
+                onChange={(html) => field("specifications", html)}
+                disabled={saving || Boolean(journalView.needsReview)}
+                onBusyChange={setSpecificationsBusy}
+                uploadImage={async (file) => {
+                  try {
+                    return mediaUrl(
+                      (await uploadDescription(file).unwrap()).data.url,
+                    );
+                  } catch (error) {
+                    throw new Error(
+                      getApiErrorMessage(
+                        error,
+                        "Specification image upload failed.",
+                      ),
+                    );
+                  }
+                }}
+              />
+            </Field>
+          </Section>
+
+          <Section
+            id="size-chart"
+            number="03"
+            title="Size chart & fit guide"
+            description="Select a reusable dynamic size chart to help customers choose their best fit."
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="flex-1">
+                  <Field
+                    name="sizeChartId"
+                    label="Assigned Size Chart"
+                    optional
+                    hint="Choose an existing size chart to display an interactive guide on the product page."
+                  >
+                    <select
+                      id="sizeChartId"
+                      className={selectClass}
+                      value={form.sizeChartId}
+                      disabled={blocked}
+                      onChange={(e) => field("sizeChartId", e.target.value)}
+                    >
+                      <option value="">No size chart (not an apparel/sized item)</option>
+                      {options.data?.sizeCharts?.map((chart) => (
+                        <option key={chart.id} value={chart.id}>
+                          {chart.name} ({chart.unit})
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="pb-1">
+                  <Link
+                    href="/admin/size-charts"
+                    target="_blank"
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "gap-1.5 whitespace-nowrap h-10",
+                    )}
+                  >
+                    <Plus className="size-4" />
+                    <span>Manage Size Charts</span>
+                  </Link>
+                </div>
+              </div>
+
+              {selectedChart && (
+                <div className="rounded-xl border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-semibold">{selectedChart.name}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Unit: <strong className="uppercase">{selectedChart.unit}</strong>
+                        {selectedChart.description && ` · ${selectedChart.description}`}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {selectedChart.rows.length} Sizes
+                    </Badge>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-lg border bg-card">
+                    <table className="w-full text-xs">
+                      <thead className="border-b bg-muted/60 text-muted-foreground">
+                        <tr>
+                          {selectedChart.columns.map((col, idx) => (
+                            <th key={idx} className="px-3 py-2 text-left font-semibold">
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {selectedChart.rows.map((row, rIdx) => (
+                          <tr key={rIdx} className="hover:bg-muted/30">
+                            {selectedChart.columns.map((col, cIdx) => (
+                              <td key={cIdx} className="px-3 py-2 font-medium">
+                                {row[col] ?? "—"}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {selectedChart.tips && (
+                    <p className="text-xs text-muted-foreground italic">
+                      💡 {selectedChart.tips}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </Section>
+
+          <Section
+            id="shipping-payment"
+            number="04"
             title="Shipping & Payment"
             description="Configure delivery charges, Cash on Delivery (COD), and advance payment requirements."
           >
@@ -935,7 +1080,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
 
           <Section
             id="variants"
-            number="03"
+            number="05"
             title="Variants & stock"
             description="Set the price and opening stock for each option."
             action={
@@ -1331,7 +1476,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
 
           <Section
             id="images"
-            number="04"
+            number="06"
             title="Product photos"
             description="A great first photo helps customers choose your product."
           >

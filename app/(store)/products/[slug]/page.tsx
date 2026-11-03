@@ -26,6 +26,8 @@ import {
   Award,
   Zap,
   Loader2,
+  Ruler,
+  X,
 } from "lucide-react";
 
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
@@ -211,6 +213,7 @@ export default function ProductDetailsPage() {
   );
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = product ? isInWishlist(product.id) : false;
@@ -238,6 +241,8 @@ export default function ProductDetailsPage() {
     product?.variants?.find((v) => v.isActive) ??
     product?.variants?.[0] ??
     null;
+
+  const sizeChart = product?.sizeChart;
 
   const price = activeVariant ? Number(activeVariant.price) : null;
   const compareAt = activeVariant?.compareAtPrice
@@ -475,11 +480,28 @@ export default function ProductDetailsPage() {
               <VariantSelector
                 variants={variants}
                 selectedVariantId={activeVariant?.id ?? null}
+                onOpenSizeChart={
+                  sizeChart ? () => setShowSizeGuide(true) : undefined
+                }
                 onSelect={(v) => {
                   setSelectedVariant(v);
                   setQuantity(1);
                 }}
               />
+            )}
+
+            {/* Standalone Size Guide Button if product has size chart */}
+            {sizeChart && (
+              <div className="flex items-center justify-between text-xs pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(true)}
+                  className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline cursor-pointer"
+                >
+                  <Ruler className="size-3.5" />
+                  <span>View Size Guide ({sizeChart.name})</span>
+                </button>
+              </div>
             )}
 
             {/* ── Quantity ── */}
@@ -942,9 +964,17 @@ export default function ProductDetailsPage() {
             </div>
           )}
 
-          {/* ── TAB 3: Specifications Content (Mock Data) ── */}
+          {/* ── TAB 3: Specifications Content ── */}
           {activeTab === "specs" && (
             <div className="mt-8 space-y-8 animate-in fade-in-50 duration-200">
+              {product.specifications ? (
+                <div className="rounded-2xl border bg-card p-6 shadow-2xs">
+                  <div className="prose prose-sm max-w-none text-foreground/90 dark:prose-invert">
+                    <RichTextContent value={product.specifications} />
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Group 1: General Information */}
                 <div className="rounded-2xl border bg-card p-6 shadow-2xs">
@@ -1175,6 +1205,75 @@ export default function ProductDetailsPage() {
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Size Guide Modal ── */}
+        {showSizeGuide && sizeChart && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="relative w-full max-w-2xl rounded-2xl border bg-background p-6 shadow-2xl animate-in fade-in-50 zoom-in-95">
+              <div className="flex items-center justify-between border-b pb-4 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Ruler className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{sizeChart.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Size & Fit Guide · All measurements in{" "}
+                      <strong className="uppercase">{sizeChart.unit}</strong>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(false)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border bg-card mb-4">
+                <table className="w-full text-xs text-left">
+                  <thead className="border-b bg-muted/60 text-muted-foreground font-semibold">
+                    <tr>
+                      {sizeChart.columns.map((col, idx) => (
+                        <th key={idx} className="px-3.5 py-2.5">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {sizeChart.rows.map((row, rIdx) => (
+                      <tr key={rIdx} className="hover:bg-muted/30">
+                        {sizeChart.columns.map((col, cIdx) => (
+                          <td key={cIdx} className="px-3.5 py-2.5 font-medium">
+                            {row[col] ?? "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {sizeChart.tips && (
+                <div className="rounded-xl border bg-muted/30 p-3.5 text-xs text-muted-foreground space-y-1">
+                  <p className="font-bold text-foreground flex items-center gap-1.5">
+                    <span>📏</span> How to measure
+                  </p>
+                  <p className="leading-relaxed">{sizeChart.tips}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-4 mt-2">
+                <Button type="button" variant="outline" onClick={() => setShowSizeGuide(false)}>
+                  Close Guide
+                </Button>
+              </div>
             </div>
           </div>
         )}

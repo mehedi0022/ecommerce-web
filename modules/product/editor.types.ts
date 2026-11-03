@@ -12,7 +12,7 @@ export interface EditorImage {
   key: string; id?: number; file?: File; url: string; altText: string; isPrimary: boolean; attributeValueIds: number[];
 }
 export interface EditorForm {
-  name: string; shortDescription: string; description: string; brandId: string;
+  name: string; shortDescription: string; description: string; specifications: string; sizeChartId: string; brandId: string;
   categoryIds: number[]; primaryCategoryId: string; isFeatured: boolean; status: ProductStatus;
   isFreeShipping: boolean;
   isCodAvailable: boolean;
@@ -35,10 +35,16 @@ export const newJournal = (initial?: EditorInitial): SaveJournal => ({ productId
 export function initialForm(initial?: EditorInitial): EditorForm {
   const product = initial?.product;
   return {
-    name: product?.name ?? "", shortDescription: product?.shortDescription ?? "", description: product?.description ?? "",
-    brandId: product?.brandId ? String(product.brandId) : "", categoryIds: product?.categories.map(c => c.categoryId) ?? [],
+    name: product?.name ?? "",
+    shortDescription: product?.shortDescription ?? "",
+    description: product?.description ?? "",
+    specifications: product?.specifications ?? "",
+    sizeChartId: product?.sizeChartId ? String(product.sizeChartId) : "",
+    brandId: product?.brandId ? String(product.brandId) : "",
+    categoryIds: product?.categories.map(c => c.categoryId) ?? [],
     primaryCategoryId: String(product?.categories.find(c => c.isPrimary)?.categoryId ?? ""),
-    isFeatured: product?.isFeatured ?? false, status: product?.status ?? "DRAFT",
+    isFeatured: product?.isFeatured ?? false,
+    status: product?.status ?? "DRAFT",
     isFreeShipping: product?.isFreeShipping ?? false,
     isCodAvailable: product?.isCodAvailable ?? true,
     requiresAdvancePayment: product?.requiresAdvancePayment ?? false,
