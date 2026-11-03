@@ -96,6 +96,7 @@ export const adminNavigation: AdminNavItem[] = [
       "popups:read:any",
     ],
     children: [
+      { title: "Landing Pages", href: "/admin/landing-pages", requiredPermission: "products:read:any" },
       { title: "Navigation", href: "/admin/navigation", requiredPermission: "navigation:read:any" },
       { title: "Sliders & Banners", href: "/admin/sliders", requiredPermission: "sliders:read:any" },
       { title: "Popups", href: "/admin/popups", requiredPermission: "popups:read:any" },
