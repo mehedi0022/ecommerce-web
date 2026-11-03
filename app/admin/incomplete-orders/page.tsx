@@ -52,7 +52,27 @@ import {
 } from "@/modules/incomplete-order/incompleteOrderApi";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { IncompleteOrder, IncompleteCartItem } from "@/modules/incomplete-order/types";
+import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddressForm";
+import type { CheckoutAddress } from "@/modules/checkout/checkout.types";
 import { getApiErrorMessage } from "@/lib/api/api-error";
+
+const INITIAL_CONV_ADDRESS: CheckoutAddress = {
+  fullName: "",
+  phone: "",
+  addressLine1: "",
+  addressLine2: "",
+  divisionId: "6",
+  districtId: "47",
+  upazilaId: "",
+  unionId: "",
+  division: "Dhaka",
+  district: "Dhaka",
+  upazila: "",
+  thana: "",
+  area: "",
+  postalCode: "",
+  countryCode: "BD",
+};
 
 const STATUS_TABS = [
   { label: "All Leads", value: "ALL" },
@@ -116,10 +136,7 @@ export default function AdminIncompleteOrdersPage() {
   const [convCustomerName, setConvCustomerName] = useState("");
   const [convCustomerPhone, setConvCustomerPhone] = useState("");
   const [convCustomerEmail, setConvCustomerEmail] = useState("");
-  const [convAddressLine1, setConvAddressLine1] = useState("");
-  const [convDistrict, setConvDistrict] = useState("Dhaka");
-  const [convUpazila, setConvUpazila] = useState("");
-  const [convDivision, setConvDivision] = useState("");
+  const [convAddress, setConvAddress] = useState<CheckoutAddress>(INITIAL_CONV_ADDRESS);
   const [convPaymentMethod, setConvPaymentMethod] = useState<"CASH_ON_DELIVERY" | "ONLINE">("CASH_ON_DELIVERY");
   const [convShippingFee, setConvShippingFee] = useState<number>(60);
   const [convAdvanceAmount, setConvAdvanceAmount] = useState<number>(0);
@@ -132,20 +149,47 @@ export default function AdminIncompleteOrdersPage() {
       toast.info("This lead is already converted.");
       return;
     }
+    const addr: any = lead.shippingAddress || {};
+    const name = lead.customerName || addr.fullName || "";
+    const phone = lead.customerPhone || addr.phone || "";
+
     setConvertLead(lead);
-    setConvCustomerName(lead.customerName || lead.shippingAddress?.fullName || "");
-    setConvCustomerPhone(lead.customerPhone || lead.shippingAddress?.phone || "");
+    setConvCustomerName(name);
+    setConvCustomerPhone(phone);
     setConvCustomerEmail(lead.customerEmail || "");
-    setConvAddressLine1(lead.shippingAddress?.addressLine1 || "");
-    setConvDistrict(lead.shippingAddress?.district || "Dhaka");
-    setConvUpazila(lead.shippingAddress?.upazila || lead.shippingAddress?.thana || "");
-    setConvDivision(lead.shippingAddress?.division || "");
+    setConvAddress({
+      fullName: name,
+      phone,
+      addressLine1: addr.addressLine1 || "",
+      addressLine2: addr.addressLine2 || "",
+      divisionId: addr.divisionId || "6",
+      districtId: addr.districtId || "47",
+      upazilaId: addr.upazilaId || "",
+      unionId: addr.unionId || "",
+      division: addr.division || "Dhaka",
+      district: addr.district || "Dhaka",
+      upazila: addr.upazila || addr.thana || "",
+      thana: addr.thana || addr.upazila || "",
+      area: addr.area || "",
+      postalCode: addr.postalCode || "",
+      countryCode: addr.countryCode || "BD",
+    });
     setConvPaymentMethod("CASH_ON_DELIVERY");
     setConvShippingFee(Number(lead.shippingFee) || 60);
     setConvAdvanceAmount(0);
     setConvDiscountAmount(0);
     setConvAdminNote(lead.crmNotes ? `Lead note: ${lead.crmNotes}` : "");
     setConvCartItems(lead.cartItems ? lead.cartItems.map((item) => ({ ...item })) : []);
+  };
+
+  const handleCustomerNameChange = (val: string) => {
+    setConvCustomerName(val);
+    setConvAddress((prev) => ({ ...prev, fullName: val }));
+  };
+
+  const handleCustomerPhoneChange = (val: string) => {
+    setConvCustomerPhone(val);
+    setConvAddress((prev) => ({ ...prev, phone: val }));
   };
 
   const handleUpdateItemQuantity = (index: number, delta: number) => {
@@ -177,15 +221,19 @@ export default function AdminIncompleteOrdersPage() {
   const handleConfirmConvert = async () => {
     if (!convertLead) return;
     if (!convCustomerPhone.trim()) {
-      toast.error("Please enter a valid customer phone number");
+      toast.error("Please enter customer phone number");
       return;
     }
     if (!convCustomerName.trim()) {
       toast.error("Please enter customer name");
       return;
     }
-    if (!convAddressLine1.trim()) {
-      toast.error("Please enter delivery address");
+    if (!convAddress.addressLine1.trim()) {
+      toast.error("Please enter street address / house / road");
+      return;
+    }
+    if (!convAddress.district.trim()) {
+      toast.error("Please select a delivery district");
       return;
     }
     if (convCartItems.length === 0) {
@@ -203,11 +251,19 @@ export default function AdminIncompleteOrdersPage() {
           shippingAddress: {
             fullName: convCustomerName.trim(),
             phone: convCustomerPhone.trim(),
-            addressLine1: convAddressLine1.trim(),
-            district: convDistrict.trim(),
-            upazila: convUpazila.trim() || undefined,
-            division: convDivision.trim() || undefined,
-            countryCode: "BD",
+            addressLine1: convAddress.addressLine1.trim(),
+            addressLine2: convAddress.addressLine2?.trim() || undefined,
+            divisionId: convAddress.divisionId || undefined,
+            districtId: convAddress.districtId || undefined,
+            upazilaId: convAddress.upazilaId || undefined,
+            unionId: convAddress.unionId || undefined,
+            division: convAddress.division?.trim() || undefined,
+            district: convAddress.district.trim(),
+            upazila: convAddress.upazila?.trim() || undefined,
+            thana: convAddress.thana?.trim() || undefined,
+            area: convAddress.area?.trim() || undefined,
+            postalCode: convAddress.postalCode?.trim() || undefined,
+            countryCode: convAddress.countryCode || "BD",
           },
           cartItems: convCartItems,
           paymentMethod: convPaymentMethod,
@@ -664,10 +720,10 @@ export default function AdminIncompleteOrdersPage() {
           <DialogHeader>
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="size-5" />
-              <DialogTitle className="text-lg">Convert Lead to Real Order (অর্ডার তথ্য যাচাই ও কনফার্ম)</DialogTitle>
+              <DialogTitle className="text-lg">Verify & Convert Lead to Official Order</DialogTitle>
             </div>
             <DialogDescription className="text-xs">
-              Review and adjust customer details, delivery destination, items, and delivery fee before officially placing the order for Lead #{convertLead?.id}.
+              Review customer details, delivery location, items, and pricing before creating the official order for Lead #{convertLead?.id}.
             </DialogDescription>
           </DialogHeader>
 
@@ -676,15 +732,15 @@ export default function AdminIncompleteOrdersPage() {
             <div className="rounded-2xl border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                 <UserCheck className="size-4 text-primary" />
-                <span>Customer Information (কাস্টমার তথ্য)</span>
+                <span>Customer Information</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground">Recipient Name *</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">Customer Full Name *</label>
                   <Input
                     value={convCustomerName}
-                    onChange={(e) => setConvCustomerName(e.target.value)}
-                    placeholder="Full name"
+                    onChange={(e) => handleCustomerNameChange(e.target.value)}
+                    placeholder="e.g. Tanvir Ahmed"
                     className="h-9 text-xs"
                   />
                 </div>
@@ -692,13 +748,13 @@ export default function AdminIncompleteOrdersPage() {
                   <label className="text-[11px] font-semibold text-muted-foreground">Phone Number *</label>
                   <Input
                     value={convCustomerPhone}
-                    onChange={(e) => setConvCustomerPhone(e.target.value)}
+                    onChange={(e) => handleCustomerPhoneChange(e.target.value)}
                     placeholder="01XXXXXXXXX"
                     className="h-9 text-xs"
                   />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="text-[11px] font-semibold text-muted-foreground">Email (Optional)</label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">Email Address (Optional)</label>
                   <Input
                     type="email"
                     value={convCustomerEmail}
@@ -710,54 +766,17 @@ export default function AdminIncompleteOrdersPage() {
               </div>
             </div>
 
-            {/* 2. Delivery Address */}
+            {/* 2. Delivery Address (Structured like Checkout page) */}
             <div className="rounded-2xl border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                 <MapPin className="size-4 text-rose-500" />
-                <span>Delivery Address (ডেলিভারি ঠিকানা)</span>
+                <span>Delivery Address</span>
               </div>
-              <div className="space-y-3 text-xs">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground">
-                    Street Address / House / Road / Area *
-                  </label>
-                  <Textarea
-                    value={convAddressLine1}
-                    onChange={(e) => setConvAddressLine1(e.target.value)}
-                    placeholder="House, Road, Area, Landmark"
-                    className="min-h-16 text-xs resize-none"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-muted-foreground">City / District *</label>
-                    <Input
-                      value={convDistrict}
-                      onChange={(e) => setConvDistrict(e.target.value)}
-                      placeholder="e.g. Dhaka, Chittagong"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-muted-foreground">Thana / Upazila</label>
-                    <Input
-                      value={convUpazila}
-                      onChange={(e) => setConvUpazila(e.target.value)}
-                      placeholder="e.g. Mirpur, Dhanmondi"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-semibold text-muted-foreground">Division</label>
-                    <Input
-                      value={convDivision}
-                      onChange={(e) => setConvDivision(e.target.value)}
-                      placeholder="e.g. Dhaka"
-                      className="h-9 text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
+              <CheckoutAddressForm
+                address={convAddress}
+                onChange={setConvAddress}
+                showContactFields={false}
+              />
             </div>
 
             {/* 3. Ordered Products */}
@@ -844,7 +863,7 @@ export default function AdminIncompleteOrdersPage() {
             <div className="rounded-2xl border bg-muted/20 p-4 space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                 <Truck className="size-4 text-indigo-500" />
-                <span>Delivery & Payment Method</span>
+                <span>Delivery & Payment Settings</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -855,8 +874,8 @@ export default function AdminIncompleteOrdersPage() {
                     onChange={(e) => setConvPaymentMethod(e.target.value as any)}
                     className="h-9 w-full rounded-md border border-input bg-background px-3 text-xs focus:outline-hidden focus:ring-2 focus:ring-ring"
                   >
-                    <option value="CASH_ON_DELIVERY">Cash on Delivery (ক্যাশ অন ডেলিভারি)</option>
-                    <option value="ONLINE">bKash / Nagad / Online Paid (অনলাইন পেইড)</option>
+                    <option value="CASH_ON_DELIVERY">Cash on Delivery (COD)</option>
+                    <option value="ONLINE">Paid Online / Mobile Financial Service (MFS)</option>
                   </select>
                 </div>
 
@@ -919,12 +938,12 @@ export default function AdminIncompleteOrdersPage() {
               </div>
               {convAdvanceAmount > 0 && (
                 <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
-                  <span>Advance Received (অগ্রিম জমা)</span>
+                  <span>Advance Received</span>
                   <span>-৳{Number(convAdvanceAmount).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between font-extrabold text-emerald-700 dark:text-emerald-400 pt-1.5 border-t text-base">
-                <span>Cash to Collect on Delivery (বাকি টাকা)</span>
+                <span>Balance Due on Delivery</span>
                 <span>৳{convDueAmount.toFixed(2)}</span>
               </div>
             </div>
@@ -935,7 +954,7 @@ export default function AdminIncompleteOrdersPage() {
               <Textarea
                 value={convAdminNote}
                 onChange={(e) => setConvAdminNote(e.target.value)}
-                placeholder="e.g. Call before delivery, customer requested 4 PM to 7 PM delivery..."
+                placeholder="e.g. Call before delivery, customer requested evening delivery..."
                 className="min-h-16 text-xs resize-none"
               />
             </div>
