@@ -38,6 +38,7 @@ import type { LandingPage } from "../types";
 import type { ProductVariant, ProductImage } from "@/modules/product/types";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import { VariantSelector } from "@/modules/product/components/store/VariantSelector";
+import { useIncompleteOrderCapture } from "@/modules/incomplete-order/useIncompleteOrderCapture";
 import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddressForm";
 import { CheckoutShippingMethods } from "@/modules/checkout/components/CheckoutShippingMethods";
 import { CheckoutPaymentMethod } from "@/modules/checkout/components/CheckoutPaymentMethod";
@@ -194,7 +195,7 @@ export function LandingPageStoreView(props: LandingPageStoreViewProps) {
     if (user) {
       setShippingAddress((prev) => ({
         ...prev,
-        fullName: prev.fullName || user.name || "",
+        fullName: prev.fullName || (user as any)?.name || user.fullName || "",
         phone: prev.phone || user.phone || "",
       }));
     }
@@ -324,6 +325,40 @@ export function LandingPageStoreView(props: LandingPageStoreViewProps) {
   // Success Confirmation State
   const [orderConfirmed, setOrderConfirmed] = useState<any | null>(null);
 
+  // Auto-capture lead in real-time as visitor types contact details
+  useIncompleteOrderCapture({
+    customerName: activeAddress?.fullName || null,
+    customerPhone: activeAddress?.phone || null,
+    shippingAddress: activeAddress
+      ? {
+          fullName: activeAddress.fullName,
+          phone: activeAddress.phone,
+          division: activeAddress.division,
+          district: activeAddress.district,
+          upazila: activeAddress.upazila,
+          addressLine1: activeAddress.addressLine1,
+        }
+      : null,
+    cartItems: selectedVariant
+      ? [
+          {
+            variantId: selectedVariant.id,
+            productId: product?.id,
+            name: product?.name || landingPage.title,
+            sku: selectedVariant.sku,
+            price: selectedVariant.price,
+            quantity,
+            image: activeImage || images[0] || "",
+          },
+        ]
+      : [],
+    subtotal: itemsTotal,
+    shippingFee,
+    totalAmount: finalTotal,
+    source: `LANDING_PAGE:${landingPage.slug}`,
+    enabled: !orderConfirmed,
+  });
+
   // Order Form Ref for Smooth Scrolling
   const orderFormRef = useRef<HTMLDivElement>(null);
 
@@ -396,7 +431,7 @@ export function LandingPageStoreView(props: LandingPageStoreViewProps) {
             addressLine1: currentAddr.addressLine1.trim(),
             addressLine2: currentAddr.addressLine2?.trim() || undefined,
             divisionId: currentAddr.divisionId || undefined,
-            districtId: currentAddr.districtId || undefined,
+            districtId: currentAddr.districtId || "47",
             upazilaId: currentAddr.upazilaId || undefined,
             unionId: currentAddr.unionId || undefined,
             division: currentAddr.division?.trim() || undefined,
@@ -451,7 +486,7 @@ export function LandingPageStoreView(props: LandingPageStoreViewProps) {
             addressLine1: currentAddr.addressLine1.trim(),
             addressLine2: currentAddr.addressLine2?.trim() || undefined,
             divisionId: currentAddr.divisionId || undefined,
-            districtId: currentAddr.districtId || undefined,
+            districtId: currentAddr.districtId || "47",
             upazilaId: currentAddr.upazilaId || undefined,
             unionId: currentAddr.unionId || undefined,
             division: currentAddr.division?.trim() || undefined,

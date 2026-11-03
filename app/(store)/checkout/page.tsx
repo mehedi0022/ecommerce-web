@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -39,6 +39,7 @@ import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddre
 import { CheckoutShippingMethods } from "@/modules/checkout/components/CheckoutShippingMethods";
 import { CheckoutPaymentMethod } from "@/modules/checkout/components/CheckoutPaymentMethod";
 import { CheckoutOrderSummary } from "@/modules/checkout/components/CheckoutOrderSummary";
+import { useIncompleteOrderCapture } from "@/modules/incomplete-order/useIncompleteOrderCapture";
 import type {
   CheckoutAddress,
   CheckoutCustomer,
@@ -384,6 +385,44 @@ function CheckoutForm() {
       setPaymentMethodType("MANUAL_MFS");
     }
   }, [isAdvanceRequired, paymentMethodCode]);
+
+  // Real-time auto-capture of incomplete orders (abandoned checkouts)
+  const effectivePhone = activeAddress?.phone || customer.phone || user?.phone || "";
+  const effectiveName = activeAddress?.fullName || customer.name || (user as any)?.name || user?.fullName || "";
+  const incompleteCartItems = useMemo(() => {
+    return items.map((i: any) => ({
+      variantId: i.variant?.id || i.variantId,
+      productId: i.product?.id || i.productId,
+      name: i.product?.name || "Product",
+      sku: i.variant?.sku || "",
+      price: i.variant?.price || i.unitPrice || 0,
+      quantity: i.quantity,
+      image: i.product?.images?.[0]?.imageUrl || i.variant?.image || "",
+    }));
+  }, [items]);
+
+  useIncompleteOrderCapture({
+    customerName: effectiveName,
+    customerPhone: effectivePhone,
+    customerEmail: customer.email || user?.email || null,
+    shippingAddress: activeAddress
+      ? {
+          fullName: activeAddress.fullName,
+          phone: activeAddress.phone,
+          division: activeAddress.division,
+          district: activeAddress.district,
+          upazila: activeAddress.upazila,
+          addressLine1: activeAddress.addressLine1,
+          addressLine2: activeAddress.addressLine2,
+        }
+      : null,
+    cartItems: incompleteCartItems,
+    subtotal: subtotalNum,
+    shippingFee,
+    totalAmount: grandTotalNum,
+    source: "CHECKOUT",
+    enabled: items.length > 0,
+  });
 
   // Handle Place Order
   const handlePlaceOrder = async () => {

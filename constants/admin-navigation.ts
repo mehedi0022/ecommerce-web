@@ -59,6 +59,7 @@ export const adminNavigation: AdminNavItem[] = [
     ],
     children: [
       { title: "All Orders", href: "/admin/orders", badgeKey: "ALL", requiredPermission: "orders:read:any" },
+      { title: "Incomplete Orders (CRM)", href: "/admin/incomplete-orders", requiredPermission: "orders:read:any" },
       { title: "Pending", href: "/admin/orders?status=PENDING", badgeKey: "PENDING", requiredPermission: "orders:read:any" },
       { title: "Confirmed", href: "/admin/orders?status=CONFIRMED", badgeKey: "CONFIRMED", requiredPermission: "orders:read:any" },
       { title: "Processing", href: "/admin/orders?status=PROCESSING", badgeKey: "PROCESSING", requiredPermission: "orders:read:any" },

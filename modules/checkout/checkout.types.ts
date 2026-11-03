@@ -71,6 +71,11 @@ export interface CheckoutResponseData {
   taxAmount: string;
   grandTotal: string;
   guestAccessToken?: string;
+  paymentSession?: {
+    paymentUrl?: string;
+    sessionId?: string;
+    [key: string]: any;
+  };
 }
 
 export type CheckoutApiResponse = ApiResponse<CheckoutResponseData>;
