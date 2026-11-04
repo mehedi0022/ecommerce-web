@@ -58,11 +58,12 @@ export default function AdminVariantsPage() {
 
     return allVariants.filter(({ product, variant }) => {
       const matchSku = variant.sku?.toLowerCase().includes(q);
+      const matchBarcode = variant.barcode?.toLowerCase().includes(q);
       const matchName = product.name?.toLowerCase().includes(q);
       const matchAttr = (variant.attributeValues || []).some((av) =>
         av.attributeValue?.value?.toLowerCase().includes(q)
       );
-      return matchSku || matchName || matchAttr;
+      return matchSku || matchBarcode || matchName || matchAttr;
     });
   }, [allVariants, search]);
 
@@ -236,11 +237,16 @@ export default function AdminVariantsPage() {
                       </td>
 
                       {/* SKU / Barcode */}
-                      <td className="py-3 px-4 font-mono font-semibold text-foreground">
-                        <div className="flex items-center gap-1.5">
+                      <td className="py-3 px-4 font-mono text-foreground">
+                        <div className="flex items-center gap-1.5 font-semibold">
                           <Barcode className="size-3.5 text-muted-foreground" />
-                          <span>{variant.sku}</span>
+                          <span>{variant.barcode?.trim() || variant.sku}</span>
                         </div>
+                        {variant.barcode?.trim() && variant.barcode.trim() !== variant.sku && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            SKU: {variant.sku}
+                          </div>
+                        )}
                       </td>
 
                       {/* Selling Price */}

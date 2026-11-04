@@ -309,7 +309,9 @@ export function PosManualOrderPage() {
 
     for (const p of products) {
       for (const v of p.variants) {
-        if (v.sku.toLowerCase() === barcode.toLowerCase()) {
+        const matchesSku = v.sku.toLowerCase() === barcode.toLowerCase();
+        const matchesBarcode = Boolean(v.barcode && v.barcode.toLowerCase() === barcode.toLowerCase());
+        if (matchesSku || matchesBarcode) {
           foundProduct = p;
           foundVariant = v;
           break;
@@ -1418,8 +1420,11 @@ export function PosManualOrderPage() {
                         <div className="font-semibold text-foreground">
                           {summary || `SKU: ${v.sku}`}
                         </div>
-                        <div className="text-[11px] text-muted-foreground font-mono">
-                          SKU: {v.sku}
+                        <div className="text-[11px] text-muted-foreground font-mono flex items-center gap-2">
+                          <span>SKU: {v.sku}</span>
+                          {v.barcode && (
+                            <span className="text-zinc-500">| Barcode: {v.barcode}</span>
+                          )}
                         </div>
                         <div className="mt-0.5">
                           {stock > 0 ? (

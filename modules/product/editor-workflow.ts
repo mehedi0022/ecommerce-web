@@ -22,12 +22,20 @@ export function validateEditor(form: EditorForm, attributes: AttributeOption[], 
   if ((target === "ACTIVE" || rows.length) && !form.primaryCategoryId) errors.category = "Choose a primary category before adding variants.";
   if (target === "ACTIVE" && !rows.some(row => row.isActive)) errors.variants = "Add at least one active variant with a SKU and price.";
   const skus = new Set<string>();
+  const barcodes = new Set<string>();
   const combinations = new Set<string>();
   for (const row of rows) {
     const field = `variant-${row.key}`;
     if (!row.sku.trim() || row.sku.trim().length > 100) errors[`${field}-sku`] = "Enter a SKU (1–100 characters).";
     else if (skus.has(row.sku.trim())) errors[`${field}-sku`] = "Each variant needs a different SKU.";
     skus.add(row.sku.trim());
+
+    if (row.barcode && row.barcode.trim()) {
+      const b = row.barcode.trim();
+      if (b.length > 100) errors[`${field}-barcode`] = "Barcode must be 100 characters or fewer.";
+      else if (barcodes.has(b)) errors[`${field}-barcode`] = "Each variant must have a unique barcode.";
+      barcodes.add(b);
+    }
     if (!money(row.price)) errors[`${field}-price`] = "Enter a valid price with up to 2 decimal places.";
     if (row.compareAtPrice && (!money(row.compareAtPrice) || Number(row.compareAtPrice) < Number(row.price))) errors[`${field}-compareAtPrice`] = "Compare-at price must be at least the selling price.";
     if (row.costPrice && !money(row.costPrice)) errors[`${field}-costPrice`] = "Enter a valid cost with up to 2 decimal places.";
@@ -123,7 +131,16 @@ export async function saveEditor(
     await api.deleteVariant(id, variantId); journal.removedVariants.push(variantId); checkpoint();
   }
   for (const [sortOrder, row] of rows.entries()) {
-    const body: VariantInput = { sku: row.sku.trim(), price: Number(row.price), compareAtPrice: row.compareAtPrice ? Number(row.compareAtPrice) : null, costPrice: row.costPrice ? Number(row.costPrice) : null, isActive: row.isActive, sortOrder, attributeValueIds: selectedValues(row) };
+    const body: VariantInput = {
+      sku: row.sku.trim(),
+      barcode: row.barcode && row.barcode.trim() ? row.barcode.trim() : null,
+      price: Number(row.price),
+      compareAtPrice: row.compareAtPrice ? Number(row.compareAtPrice) : null,
+      costPrice: row.costPrice ? Number(row.costPrice) : null,
+      isActive: row.isActive,
+      sortOrder,
+      attributeValueIds: selectedValues(row),
+    };
     const fingerprint = JSON.stringify(body);
     const saved = journal.variants[row.key] ?? (row.id ? { id: row.id } : undefined);
     if (saved?.fingerprint === fingerprint) continue;

@@ -1440,6 +1440,37 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                             ) : null}
                           </Field>
                           <Field
+                            name={`${prefix}-barcode`}
+                            label={
+                              <span className="flex items-center justify-between w-full">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span>Barcode (UPC / EAN)</span>
+                                  <Badge variant="outline" className="text-[10px] font-normal py-0 px-1 text-muted-foreground">
+                                    Optional
+                                  </Badge>
+                                </span>
+                              </span>
+                            }
+                            error={errors[`${prefix}-barcode`]}
+                          >
+                            <Input
+                              id={`${prefix}-barcode`}
+                              value={row.barcode ?? ""}
+                              maxLength={100}
+                              placeholder="e.g. 8901234567890 (or empty = use SKU)"
+                              className="h-10 font-mono text-xs"
+                              aria-invalid={Boolean(errors[`${prefix}-barcode`])}
+                              onChange={(e) =>
+                                rowField(row.key, "barcode", e.target.value)
+                              }
+                            />
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              Leave empty to use SKU for sticker printing and POS barcode scanner.
+                            </p>
+                          </Field>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <Field
                             name={`${prefix}-price`}
                             label="Selling price"
                             error={errors[`${prefix}-price`]}
@@ -1459,13 +1490,11 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                               }
                             />
                           </Field>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
                           <Field
                             name={`${prefix}-compareAtPrice`}
                             label="Compare-at price"
                             optional
-                            hint="Original price, if this item is on sale."
+                            hint="Original price if on sale."
                             error={errors[`${prefix}-compareAtPrice`]}
                           >
                             <Input
@@ -1490,7 +1519,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                             name={`${prefix}-costPrice`}
                             label="Cost per item"
                             optional
-                            hint="For your records. Not shown to customers."
+                            hint="For internal records."
                             error={errors[`${prefix}-costPrice`]}
                           >
                             <Input

@@ -4,7 +4,7 @@ export interface InventorySnapshot { quantity: number; reservedQuantity: number;
 export interface EditorInitial { product: Product; variants: ProductVariant[]; images: ProductImage[]; inventory: Record<number, InventorySnapshot | null> }
 export interface AttributeOption { id: number; name: string; isRequired: boolean; values: { id: number; value: string }[] }
 export interface VariantRow {
-  key: string; id?: number; sku: string; price: string; compareAtPrice: string; costPrice: string;
+  key: string; id?: number; sku: string; barcode?: string; price: string; compareAtPrice: string; costPrice: string;
   selections: Record<number, number>; isActive: boolean; stock: string; threshold: string;
   inventory?: InventorySnapshot;
 }
@@ -30,7 +30,7 @@ export interface SaveJournal {
   needsReview?: boolean;
 }
 
-export const blankVariant = (key: string): VariantRow => ({ key, sku: "", price: "", compareAtPrice: "", costPrice: "", selections: {}, isActive: true, stock: "0", threshold: "5" });
+export const blankVariant = (key: string): VariantRow => ({ key, sku: "", barcode: "", price: "", compareAtPrice: "", costPrice: "", selections: {}, isActive: true, stock: "0", threshold: "5" });
 export const newJournal = (initial?: EditorInitial): SaveJournal => ({ productId: initial?.product.id, status: initial?.product.status, variants: {}, images: {}, stock: {}, removedVariants: [], removedImages: [] });
 export function initialForm(initial?: EditorInitial): EditorForm {
   const product = initial?.product;
@@ -50,7 +50,7 @@ export function initialForm(initial?: EditorInitial): EditorForm {
     requiresAdvancePayment: product?.requiresAdvancePayment ?? false,
     advancePaymentAmount: product?.advancePaymentAmount != null ? String(product.advancePaymentAmount) : "",
     variants: initial?.variants.length ? initial.variants.map(v => ({
-      key: `variant-${v.id}`, id: v.id, sku: v.sku, price: String(v.price), compareAtPrice: v.compareAtPrice ?? "", costPrice: v.costPrice ?? "",
+      key: `variant-${v.id}`, id: v.id, sku: v.sku, barcode: v.barcode ?? "", price: String(v.price), compareAtPrice: v.compareAtPrice ?? "", costPrice: v.costPrice ?? "",
       selections: Object.fromEntries((v.attributeValues ?? []).map(x => [x.attributeValue.attributeId, x.attributeValue.id])),
       isActive: v.isActive, stock: "0", threshold: "5", inventory: initial.inventory[v.id] ?? undefined,
     })) : [blankVariant("initial")],

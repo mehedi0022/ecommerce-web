@@ -175,12 +175,14 @@ export function ProductBarcodePrintModal({
 
     const labelsHtml = labelsToPrint
       .map(({ variant }) => {
+        const effectiveBarcode = variant.barcode?.trim() || variant.sku;
         const attrSummary = (variant.attributeValues || [])
           .map((av) => av.attributeValue?.value)
           .filter(Boolean)
           .join(" / ");
 
         const priceText = showPrice ? `৳${Number(variant.price).toFixed(0)}` : "";
+        const skuSubText = variant.barcode?.trim() && variant.barcode.trim() !== variant.sku ? `SKU: ${variant.sku}` : "";
 
         if (is50x30) {
           return `
@@ -219,9 +221,10 @@ export function ProductBarcodePrintModal({
                 </svg>
               </div>
               <div class="footer-row">
-                <span class="sku-text">*${variant.sku}*</span>
+                <span class="sku-text">*${effectiveBarcode}*</span>
                 ${priceText ? `<span class="price-text">${priceText}</span>` : ""}
               </div>
+              ${skuSubText ? `<div style="font-size:7px;color:#555;line-height:1;margin-top:1px;">${skuSubText}</div>` : ""}
             </div>
           `;
         }
@@ -260,7 +263,7 @@ export function ProductBarcodePrintModal({
                 </svg>
               </div>
               <div class="footer-row">
-                <span class="sku-text">${variant.sku}</span>
+                <span class="sku-text">${effectiveBarcode}</span>
                 ${priceText ? `<span class="price-text">${priceText}</span>` : ""}
               </div>
             </div>
@@ -303,9 +306,10 @@ export function ProductBarcodePrintModal({
               </svg>
             </div>
             <div class="footer-row">
-              <span class="sku-text">*${variant.sku}*</span>
+              <span class="sku-text">*${effectiveBarcode}*</span>
               ${priceText ? `<span class="price-text">${priceText}</span>` : ""}
             </div>
+            ${skuSubText ? `<div style="font-size:7px;color:#555;line-height:1;margin-top:1px;">${skuSubText}</div>` : ""}
           </div>
         `;
       })
@@ -557,7 +561,10 @@ export function ProductBarcodePrintModal({
                       {attrSummary || `Option #${v.id}`}
                     </td>
                     <td className="py-2.5 px-3 font-mono text-[11px] text-muted-foreground">
-                      {v.sku}
+                      <div className="font-semibold text-foreground">{v.barcode?.trim() || v.sku}</div>
+                      {v.barcode?.trim() && v.barcode.trim() !== v.sku && (
+                        <div className="text-[10px] text-muted-foreground">SKU: {v.sku}</div>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 text-right font-bold">
                       ৳{Number(v.price).toFixed(0)}
@@ -613,12 +620,12 @@ export function ProductBarcodePrintModal({
                 </div>
 
                 <div className="w-full my-0.5">
-                  <BarcodeSvg value={variants[0].sku} height={labelSize === "40x25mm" ? 28 : 34} />
+                  <BarcodeSvg value={variants[0].barcode?.trim() || variants[0].sku} height={labelSize === "40x25mm" ? 28 : 34} />
                 </div>
 
                 <div className="flex justify-between items-center text-[9px] font-bold pt-0.5 border-t border-zinc-200">
                   <span className="font-mono text-[8px] text-zinc-700">
-                    {variants[0].sku}
+                    {variants[0].barcode?.trim() || variants[0].sku}
                   </span>
                   {showPrice && (
                     <span className="text-[10px] text-zinc-950">

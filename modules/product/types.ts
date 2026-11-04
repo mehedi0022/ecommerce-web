@@ -31,6 +31,7 @@ export interface ProductVariant {
   id: number;
   productId: number;
   sku: string;
+  barcode?: string | null;
   price: string;
   compareAtPrice: string | null;
   costPrice: string | null;
@@ -95,6 +96,7 @@ export interface ProductQuery {
 }
 export interface VariantInput {
   sku: string;
+  barcode?: string | null;
   price: number;
   compareAtPrice?: number | null;
   costPrice?: number | null;

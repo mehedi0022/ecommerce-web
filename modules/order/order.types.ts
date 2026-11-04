@@ -242,6 +242,7 @@ export interface PosProductVariant {
   id: number;
   productId?: number;
   sku: string;
+  barcode?: string | null;
   price: string;
   compareAtPrice?: string | null;
   isActive: boolean;
