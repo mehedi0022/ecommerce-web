@@ -9,8 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { PaymentMethodsManagement } from "@/modules/payment/components/admin/PaymentMethodsManagement";
 import { NotificationManagement } from "@/modules/notification/components/admin/NotificationManagement";
 import { InvoiceSettingsManagement } from "@/modules/order/invoice-settings/InvoiceSettingsManagement";
+import { MarketingSettingsManagement } from "@/modules/marketing/components/admin/MarketingSettingsManagement";
 
-const tabs = ["General", "Invoice & Labels", "Payment Methods", "Profile", "Notifications", "Security"];
+const tabs = [
+  "General",
+  "Marketing & Pixels",
+  "Invoice & Labels",
+  "Payment Methods",
+  "Profile",
+  "Notifications",
+  "Security",
+];
 
 export default function SettingsPage() {
   const [tab, setTab] = useState("General");
@@ -47,7 +56,11 @@ export default function SettingsPage() {
           ))}
         </nav>
 
-        {tab === "Invoice & Labels" ? (
+        {tab === "Marketing & Pixels" ? (
+          <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+            <MarketingSettingsManagement />
+          </section>
+        ) : tab === "Invoice & Labels" ? (
           <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
             <InvoiceSettingsManagement />
           </section>

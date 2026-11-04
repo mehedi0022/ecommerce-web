@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StoreFooter } from "@/components/layout/store/StoreFooter";
 import { StoreHeader } from "@/components/layout/store/StoreHeader";
 import { StorefrontPromoPopup } from "@/modules/popup/components/store/StorefrontPromoPopup";
+import { StorefrontTrackingScripts } from "@/modules/marketing/components/StorefrontTrackingScripts";
 
 export default function StoreLayout({
   children,
@@ -10,6 +11,7 @@ export default function StoreLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col">
+      <StorefrontTrackingScripts />
       <StoreHeader />
 
       <main className="flex-1">{children}</main>

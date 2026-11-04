@@ -3,6 +3,7 @@ import {
   FolderTree,
   LayoutDashboard,
   Megaphone,
+  PhoneCall,
   Settings,
   ShoppingBag,
   Truck,
@@ -22,6 +23,7 @@ export type AdminNavItem = {
   href: string;
   icon?: LucideIcon;
   badge?: string;
+  badgeKey?: string;
   requiredPermission?: string | string[];
   children?: AdminNavChild[];
 };
@@ -40,36 +42,116 @@ export const adminNavigation: AdminNavItem[] = [
       "inventory:read:any",
     ],
     children: [
-      { title: "Products", href: "/admin/products", requiredPermission: "products:read:any" },
-      { title: "Categories", href: "/admin/catalog/categories", requiredPermission: "categories:read:any" },
-      { title: "Brands", href: "/admin/brands", requiredPermission: "brands:read:any" },
-      { title: "Attributes", href: "/admin/attributes", requiredPermission: "attributes:read:any" },
-      { title: "Variants", href: "/admin/variants", requiredPermission: "products:read:any" },
-      { title: "Size Charts", href: "/admin/size-charts", requiredPermission: "products:read:any" },
-      { title: "Inventory", href: "/admin/inventory", requiredPermission: "inventory:read:any" },
+      {
+        title: "Products",
+        href: "/admin/products",
+        requiredPermission: "products:read:any",
+      },
+      {
+        title: "Categories",
+        href: "/admin/catalog/categories",
+        requiredPermission: "categories:read:any",
+      },
+      {
+        title: "Brands",
+        href: "/admin/brands",
+        requiredPermission: "brands:read:any",
+      },
+      {
+        title: "Attributes",
+        href: "/admin/attributes",
+        requiredPermission: "attributes:read:any",
+      },
+      {
+        title: "Variants",
+        href: "/admin/variants",
+        requiredPermission: "products:read:any",
+      },
+      {
+        title: "Size Charts",
+        href: "/admin/size-charts",
+        requiredPermission: "products:read:any",
+      },
+      {
+        title: "Inventory",
+        href: "/admin/inventory",
+        requiredPermission: "inventory:read:any",
+      },
     ],
   },
   {
     title: "Orders",
     href: "/admin/orders",
     icon: ShoppingBag,
-    requiredPermission: [
-      "orders:read:any",
-      "orders:manage",
-    ],
+    requiredPermission: ["orders:read:any", "orders:manage"],
     children: [
-      { title: "POS & Manual Order", href: "/admin/orders/create", requiredPermission: "orders:manage" },
-      { title: "All Orders", href: "/admin/orders", badgeKey: "ALL", requiredPermission: "orders:read:any" },
-      { title: "Incomplete Orders (CRM)", href: "/admin/incomplete-orders", requiredPermission: "orders:read:any" },
-      { title: "Pending", href: "/admin/orders?status=PENDING", badgeKey: "PENDING", requiredPermission: "orders:read:any" },
-      { title: "Confirmed", href: "/admin/orders?status=CONFIRMED", badgeKey: "CONFIRMED", requiredPermission: "orders:read:any" },
-      { title: "Processing", href: "/admin/orders?status=PROCESSING", badgeKey: "PROCESSING", requiredPermission: "orders:read:any" },
-      { title: "Ready to Ship", href: "/admin/orders?status=READY_TO_SHIP", badgeKey: "READY_TO_SHIP", requiredPermission: "orders:read:any" },
-      { title: "Shipped", href: "/admin/orders?status=SHIPPED", badgeKey: "SHIPPED", requiredPermission: "orders:read:any" },
-      { title: "Delivered", href: "/admin/orders?status=DELIVERED", badgeKey: "DELIVERED", requiredPermission: "orders:read:any" },
-      { title: "Cancelled", href: "/admin/orders?status=CANCELLED", badgeKey: "CANCELLED", requiredPermission: "orders:read:any" },
-      { title: "Returned / Failed", href: "/admin/orders?status=RETURNED", badgeKey: "RETURNED", requiredPermission: "orders:read:any" },
+      {
+        title: "POS & Manual Order",
+        href: "/admin/orders/create",
+        requiredPermission: "orders:manage",
+      },
+      {
+        title: "All Orders",
+        href: "/admin/orders",
+        badgeKey: "ALL",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Pending",
+        href: "/admin/orders?status=PENDING",
+        badgeKey: "PENDING",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Confirmed",
+        href: "/admin/orders?status=CONFIRMED",
+        badgeKey: "CONFIRMED",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Processing",
+        href: "/admin/orders?status=PROCESSING",
+        badgeKey: "PROCESSING",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Ready to Ship",
+        href: "/admin/orders?status=READY_TO_SHIP",
+        badgeKey: "READY_TO_SHIP",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Shipped",
+        href: "/admin/orders?status=SHIPPED",
+        badgeKey: "SHIPPED",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Delivered",
+        href: "/admin/orders?status=DELIVERED",
+        badgeKey: "DELIVERED",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Cancelled",
+        href: "/admin/orders?status=CANCELLED",
+        badgeKey: "CANCELLED",
+        requiredPermission: "orders:read:any",
+      },
+      {
+        title: "Returned / Failed",
+        href: "/admin/orders?status=RETURNED",
+        badgeKey: "RETURNED",
+        requiredPermission: "orders:read:any",
+      },
     ],
+  },
+  {
+    title: "Incomplete Orders",
+    href: "/admin/incomplete-orders",
+    icon: PhoneCall,
+    badgeKey: "INCOMPLETE_ORDERS",
+    requiredPermission: "orders:read:any",
   },
   {
     title: "Fulfillment & Sales",
@@ -82,10 +164,26 @@ export const adminNavigation: AdminNavItem[] = [
       "coupons:manage",
     ],
     children: [
-      { title: "Shipments & Courier", href: "/admin/shipments", requiredPermission: "shipments:manage" },
-      { title: "Returns", href: "/admin/returns", requiredPermission: "returns:read" },
-      { title: "Refunds", href: "/admin/refunds", requiredPermission: "refunds:read" },
-      { title: "Coupons", href: "/admin/coupons", requiredPermission: "coupons:manage" },
+      {
+        title: "Shipments & Courier",
+        href: "/admin/shipments",
+        requiredPermission: "shipments:manage",
+      },
+      {
+        title: "Returns",
+        href: "/admin/returns",
+        requiredPermission: "returns:read",
+      },
+      {
+        title: "Refunds",
+        href: "/admin/refunds",
+        requiredPermission: "refunds:read",
+      },
+      {
+        title: "Coupons",
+        href: "/admin/coupons",
+        requiredPermission: "coupons:manage",
+      },
     ],
   },
   {
@@ -98,10 +196,26 @@ export const adminNavigation: AdminNavItem[] = [
       "popups:read:any",
     ],
     children: [
-      { title: "Landing Pages", href: "/admin/landing-pages", requiredPermission: "products:read:any" },
-      { title: "Navigation", href: "/admin/navigation", requiredPermission: "navigation:read:any" },
-      { title: "Sliders & Banners", href: "/admin/sliders", requiredPermission: "sliders:read:any" },
-      { title: "Popups", href: "/admin/popups", requiredPermission: "popups:read:any" },
+      {
+        title: "Landing Pages",
+        href: "/admin/landing-pages",
+        requiredPermission: "products:read:any",
+      },
+      {
+        title: "Navigation",
+        href: "/admin/navigation",
+        requiredPermission: "navigation:read:any",
+      },
+      {
+        title: "Sliders & Banners",
+        href: "/admin/sliders",
+        requiredPermission: "sliders:read:any",
+      },
+      {
+        title: "Popups",
+        href: "/admin/popups",
+        requiredPermission: "popups:read:any",
+      },
     ],
   },
   {
@@ -110,8 +224,16 @@ export const adminNavigation: AdminNavItem[] = [
     icon: Users,
     requiredPermission: ["users:read:any", "reviews:read"],
     children: [
-      { title: "Customers", href: "/admin/customers", requiredPermission: "users:read:any" },
-      { title: "Reviews", href: "/admin/reviews", requiredPermission: "reviews:read" },
+      {
+        title: "Customers",
+        href: "/admin/customers",
+        requiredPermission: "users:read:any",
+      },
+      {
+        title: "Reviews",
+        href: "/admin/reviews",
+        requiredPermission: "reviews:read",
+      },
     ],
   },
   {
@@ -120,8 +242,16 @@ export const adminNavigation: AdminNavItem[] = [
     icon: ShieldCheck,
     requiredPermission: ["users:read:any", "users:create", "rbac:roles:manage"],
     children: [
-      { title: "Staff Members", href: "/admin/users", requiredPermission: "users:read:any" },
-      { title: "Roles & Permissions", href: "/admin/roles", requiredPermission: "rbac:roles:manage" },
+      {
+        title: "Staff Members",
+        href: "/admin/users",
+        requiredPermission: "users:read:any",
+      },
+      {
+        title: "Roles & Permissions",
+        href: "/admin/roles",
+        requiredPermission: "rbac:roles:manage",
+      },
     ],
   },
   {
@@ -134,9 +264,14 @@ export const adminNavigation: AdminNavItem[] = [
     title: "Settings",
     href: "/admin/settings",
     icon: Settings,
-    requiredPermission: ["orders:manage", "shipping:manage", "rbac:roles:manage"],
+    requiredPermission: [
+      "orders:manage",
+      "shipping:manage",
+      "rbac:roles:manage",
+    ],
     children: [
       { title: "General Settings", href: "/admin/settings" },
+      { title: "Marketing & Pixels", href: "/admin/settings/marketing" },
       { title: "Invoice & Labels", href: "/admin/settings/invoice" },
       { title: "Payment Methods", href: "/admin/settings/payments" },
       { title: "Courier Integration", href: "/admin/settings/courier" },

@@ -17,7 +17,11 @@ import {
   Check,
   RefreshCw,
   ExternalLink,
+  ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Copy,
   UserX,
   FileText,
   Loader2,
@@ -86,6 +90,10 @@ const STATUS_TABS = [
 export default function AdminIncompleteOrdersPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [search, setSearch] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(20);
+  const [expandedCardIds, setExpandedCardIds] = useState<Record<number, boolean>>({});
+
   const [activeLeadForNotes, setActiveLeadForNotes] = useState<IncompleteOrder | null>(null);
   const [modalStatus, setModalStatus] = useState<IncompleteOrder["status"]>("PENDING");
   const [modalNotes, setModalNotes] = useState<string>("");
@@ -99,6 +107,8 @@ export default function AdminIncompleteOrdersPage() {
     isFetching,
     refetch: refetchList,
   } = useListIncompleteOrdersQuery({
+    page,
+    limit,
     status: selectedStatus === "ALL" ? undefined : selectedStatus,
     search: search.trim() || undefined,
   });
@@ -107,6 +117,41 @@ export default function AdminIncompleteOrdersPage() {
   const [convertOrder, { isLoading: isConverting }] = useConvertIncompleteOrderMutation();
 
   const incompleteOrders = listData?.data || [];
+  const meta = listData?.meta;
+
+  const toggleExpand = (id: number) => {
+    setExpandedCardIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    setPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setPage(1);
+  };
+
+  const getTabCount = (tabValue: string) => {
+    if (!metrics) return undefined;
+    switch (tabValue) {
+      case "ALL":
+        return metrics.totalLeads ?? 0;
+      case "PENDING":
+        return metrics.statusCounts?.["PENDING"] ?? metrics.pendingCalls ?? 0;
+      case "CALLED_NO_RESPONSE":
+        return metrics.statusCounts?.["CALLED_NO_RESPONSE"] ?? 0;
+      case "CONTACTED":
+        return metrics.statusCounts?.["CONTACTED"] ?? metrics.contactedCount ?? 0;
+      case "CONVERTED":
+        return metrics.statusCounts?.["CONVERTED"] ?? metrics.convertedCount ?? 0;
+      case "CANCELLED":
+        return metrics.statusCounts?.["CANCELLED"] ?? 0;
+      default:
+        return undefined;
+    }
+  };
 
   const handleOpenNotesModal = (lead: IncompleteOrder) => {
     setActiveLeadForNotes(lead);
@@ -388,21 +433,39 @@ export default function AdminIncompleteOrdersPage() {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              type="button"
-              onClick={() => setSelectedStatus(tab.value)}
-              className={cn(
-                "px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer",
-                selectedStatus === tab.value
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {STATUS_TABS.map((tab) => {
+            const count = getTabCount(tab.value);
+            const isSelected = selectedStatus === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleStatusChange(tab.value)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <span>{tab.label}</span>
+                {typeof count === "number" && (
+                  <span
+                    className={cn(
+                      "rounded-full px-1.5 py-0.2 text-[10px] font-bold tabular-nums",
+                      isSelected
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : tab.value === "PENDING" && count > 0
+                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search Input */}
@@ -410,7 +473,7 @@ export default function AdminIncompleteOrdersPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by phone or name..."
             className="pl-9 h-9 text-xs"
           />
@@ -419,9 +482,9 @@ export default function AdminIncompleteOrdersPage() {
 
       {/* ── Leads List ── */}
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 rounded-2xl border bg-muted/20 animate-pulse" />
+        <div className="space-y-2.5">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-20 rounded-xl border bg-muted/20 animate-pulse" />
           ))}
         </div>
       ) : incompleteOrders.length === 0 ? (
@@ -435,220 +498,388 @@ export default function AdminIncompleteOrdersPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-2.5">
           {incompleteOrders.map((lead) => {
             const isConverted = lead.status === "CONVERTED";
+            const isExpanded = Boolean(expandedCardIds[lead.id]);
             return (
               <div
                 key={lead.id}
                 className={cn(
-                  "rounded-2xl border bg-card p-4 sm:p-5 shadow-xs transition-all hover:border-primary/40 space-y-4",
-                  isConverted && "border-emerald-500/30 bg-emerald-500/5",
-                  lead.status === "PENDING" && "border-amber-500/30"
+                  "rounded-xl border bg-card p-3 sm:p-3.5 shadow-xs transition-all hover:border-primary/50 space-y-2.5",
+                  isConverted && "border-emerald-500/30 bg-emerald-500/[0.02]",
+                  lead.status === "PENDING" && "border-amber-500/30 bg-amber-500/[0.02]"
                 )}
               >
-                {/* Header row */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs shrink-0">
+                {/* ── Compact Main Row ── */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                  {/* Left: Lead Identity, Customer & Status */}
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xs shrink-0">
                       #{lead.id}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-foreground">
+
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-sm text-foreground truncate max-w-[150px] sm:max-w-[200px]">
                           {lead.customerName || "Customer"}
                         </span>
-                        <a
-                          href={`tel:${lead.customerPhone}`}
-                          className="font-mono font-black text-sm text-primary hover:underline"
+
+                        <div className="flex items-center gap-1">
+                          <a
+                            href={`tel:${lead.customerPhone}`}
+                            className="font-mono font-bold text-xs text-primary hover:underline"
+                            title="Click to dial"
+                          >
+                            {lead.customerPhone}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(lead.customerPhone);
+                              toast.success("Phone copied to clipboard!");
+                            }}
+                            className="text-muted-foreground hover:text-foreground p-0.5 rounded cursor-pointer transition-colors"
+                            title="Copy Phone"
+                          >
+                            <Copy className="size-3" />
+                          </button>
+                        </div>
+
+                        {/* Status Badge */}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-bold uppercase px-1.5 py-0",
+                            lead.status === "PENDING" && "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400",
+                            lead.status === "CALLED_NO_RESPONSE" && "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-400",
+                            lead.status === "CONTACTED" && "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-400",
+                            lead.status === "CONVERTED" && "bg-emerald-600 text-white border-emerald-600",
+                            lead.status === "CANCELLED" && "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-400"
+                          )}
                         >
-                          {lead.customerPhone}
-                        </a>
+                          {lead.status === "PENDING" && "Pending Call"}
+                          {lead.status === "CALLED_NO_RESPONSE" && "No Answer"}
+                          {lead.status === "CONTACTED" && "Contacted"}
+                          {lead.status === "CONVERTED" && "Order Won"}
+                          {lead.status === "CANCELLED" && "Cancelled"}
+                        </Badge>
+
+                        {lead.convertedOrder && (
+                          <Link
+                            href={`/admin/orders/${lead.convertedOrder.orderNumber}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:underline"
+                          >
+                            <span>#{lead.convertedOrder.orderNumber}</span>
+                            <ExternalLink className="size-3" />
+                          </Link>
+                        )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
-                        <Clock className="size-3" />
-                        <span>{new Date(lead.createdAt).toLocaleString()}</span>
+
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Clock className="size-3" />
+                          {new Date(lead.createdAt).toLocaleDateString()} {new Date(lead.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
                         <span>•</span>
-                        <span className="font-semibold text-foreground/80">Source: {lead.source}</span>
-                      </p>
+                        <span className="rounded bg-muted px-1.5 py-0.2 text-[10px] font-semibold text-foreground/80">
+                          {lead.source}
+                        </span>
+                        {lead.shippingAddress?.district && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-0.5 truncate max-w-[160px]">
+                              <MapPin className="size-3 shrink-0 text-muted-foreground" />
+                              {lead.shippingAddress.district}
+                              {lead.shippingAddress.division ? `, ${lead.shippingAddress.division}` : ""}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    {/* Status Badge */}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] font-bold uppercase",
-                        lead.status === "PENDING" && "bg-amber-500/15 text-amber-700 border-amber-400",
-                        lead.status === "CALLED_NO_RESPONSE" && "bg-blue-500/15 text-blue-700 border-blue-400",
-                        lead.status === "CONTACTED" && "bg-purple-500/15 text-purple-700 border-purple-400",
-                        lead.status === "CONVERTED" && "bg-emerald-600 text-white border-emerald-600",
-                        lead.status === "CANCELLED" && "bg-rose-500/15 text-rose-700 border-rose-400"
-                      )}
-                    >
-                      {lead.status === "PENDING" && "Pending Call"}
-                      {lead.status === "CALLED_NO_RESPONSE" && "No Answer"}
-                      {lead.status === "CONTACTED" && "Contacted"}
-                      {lead.status === "CONVERTED" && "Order Won"}
-                      {lead.status === "CANCELLED" && "Cancelled"}
-                    </Badge>
-
-                    {lead.convertedOrder && (
-                      <Link
-                        href={`/admin/orders/${lead.convertedOrder.orderNumber}`}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:underline"
-                      >
-                        <span>#{lead.convertedOrder.orderNumber}</span>
-                        <ExternalLink className="size-3" />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-
-                {/* Body info: Cart items preview & Destination */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs">
-                  {/* Cart Items */}
-                  <div className="space-y-1.5">
-                    <p className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">
-                      Cart Products ({lead.cartItems?.length || 0})
-                    </p>
-                    <div className="space-y-1.5">
-                      {lead.cartItems?.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2 rounded-xl bg-muted/30 p-1.5 border">
+                  {/* Middle: Cart Preview & Total Stuck Amount */}
+                  <div className="flex items-center gap-3 lg:px-4 py-1.5 lg:py-0 border-y lg:border-y-0 lg:border-x border-border/50 shrink-0">
+                    {/* Mini thumbnails stack */}
+                    <div className="flex items-center -space-x-2 overflow-hidden shrink-0">
+                      {lead.cartItems?.slice(0, 3).map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="relative size-7 rounded-lg border-2 border-background bg-muted overflow-hidden shrink-0"
+                          title={`${item.name} (${item.quantity}x)`}
+                        >
                           {item.image ? (
                             <img
                               src={mediaUrl(item.image)}
                               alt={item.name}
-                              className="size-8 rounded-lg object-cover bg-background shrink-0"
+                              className="size-full object-cover"
                             />
                           ) : (
-                            <div className="size-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                              <Package className="size-3.5 text-muted-foreground" />
-                            </div>
+                            <Package className="size-3.5 m-auto text-muted-foreground" />
                           )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold truncate text-foreground text-[11px]">{item.name}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {item.sku ? `SKU: ${item.sku} · ` : ""}
-                              {item.quantity} × ৳{Number(item.price).toFixed(0)}
-                            </p>
-                          </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Delivery Address */}
-                  <div className="space-y-1.5">
-                    <p className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">
-                      Delivery Destination
-                    </p>
-                    {lead.shippingAddress ? (
-                      <div className="rounded-xl border bg-muted/20 p-2.5 space-y-1">
-                        <p className="font-semibold text-foreground flex items-center gap-1.5">
-                          <MapPin className="size-3.5 text-primary shrink-0" />
-                          <span>
-                            {lead.shippingAddress.district || "District not selected"},{" "}
-                            {lead.shippingAddress.division || ""}
-                          </span>
-                        </p>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2">
-                          {lead.shippingAddress.addressLine1 || "Detailed address not entered yet"}
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground italic text-[11px]">No address entered</p>
-                    )}
-                  </div>
-
-                  {/* Pricing Breakdown & CRM Note */}
-                  <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
-                    <p className="font-semibold text-muted-foreground text-[11px] uppercase tracking-wider">
-                      Pricing & Call Notes
-                    </p>
-                    <div className="rounded-xl border bg-muted/20 p-2.5 space-y-1 text-[11px]">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal:</span>
-                        <span className="font-medium">৳{Number(lead.subtotal).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Shipping:</span>
-                        <span className="font-medium">৳{Number(lead.shippingFee).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-1 font-bold text-foreground">
-                        <span>Total Stuck Value:</span>
-                        <span className="text-primary font-black">৳{Number(lead.totalAmount).toFixed(2)}</span>
-                      </div>
-
-                      {lead.crmNotes && (
-                        <div className="mt-2 pt-1 border-t text-amber-700 dark:text-amber-300 font-medium italic">
-                          "{lead.crmNotes}"
+                      {(lead.cartItems?.length || 0) > 3 && (
+                        <div className="size-7 rounded-lg border-2 border-background bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground shrink-0">
+                          +{lead.cartItems.length - 3}
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
 
-                {/* CRM Action Buttons Row */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-                  <div className="flex items-center gap-2">
-                    {/* Call Direct */}
+                    <div className="text-xs">
+                      <p className="font-black text-foreground">
+                        ৳{Number(lead.totalAmount).toFixed(0)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {lead.cartItems?.length || 0} item{lead.cartItems?.length === 1 ? "" : "s"} · Sub: ৳{Number(lead.subtotal).toFixed(0)}
+                      </p>
+                    </div>
+
+                    {lead.crmNotes && (
+                      <div
+                        className="hidden xl:block max-w-[170px] text-[10px] italic text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-1 rounded truncate"
+                        title={lead.crmNotes}
+                      >
+                        "{lead.crmNotes}"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: Quick Action Buttons & Expand Toggle */}
+                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                    {/* Call button */}
                     <a
                       href={`tel:${lead.customerPhone}`}
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" }),
-                        "h-8 gap-1.5 text-xs font-bold text-foreground hover:bg-primary/10 hover:text-primary"
+                        "h-7 px-2.5 gap-1 text-[11px] font-bold text-foreground hover:bg-primary/10 hover:text-primary cursor-pointer"
                       )}
+                      title="Direct Call"
                     >
-                      <PhoneCall className="size-3.5" />
-                      <span>Call {lead.customerPhone}</span>
+                      <PhoneCall className="size-3" />
+                      <span>Call</span>
                     </a>
 
-                    {/* WhatsApp */}
+                    {/* WhatsApp button */}
                     <a
                       href={getWhatsAppLink(lead)}
                       target="_blank"
                       rel="noreferrer"
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" }),
-                        "h-8 gap-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                        "h-7 px-2.5 gap-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 cursor-pointer"
                       )}
+                      title="Chat on WhatsApp"
                     >
-                      <MessageCircle className="size-3.5" />
-                      <span>WhatsApp Lead</span>
+                      <MessageCircle className="size-3" />
+                      <span>WhatsApp</span>
                     </a>
 
-                    {/* Note & Status */}
+                    {/* CRM Note button */}
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenNotesModal(lead)}
-                      className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                      title="Update Note & Status"
                     >
-                      <FileText className="size-3.5" />
-                      <span>Notes & Status</span>
+                      <FileText className="size-3" />
+                      <span className="hidden sm:inline">Note</span>
                     </Button>
-                  </div>
 
-                  {/* Convert to Real Order Modal trigger */}
-                  {!isConverted && (
+                    {/* Convert to Real Order */}
+                    {!isConverted && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isConverting}
+                        onClick={() => handleOpenConvertModal(lead)}
+                        className="h-7 px-2.5 gap-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                      >
+                        <CheckCircle2 className="size-3" />
+                        <span>Convert</span>
+                      </Button>
+                    )}
+
+                    {/* Expand/Collapse Toggle */}
                     <Button
                       type="button"
+                      variant="ghost"
                       size="sm"
-                      disabled={isConverting}
-                      onClick={() => handleOpenConvertModal(lead)}
-                      className="h-8 gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                      onClick={() => toggleExpand(lead.id)}
+                      className="size-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title={isExpanded ? "Hide Details" : "Show Full Details"}
                     >
-                      <CheckCircle2 className="size-3.5" />
-                      <span>Convert to Real Order</span>
+                      {isExpanded ? (
+                        <ChevronUp className="size-3.5" />
+                      ) : (
+                        <ChevronDown className="size-3.5" />
+                      )}
                     </Button>
-                  )}
+                  </div>
                 </div>
+
+                {/* ── Optional Expandable Drawer: Full Item Lines & Address ── */}
+                {isExpanded && (
+                  <div className="pt-2.5 border-t border-border/60 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 text-xs bg-muted/10 -mx-3 -mb-3 p-3 rounded-b-xl">
+                    {/* Products detail */}
+                    <div className="space-y-1.5">
+                      <p className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Ordered Items ({lead.cartItems?.length || 0})
+                      </p>
+                      <div className="space-y-1">
+                        {lead.cartItems?.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2 rounded-lg bg-background p-1.5 border">
+                            {item.image ? (
+                              <img
+                                src={mediaUrl(item.image)}
+                                alt={item.name}
+                                className="size-7 rounded object-cover shrink-0"
+                              />
+                            ) : (
+                              <Package className="size-4 text-muted-foreground shrink-0" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold truncate text-[11px]">{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {item.sku ? `SKU: ${item.sku} · ` : ""}
+                                {item.quantity} × ৳{Number(item.price).toFixed(0)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Delivery Address detail */}
+                    <div className="space-y-1.5">
+                      <p className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Customer & Delivery Address
+                      </p>
+                      <div className="rounded-lg bg-background p-2 border space-y-0.5 text-[11px]">
+                        <p className="font-bold text-foreground">
+                          {lead.customerName || "Customer"} ({lead.customerPhone})
+                        </p>
+                        {lead.shippingAddress ? (
+                          <>
+                            <p className="text-muted-foreground">
+                              {lead.shippingAddress.addressLine1 || "No street address"}
+                            </p>
+                            <p className="font-medium text-foreground">
+                              {[
+                                lead.shippingAddress.upazila || lead.shippingAddress.thana,
+                                lead.shippingAddress.district,
+                                lead.shippingAddress.division,
+                                lead.shippingAddress.postalCode,
+                              ]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-muted-foreground italic">No address provided</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Financial Summary & CRM Notes */}
+                    <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                      <p className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Payment & Agent Notes
+                      </p>
+                      <div className="rounded-lg bg-background p-2 border space-y-1 text-[11px]">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Subtotal:</span>
+                          <span className="font-semibold">৳{Number(lead.subtotal).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Shipping Fee:</span>
+                          <span className="font-semibold">৳{Number(lead.shippingFee).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-1 font-bold">
+                          <span>Total Amount:</span>
+                          <span className="text-primary font-black">৳{Number(lead.totalAmount).toFixed(2)}</span>
+                        </div>
+                        {lead.crmNotes && (
+                          <div className="mt-1 pt-1 border-t text-amber-700 dark:text-amber-300 italic text-[10px]">
+                            Agent Note: "{lead.crmNotes}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Pagination Bar ── */}
+      {meta && meta.totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 text-xs shadow-xs">
+          <div className="text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{(page - 1) * limit + 1}</span> to{" "}
+            <span className="font-semibold text-foreground">
+              {Math.min(page * limit, meta.total)}
+            </span>{" "}
+            of <span className="font-semibold text-foreground">{meta.total}</span> leads
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isFetching}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+            >
+              <ChevronLeft className="size-3.5" />
+              <span>Previous</span>
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: meta.totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === meta.totalPages || Math.abs(p - page) <= 1)
+                .map((p, idx, arr) => {
+                  const prev = arr[idx - 1];
+                  const showEllipsis = prev && p - prev > 1;
+                  return (
+                    <div key={p} className="flex items-center">
+                      {showEllipsis && <span className="px-1 text-muted-foreground">…</span>}
+                      <Button
+                        type="button"
+                        variant={page === p ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPage(p)}
+                        disabled={isFetching}
+                        className={cn(
+                          "size-8 p-0 text-xs font-semibold cursor-pointer",
+                          page === p && "shadow-xs"
+                        )}
+                      >
+                        {p}
+                      </Button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={page >= meta.totalPages || isFetching}
+              onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+              className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+            >
+              <span>Next</span>
+              <ChevronRight className="size-3.5" />
+            </Button>
+          </div>
         </div>
       )}
 

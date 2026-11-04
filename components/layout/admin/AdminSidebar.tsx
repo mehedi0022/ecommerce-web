@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { adminNavigation } from "@/constants/admin-navigation";
 import { useMeQuery } from "@/modules/auth/authApi";
 import { useGetAdminOrderStatusCountsQuery } from "@/modules/order/orderApi";
+import { useGetIncompleteOrderMetricsQuery } from "@/modules/incomplete-order/incompleteOrderApi";
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -20,6 +21,9 @@ export const AdminSidebar = () => {
 
   const { data: countsData } = useGetAdminOrderStatusCountsQuery();
   const statusCounts = (countsData?.data || {}) as Record<string, number>;
+
+  const { data: incompleteMetricsData } = useGetIncompleteOrderMetricsQuery();
+  const pendingIncompleteCount = incompleteMetricsData?.data?.pendingCalls ?? 0;
 
   const { data: meData } = useMeQuery();
   const user = meData?.data;
@@ -124,10 +128,27 @@ export const AdminSidebar = () => {
                     {Icon && <Icon className="size-[16px]" />}
                     {!collapsed && item.title}
                   </span>
-                  {!collapsed && item.badge && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                      {item.badge}
-                    </span>
+                  {!collapsed && (
+                    <div className="flex items-center gap-1.5">
+                      {item.badge && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.badgeKey === "INCOMPLETE_ORDERS" && pendingIncompleteCount > 0 && (
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums shadow-xs",
+                            groupActive
+                              ? "bg-primary-foreground text-primary"
+                              : "bg-amber-500 text-white animate-pulse"
+                          )}
+                          title={`${pendingIncompleteCount} leads awaiting call`}
+                        >
+                          {pendingIncompleteCount}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </Link>
               );

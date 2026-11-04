@@ -39,6 +39,7 @@ import type { ProductVariant, ProductImage } from "@/modules/product/types";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import { VariantSelector } from "@/modules/product/components/store/VariantSelector";
 import { useIncompleteOrderCapture } from "@/modules/incomplete-order/useIncompleteOrderCapture";
+import { trackPurchase } from "@/modules/marketing/lib/tracking";
 import { CheckoutAddressForm } from "@/modules/checkout/components/CheckoutAddressForm";
 import { CheckoutShippingMethods } from "@/modules/checkout/components/CheckoutShippingMethods";
 import { CheckoutPaymentMethod } from "@/modules/checkout/components/CheckoutPaymentMethod";
@@ -518,6 +519,24 @@ export function LandingPageStoreView(props: LandingPageStoreViewProps) {
       }
 
       setOrderConfirmed(orderResult);
+      // Track verified purchase with deduplication
+      if (orderResult && (orderResult.id || orderResult.orderNumber)) {
+        trackPurchase({
+          order: {
+            id: orderResult.id || orderResult.orderNumber,
+            orderNumber: orderResult.orderNumber,
+            grandTotal: orderResult.grandTotal,
+          },
+          items: [
+            {
+              id: selectedVariant?.id || product?.id || "item",
+              name: product?.name || landingPage.title,
+              price: unitPrice,
+              quantity,
+            },
+          ],
+        });
+      }
       toast.success("আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে!");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {

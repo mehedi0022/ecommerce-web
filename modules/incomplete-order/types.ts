@@ -85,6 +85,7 @@ export interface IncompleteOrderMetrics {
   pendingCalls: number;
   contactedCount: number;
   convertedCount: number;
+  statusCounts?: Record<string, number>;
   potentialRevenue: string;
   recoveredRevenue: string;
   conversionRate: string;

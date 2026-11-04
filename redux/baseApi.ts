@@ -52,6 +52,7 @@ export const baseApi = createApi({
     "SizeChart",
     "LandingPage",
     "IncompleteOrder",
+    "Marketing",
   ],
 
   endpoints: () => ({}),

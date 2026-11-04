@@ -34,6 +34,7 @@ import {
 import { useMeQuery } from "@/modules/auth/authApi";
 import { useInitiateGatewayPaymentMutation } from "@/modules/payment/paymentApi";
 import { OrderInvoiceModal } from "@/modules/order/components/invoice/OrderInvoiceModal";
+import { trackPurchase } from "@/modules/marketing/lib/tracking";
 
 export default function OrderSuccessPage({
   params,
@@ -85,6 +86,26 @@ export default function OrderSuccessPage({
 
   const isLoading = isAuth ? isAuthLoading : isGuestLoading;
   const order = authOrderData?.data || guestOrderData?.data;
+
+  // Track Purchase event once with strict deduplication (reload protected)
+  useEffect(() => {
+    if (order && order.id) {
+      trackPurchase({
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          grandTotal: order.grandTotal,
+          subtotal: order.subtotal,
+        },
+        items: (order.items || []).map((i: any) => ({
+          id: i.variantId || i.id,
+          name: i.productName || i.name || "Item",
+          price: Number(i.unitPrice || i.price || 0),
+          quantity: i.quantity || 1,
+        })),
+      });
+    }
+  }, [order]);
 
   const handleCopyOrderNumber = () => {
     navigator.clipboard.writeText(orderNumber);
