@@ -58,6 +58,7 @@ export const adminNavigation: AdminNavItem[] = [
       "orders:manage",
     ],
     children: [
+      { title: "POS & Manual Order", href: "/admin/orders/create", requiredPermission: "orders:manage" },
       { title: "All Orders", href: "/admin/orders", badgeKey: "ALL", requiredPermission: "orders:read:any" },
       { title: "Incomplete Orders (CRM)", href: "/admin/incomplete-orders", requiredPermission: "orders:read:any" },
       { title: "Pending", href: "/admin/orders?status=PENDING", badgeKey: "PENDING", requiredPermission: "orders:read:any" },

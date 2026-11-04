@@ -284,7 +284,12 @@ export const OrderInvoice = forwardRef<HTMLDivElement, OrderInvoiceProps>(
                 <p className="text-[11px] text-gray-500 mt-0.5">
                   Date: {formattedDate}
                 </p>
-                <div className="mt-1 flex items-center gap-1.5 sm:justify-end">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 sm:justify-end">
+                  {order.source && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700">
+                      SOURCE: {order.source.replace(/_/g, " ")}
+                    </span>
+                  )}
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-gray-300 bg-gray-50 text-gray-700">
                     STATUS: {order.status}
                   </span>

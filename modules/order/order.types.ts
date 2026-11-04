@@ -74,6 +74,15 @@ export interface OrderStatusHistory {
   createdAt: string;
 }
 
+export type OrderSource =
+  | "WEBSITE"
+  | "LANDING_PAGE"
+  | "PHONE_CALL"
+  | "WHATSAPP"
+  | "MESSENGER"
+  | "OUTLET_POS"
+  | "MANUAL_OTHER";
+
 export interface OrderShipment {
   id: number;
   status: string;
@@ -96,6 +105,7 @@ export interface Order {
   customerName: string;
   customerEmail: string | null;
   customerPhone: string;
+  source?: OrderSource;
   status:
     | "PENDING"
     | "CONFIRMED"
@@ -153,6 +163,7 @@ export interface OrderListQuery {
   orderNumber?: string;
   customerPhone?: string;
   customerEmail?: string;
+  source?: OrderSource;
 }
 
 export interface OrderTrackData {
@@ -225,5 +236,115 @@ export interface TransitionShipmentInput {
     | "RETURNED"
     | "CANCELLED";
   note?: string | null;
+}
+
+export interface PosProductVariant {
+  id: number;
+  productId?: number;
+  sku: string;
+  price: string;
+  compareAtPrice?: string | null;
+  isActive: boolean;
+  inventory?: {
+    availableQuantity: number;
+    reservedQuantity: number;
+  };
+  attributeValues?: Array<{
+    id: number;
+    attributeValue: {
+      id: number;
+      value: string;
+      attribute?: {
+        name: string;
+      };
+    };
+  }>;
+}
+
+export interface PosProduct {
+  id: number;
+  name: string;
+  slug: string;
+  status: string;
+  images?: Array<{
+    id: number;
+    imageUrl: string;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>;
+  variants: PosProductVariant[];
+}
+
+export interface PosCustomerAddress {
+  id: number;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  divisionId?: string | null;
+  districtId?: string | null;
+  upazilaId?: string | null;
+  unionId?: string | null;
+  division?: string | null;
+  district?: string | null;
+  upazila?: string | null;
+  thana?: string | null;
+  area?: string | null;
+  postalCode?: string | null;
+  countryCode?: string | null;
+  isDefaultShipping?: boolean;
+}
+
+export interface PosCustomer {
+  id: number;
+  fullName: string;
+  phone: string;
+  email?: string | null;
+  addresses?: PosCustomerAddress[];
+}
+
+export interface ManualOrderItemInput {
+  productId?: number;
+  variantId: number;
+  sku?: string;
+  productName?: string;
+  quantity: number;
+  unitPrice: number | string;
+}
+
+export interface CreateManualOrderInput {
+  source: OrderSource;
+  fulfillmentType: "DELIVERY" | "STORE_PICKUP";
+  customerId?: number | null;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string | null;
+  shippingAddress?: {
+    fullName?: string;
+    phone?: string;
+    divisionId?: string;
+    districtId?: string;
+    upazilaId?: string;
+    unionId?: string;
+    division?: string;
+    district?: string;
+    upazila?: string;
+    thana?: string;
+    area?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    postalCode?: string;
+    countryCode?: string;
+  } | null;
+  items: ManualOrderItemInput[];
+  shippingFee: number | string;
+  discountAmount: number | string;
+  advanceAmount: number | string;
+  paymentMethod: "CASH_ON_DELIVERY" | "ONLINE" | "PARTIAL_COD";
+  paymentMethodCode?: string;
+  paymentStatus?: "UNPAID" | "PAID" | "PARTIALLY_PAID";
+  orderStatus?: "PENDING" | "CONFIRMED" | "PROCESSING" | "DELIVERED";
+  customerNote?: string;
+  adminNote?: string;
 }
 

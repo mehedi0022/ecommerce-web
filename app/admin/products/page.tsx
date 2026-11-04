@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Sparkles,
   ShoppingBag,
+  Barcode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ import {
   DeleteDialog,
   useCatalogAction,
 } from "@/modules/catalog/components/CatalogShared";
+import { ProductBarcodePrintModal } from "@/modules/product/components/admin/ProductBarcodePrintModal";
 
 // ─── Price Helper ─────────────────────────────────────────────────────────────
 function formatPriceRange(product: Product): string {
@@ -147,6 +149,7 @@ export default function ProductsPage() {
   const [updateStatus] = useUpdateProductStatusMutation();
   const [updateProduct] = useUpdateProductMutation();
   const [deleting, setDeleting] = useState<Product>();
+  const [barcodeModalProduct, setBarcodeModalProduct] = useState<Product | null>(null);
   const action = useCatalogAction();
 
   const products = query.data?.data || [];
@@ -595,6 +598,17 @@ export default function ProductsPage() {
                             <ExternalLink className="size-4" />
                           </Link>
 
+                          {/* Print Barcodes Button */}
+                          <button
+                            type="button"
+                            onClick={() => setBarcodeModalProduct(product)}
+                            title="Print variant barcode labels"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-background px-2.5 py-1.5 text-xs font-semibold hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-2xs"
+                          >
+                            <Barcode className="size-3.5" />
+                            <span className="hidden sm:inline">Barcodes</span>
+                          </button>
+
                           {/* Edit Details */}
                           <Link
                             href={`/admin/products/${product.id}/edit`}
@@ -656,6 +670,13 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* ── Barcode Print Modal ────────────────────────────────────────── */}
+      <ProductBarcodePrintModal
+        product={barcodeModalProduct}
+        open={Boolean(barcodeModalProduct)}
+        onOpenChange={(open) => !open && setBarcodeModalProduct(null)}
+      />
 
       {/* ── Delete Confirmation Dialog ─────────────────────────────────── */}
       {deleting && (

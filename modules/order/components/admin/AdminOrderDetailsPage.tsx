@@ -25,6 +25,7 @@ import {
   Loader2,
   RefreshCw,
   Tag,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { AdminPaymentVerificationCard } from "./AdminPaymentVerificationCard";
 import { AdminBookCourierDialog } from "@/modules/courier/components/admin/AdminBookCourierDialog";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
+import { OrderThermalReceiptModal } from "../invoice/OrderThermalReceiptModal";
 import { ShippingLabelModal } from "../shipping-label/ShippingLabelModal";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
 
@@ -88,6 +90,7 @@ export function AdminOrderDetailsPage({
   const [isShipmentDialogOpen, setIsShipmentDialogOpen] = useState(false);
   const [isBookCourierDialogOpen, setIsBookCourierDialogOpen] = useState(false);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isThermalReceiptOpen, setIsThermalReceiptOpen] = useState(false);
   const [isShippingLabelModalOpen, setIsShippingLabelModalOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -213,6 +216,11 @@ export function AdminOrderDetailsPage({
               >
                 {order.status}
               </Badge>
+              {order.source && (
+                <Badge variant="outline" className="text-xs font-mono uppercase font-semibold bg-blue-50 text-blue-700 border-blue-200">
+                  {order.source.replace(/_/g, " ")}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Placed on{" "}
@@ -235,11 +243,21 @@ export function AdminOrderDetailsPage({
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setIsThermalReceiptOpen(true)}
+            className="gap-1.5 h-8 text-xs bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 font-semibold"
+          >
+            <Receipt className="size-3.5" />
+            POS Receipt (58/80mm)
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handlePrint}
             className="gap-1.5 h-8 text-xs"
           >
             <Printer className="size-3.5" />
-            Print Order Slip
+            Print A4 Invoice
           </Button>
 
           <Button
@@ -1039,6 +1057,12 @@ export function AdminOrderDetailsPage({
         order={order}
         open={isInvoiceModalOpen}
         onOpenChange={setIsInvoiceModalOpen}
+      />
+
+      <OrderThermalReceiptModal
+        order={order}
+        open={isThermalReceiptOpen}
+        onOpenChange={setIsThermalReceiptOpen}
       />
 
       {order && (

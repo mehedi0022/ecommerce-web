@@ -30,6 +30,8 @@ import {
   Ban,
   CheckCheck,
   RotateCcw,
+  Plus,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +57,7 @@ import { AdminOrderShipmentDialog } from "./AdminOrderShipmentDialog";
 import { AdminBookCourierDialog } from "@/modules/courier/components/admin/AdminBookCourierDialog";
 import { AdminBulkCourierDispatchModal } from "@/modules/courier/components/admin/AdminBulkCourierDispatchModal";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
+import { OrderThermalReceiptModal } from "../invoice/OrderThermalReceiptModal";
 import { ShippingLabelModal } from "../shipping-label/ShippingLabelModal";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
@@ -100,6 +103,7 @@ export function AdminOrdersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(urlStatus);
   const [paymentFilter, setPaymentFilter] = useState<string>("ALL");
+  const [sourceFilter, setSourceFilter] = useState<string>("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Sync state with URL parameter if user navigated via sidebar menu
@@ -140,6 +144,7 @@ export function AdminOrdersPage() {
   const [shipmentModalOrder, setShipmentModalOrder] = useState<Order | null>(null);
   const [bookCourierModalOrder, setBookCourierModalOrder] = useState<Order | null>(null);
   const [invoiceModalOrder, setInvoiceModalOrder] = useState<Order | null>(null);
+  const [thermalReceiptOrder, setThermalReceiptOrder] = useState<Order | null>(null);
   const [isBulkInvoiceOpen, setIsBulkInvoiceOpen] = useState(false);
   const [shippingLabelModalOrder, setShippingLabelModalOrder] = useState<Order | null>(null);
   const [isBulkShippingLabelOpen, setIsBulkShippingLabelOpen] = useState(false);
@@ -153,6 +158,7 @@ export function AdminOrdersPage() {
     search: debouncedSearch.trim() || undefined,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
     paymentStatus: paymentFilter !== "ALL" ? paymentFilter : undefined,
+    source: sourceFilter !== "ALL" ? (sourceFilter as any) : undefined,
   };
 
   const { data, isLoading, isFetching, refetch } =
@@ -234,18 +240,26 @@ export function AdminOrdersPage() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="gap-1.5 h-9"
-        >
-          <RefreshCw
-            className={`size-3.5 ${isFetching ? "animate-spin" : ""}`}
-          />
-          Refresh Orders
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/orders/create">
+            <Button size="sm" className="gap-1.5 h-9 bg-primary font-semibold shadow-xs">
+              <Plus className="size-3.5" />
+              New Order / POS
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-1.5 h-9"
+          >
+            <RefreshCw
+              className={`size-3.5 ${isFetching ? "animate-spin" : ""}`}
+            />
+            Refresh Orders
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Cards */}
@@ -393,6 +407,24 @@ export function AdminOrdersPage() {
             <option value="UNPAID">Unpaid (Cash on Delivery)</option>
             <option value="PAID">Paid</option>
             <option value="REFUNDED">Refunded</option>
+          </select>
+
+          <select
+            value={sourceFilter}
+            onChange={(e) => {
+              setSourceFilter(e.target.value);
+              setPage(1);
+            }}
+            className="h-9 rounded-md border border-input bg-background px-3 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <option value="ALL">All Channels / Sources</option>
+            <option value="WEBSITE">Website Sales</option>
+            <option value="LANDING_PAGE">Landing Page</option>
+            <option value="OUTLET_POS">Outlet POS</option>
+            <option value="PHONE_CALL">Phone Call</option>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="MESSENGER">Messenger</option>
+            <option value="MANUAL_OTHER">Other Manual</option>
           </select>
         </div>
       </div>
@@ -560,6 +592,11 @@ export function AdminOrdersPage() {
                             }
                           )}
                         </p>
+                        {order.source && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 mt-1 uppercase font-mono font-medium">
+                            {order.source.replace(/_/g, " ")}
+                          </Badge>
+                        )}
                       </td>
 
                       {/* Customer Info */}
@@ -865,6 +902,12 @@ export function AdminOrdersPage() {
                                 Print Tax Invoice
                               </DropdownMenuItem>
 
+                              {/* Print POS Thermal Receipt */}
+                              <DropdownMenuItem onClick={() => setThermalReceiptOrder(order)}>
+                                <Receipt className="size-3.5 mr-2 text-emerald-600" />
+                                Print POS Thermal Receipt
+                              </DropdownMenuItem>
+
                               <DropdownMenuSeparator />
 
                               {/* View Order Details */}
@@ -987,6 +1030,13 @@ export function AdminOrdersPage() {
         order={invoiceModalOrder}
         open={Boolean(invoiceModalOrder)}
         onOpenChange={(open) => !open && setInvoiceModalOrder(null)}
+      />
+
+      {/* Single Thermal Receipt Modal */}
+      <OrderThermalReceiptModal
+        order={thermalReceiptOrder}
+        open={Boolean(thermalReceiptOrder)}
+        onOpenChange={(open) => !open && setThermalReceiptOrder(null)}
       />
 
       {/* Bulk Invoice Modal */}

@@ -27,6 +27,9 @@ import {
   Trash2,
   Upload,
   X,
+  Sparkles,
+  Barcode,
+  Lock,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -184,6 +187,28 @@ function Editor({ initial }: { initial?: EditorInitial }) {
   const price = entered
     .filter((row) => row.price !== "" && Number.isFinite(Number(row.price)))
     .map((row) => Number(row.price));
+
+  const generateSkuForRow = (row: VariantRow) => {
+    const baseName = (form.name || "PRD")
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 6)
+      .toUpperCase() || "PRD";
+
+    const selectedVals = Object.values(row.selections || {})
+      .map((valId) => {
+        for (const attr of currentAttributes) {
+          const found = attr.values.find((v) => v.id === valId);
+          if (found) return found.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase();
+        }
+        return null;
+      })
+      .filter(Boolean);
+
+    const randSuffix = Math.floor(100 + Math.random() * 900);
+    const parts = [baseName, ...selectedVals, randSuffix];
+    return parts.join("-").slice(0, 40);
+  };
 
   useEffect(() => {
     const urls = previews.current;
@@ -1120,21 +1145,52 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                 >
                   Generate variants
                 </Button>
+                {form.variants.some((v) => !v.sku || v.sku.trim() === "") && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      change((old) => ({
+                        ...old,
+                        variants: old.variants.map((v) => {
+                          if (!v.sku || v.sku.trim() === "") {
+                            return { ...v, sku: generateSkuForRow(v) };
+                          }
+                          return v;
+                        }),
+                      }));
+                      setNotice({
+                        kind: "success",
+                        text: "Generated unique SKUs for all variants.",
+                      });
+                    }}
+                    className="gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
+                  >
+                    <Sparkles className="size-3.5" />
+                    Auto-Fill Missing SKUs
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   disabled={
                     !form.primaryCategoryId ||
                     (!currentAttributes.length && form.variants.length > 0)
                   }
-                  onClick={() =>
+                  onClick={() => {
+                    const base = (form.name || "PRD")
+                      .trim()
+                      .replace(/[^a-zA-Z0-9]/g, "")
+                      .slice(0, 6)
+                      .toUpperCase() || "PRD";
+                    const newSku = `${base}-${Math.floor(1000 + Math.random() * 9000)}`;
                     change((old) => ({
                       ...old,
                       variants: [
                         ...old.variants,
-                        blankVariant(crypto.randomUUID()),
+                        { ...blankVariant(crypto.randomUUID()), sku: newSku },
                       ],
-                    }))
-                  }
+                    }));
+                  }}
                 >
                   <Plus />
                   Add variant
@@ -1192,6 +1248,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                 {form.variants.map((row, index) => {
                   const prefix = `variant-${row.key}`;
                   const stock = row.inventory ?? journalView.stock[row.key];
+                  const isSkuLocked = Boolean((row.id && row.sku) || journalView.variants[row.key]);
                   return (
                     <div
                       key={row.key}
@@ -1328,7 +1385,32 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                         <div className="grid gap-4 sm:grid-cols-2">
                           <Field
                             name={`${prefix}-sku`}
-                            label="SKU"
+                            label={
+                              <span className="flex items-center justify-between w-full">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span>SKU</span>
+                                  {isSkuLocked && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded px-1.5 py-0.5">
+                                      <Lock className="size-2.5" /> Immutable
+                                    </span>
+                                  )}
+                                </span>
+                                {!isSkuLocked && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newSku = generateSkuForRow(row);
+                                      rowField(row.key, "sku", newSku);
+                                    }}
+                                    className="text-[11px] text-primary hover:underline font-semibold inline-flex items-center gap-1 cursor-pointer"
+                                    title="Auto-generate SKU based on product name and attributes"
+                                  >
+                                    <Sparkles className="size-3" />
+                                    Auto-Gen
+                                  </button>
+                                )}
+                              </span>
+                            }
                             error={errors[`${prefix}-sku`]}
                           >
                             <Input
@@ -1336,12 +1418,26 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                               value={row.sku}
                               maxLength={100}
                               placeholder="TSHIRT-BLUE-M"
-                              className="h-10 font-mono text-xs"
+                              disabled={isSkuLocked}
+                              readOnly={isSkuLocked}
+                              className={cn(
+                                "h-10 font-mono text-xs",
+                                isSkuLocked &&
+                                  "bg-muted/70 cursor-not-allowed text-muted-foreground select-all border-dashed"
+                              )}
                               aria-invalid={Boolean(errors[`${prefix}-sku`])}
-                              onChange={(e) =>
-                                rowField(row.key, "sku", e.target.value)
-                              }
+                              onChange={(e) => {
+                                if (!isSkuLocked) {
+                                  rowField(row.key, "sku", e.target.value);
+                                }
+                              }}
                             />
+                            {isSkuLocked ? (
+                              <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                                <Lock className="size-3 inline shrink-0" />
+                                SKU cannot be edited after creation to ensure barcode and inventory integrity.
+                              </p>
+                            ) : null}
                           </Field>
                           <Field
                             name={`${prefix}-price`}

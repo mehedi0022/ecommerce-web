@@ -1,4 +1,5 @@
 import { baseApi } from "@/redux/baseApi";
+import type { ApiResponse } from "@/types/api.types";
 import type {
   Order,
   OrderResponse,
@@ -9,6 +10,9 @@ import type {
   OrderUpdateAdminInput,
   CreateShipmentInput,
   TransitionShipmentInput,
+  PosProduct,
+  PosCustomer,
+  CreateManualOrderInput,
 } from "./order.types";
 
 export * from "./order.types";
@@ -135,6 +139,29 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Order", "Shipment"],
     }),
+
+    searchPosProducts: builder.query<ApiResponse<PosProduct[]>, string>({
+      query: (q) => ({
+        url: "/admin/orders/pos/products",
+        params: { q },
+      }),
+    }),
+
+    searchPosCustomers: builder.query<ApiResponse<PosCustomer[]>, string>({
+      query: (q) => ({
+        url: "/admin/orders/pos/customers",
+        params: { q },
+      }),
+    }),
+
+    createManualOrder: builder.mutation<OrderResponse, CreateManualOrderInput>({
+      query: (data) => ({
+        url: "/admin/orders/manual",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Order"],
+    }),
   }),
 });
 
@@ -151,4 +178,9 @@ export const {
   useUpdateAdminOrderMutation,
   useCreateOrderShipmentMutation,
   useTransitionOrderShipmentMutation,
+  useSearchPosProductsQuery,
+  useLazySearchPosProductsQuery,
+  useSearchPosCustomersQuery,
+  useLazySearchPosCustomersQuery,
+  useCreateManualOrderMutation,
 } = orderApi;

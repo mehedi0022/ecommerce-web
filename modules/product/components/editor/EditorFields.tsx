@@ -5,7 +5,7 @@ import { CircleCheck } from "lucide-react";
 
 export const selectClass = "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60";
 
-export function Field({ label, name, error, hint, children, optional }: { label: string; name: string; error?: string; hint?: string; children: ReactNode; optional?: boolean }) {
+export function Field({ label, name, error, hint, children, optional }: { label: ReactNode; name: string; error?: string; hint?: string; children: ReactNode; optional?: boolean }) {
   return <div className="space-y-1.5" data-field={name}>
     <label htmlFor={name} className="flex items-center gap-2 text-sm font-medium">{label}{optional && <span className="text-xs font-normal text-muted-foreground">Optional</span>}</label>
     {children}
