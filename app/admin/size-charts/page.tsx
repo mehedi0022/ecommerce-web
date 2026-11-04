@@ -308,27 +308,23 @@ export default function AdminSizeChartsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Ruler className="size-5" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Size Charts & Fit Guides</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Create reusable size charts with custom columns, rows, and fit tips for apparel and lifestyle products.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Ruler className="size-6 text-primary" />
+            Size Charts & Fit Guides
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create reusable size charts with custom columns, rows, and fit tips for apparel and lifestyle products.
+          </p>
         </div>
 
         <Button
           type="button"
           onClick={handleOpenCreate}
-          className="gap-2 shrink-0 rounded-xl font-bold shadow-sm"
+          className="gap-2 shrink-0 h-9 font-semibold"
         >
           <Plus className="size-4" />
           <span>Create Size Chart</span>

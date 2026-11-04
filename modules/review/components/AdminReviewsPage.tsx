@@ -137,8 +137,11 @@ export function AdminReviewsPage() {
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Review Moderation</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Star className="size-6 text-primary" />
+            Review Moderation
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Verify customer ratings, approve genuine product reviews, and filter spam.
           </p>
         </div>
@@ -147,7 +150,7 @@ export function AdminReviewsPage() {
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="gap-2 shrink-0 h-9"
+          className="gap-1.5 shrink-0 h-9 text-xs"
         >
           <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} />
           Refresh

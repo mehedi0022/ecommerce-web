@@ -232,15 +232,16 @@ export function AdminOrdersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <ShoppingBag className="size-6 text-primary" />
             Orders & Fulfillment
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage customer orders, track payments, assign couriers and update delivery status.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link href="/admin/orders/create">
             <Button size="sm" className="gap-1.5 h-9 bg-primary font-semibold shadow-xs">
               <Plus className="size-3.5" />

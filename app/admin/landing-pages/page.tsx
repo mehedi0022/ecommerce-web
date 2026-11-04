@@ -74,24 +74,22 @@ export default function AdminLandingPagesPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Layers className="size-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Product Landing Pages</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              High-converting single-page funnels with embedded 1-click express order checkout for social media ads.
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Layers className="size-6 text-primary" />
+            Product Landing Pages
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            High-converting single-page funnels with embedded 1-click express order checkout for social media ads.
+          </p>
         </div>
 
         <Link
           href="/admin/landing-pages/new"
-          className={cn(buttonVariants(), "gap-2 shrink-0 rounded-xl font-bold shadow-sm")}
+          className={cn(buttonVariants(), "gap-2 shrink-0 h-9 font-semibold")}
         >
           <Plus className="size-4" />
           <span>Create Landing Page</span>

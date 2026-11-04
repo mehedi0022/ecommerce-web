@@ -199,24 +199,23 @@ export function AdminRolesManagement() {
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Roles & Permissions (RBAC)
-            </h1>
-            <Badge variant="outline" className="font-semibold text-xs border-primary/30 text-primary">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Shield className="size-6 text-primary" />
+            Roles & Permissions (RBAC)
+            <Badge variant="outline" className="font-semibold text-xs border-primary/30 text-primary ml-1">
               Security Matrix
             </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Configure system access control, staff roles, and granular permission boundaries across store entities.
           </p>
         </div>
         <Button
           onClick={() => setCreateRoleOpen(true)}
           size="sm"
-          className="gap-1.5 shadow-sm"
+          className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
         >
-          <ShieldPlus className="size-4" />
+          <ShieldPlus className="size-3.5" />
           Create Custom Role
         </Button>
       </div>

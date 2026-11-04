@@ -217,26 +217,53 @@ export function ShippingManagementPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Truck className="size-6 text-primary" />
             Shipping & Zone Management
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Configure regional delivery zones across Bangladesh, map districts, and manage delivery charges.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {activeTab === "zones" ? (
-            <Button onClick={handleOpenCreateZone} className="gap-2 shrink-0">
-              <Plus className="size-4" />
+            <Button
+              onClick={handleOpenCreateZone}
+              size="sm"
+              className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
+            >
+              <Plus className="size-3.5" />
               New Shipping Zone
             </Button>
           ) : (
-            <Button onClick={handleOpenCreateMethod} className="gap-2 shrink-0">
-              <Plus className="size-4" />
+            <Button
+              onClick={handleOpenCreateMethod}
+              size="sm"
+              className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
+            >
+              <Plus className="size-3.5" />
               New Shipping Method
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              refetchZones();
+              refetchMethods();
+            }}
+            disabled={isZonesFetching || isMethodsFetching}
+            className="gap-1.5 h-9 text-xs"
+          >
+            <RefreshCw
+              className={cn(
+                "size-3.5",
+                (isZonesFetching || isMethodsFetching) && "animate-spin"
+              )}
+            />
+            Refresh
+          </Button>
         </div>
       </div>
 

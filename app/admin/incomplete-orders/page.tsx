@@ -343,26 +343,20 @@ export default function AdminIncompleteOrdersPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="space-y-6">
       {/* ── Top Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b pb-5">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
-            <PhoneCall className="size-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                Incomplete Orders & Abandoned Leads
-              </h1>
-              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-700 border-amber-300">
-                CRM Lead Recovery
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Customers who entered contact info but dropped off before pressing confirm order.
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <PhoneCall className="size-6 text-primary" />
+            Incomplete Orders & Abandoned Leads
+            <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-700 border-amber-300 font-normal ml-1">
+              CRM Lead Recovery
+            </Badge>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Customers who entered contact info but dropped off before pressing confirm order.
+          </p>
         </div>
 
         <Button
@@ -371,7 +365,7 @@ export default function AdminIncompleteOrdersPage() {
           size="sm"
           onClick={handleRefresh}
           disabled={isFetching}
-          className="gap-2 rounded-xl text-xs font-semibold cursor-pointer shrink-0"
+          className="gap-1.5 text-xs h-9"
         >
           <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} />
           <span>Refresh Leads</span>

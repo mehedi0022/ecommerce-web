@@ -35,8 +35,12 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(15);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ACTIVE" | "INACTIVE" | "ALL">("ALL");
-  const [sortBy, setSortBy] = useState<"createdAt" | "totalSpent" | "totalOrders" | "fullName">("createdAt");
+  const [statusFilter, setStatusFilter] = useState<
+    "ACTIVE" | "INACTIVE" | "ALL"
+  >("ALL");
+  const [sortBy, setSortBy] = useState<
+    "createdAt" | "totalSpent" | "totalOrders" | "fullName"
+  >("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { data, isLoading, isFetching, refetch } = useGetCustomersQuery({
@@ -48,7 +52,8 @@ export default function CustomersPage() {
     sortOrder,
   });
 
-  const [changeStatus, { isLoading: isChangingStatus }] = useChangeCustomerStatusMutation();
+  const [changeStatus, { isLoading: isChangingStatus }] =
+    useChangeCustomerStatusMutation();
 
   const customers = data?.data?.items || [];
   const summary = data?.data?.summary || {
@@ -71,10 +76,14 @@ export default function CustomersPage() {
     try {
       await changeStatus({ id: customer.id, isActive: nextStatus }).unwrap();
       toast.success(
-        `Customer ${customer.fullName} has been ${nextStatus ? "activated" : "deactivated"}.`
+        `Customer ${customer.fullName} has been ${nextStatus ? "activated" : "deactivated"}.`,
       );
     } catch (err: any) {
-      toast.error(err?.data?.message || err?.message || "Failed to update customer status");
+      toast.error(
+        err?.data?.message ||
+          err?.message ||
+          "Failed to update customer status",
+      );
     }
   };
 
@@ -142,7 +151,10 @@ export default function CustomersPage() {
       header: "Lifetime Spend",
       render: (c) => (
         <span className="font-mono font-bold text-xs text-foreground">
-          ৳{Number(c.totalSpent).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          ৳
+          {Number(c.totalSpent).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
         </span>
       ),
     },
@@ -220,19 +232,13 @@ export default function CustomersPage() {
       {/* ── Page Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <nav className="mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
-            <Link href="/admin" className="hover:text-foreground">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Customers</span>
-          </nav>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Users className="size-6 text-primary" />
             Customer Management
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            View customer accounts, lifetime purchasing activity, order history, and account statuses.
+            View customer accounts, lifetime purchasing activity, order history,
+            and account statuses.
           </p>
         </div>
 
@@ -244,7 +250,9 @@ export default function CustomersPage() {
             disabled={isFetching}
             className="gap-1.5 text-xs h-9"
           >
-            <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`size-3.5 ${isFetching ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -258,7 +266,9 @@ export default function CustomersPage() {
               <Users className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Total Customers</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Total Customers
+              </p>
               <p className="text-xl font-bold">{summary.totalCustomers}</p>
             </div>
           </CardContent>
@@ -270,7 +280,9 @@ export default function CustomersPage() {
               <UserCheck className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Active Accounts</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Active Accounts
+              </p>
               <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                 {summary.activeCustomers}
               </p>
@@ -284,7 +296,9 @@ export default function CustomersPage() {
               <UserX className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Inactive Accounts</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Inactive Accounts
+              </p>
               <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
                 {summary.inactiveCustomers}
               </p>
@@ -298,7 +312,9 @@ export default function CustomersPage() {
               <ShoppingBag className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Total Orders</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Total Orders
+              </p>
               <p className="text-xl font-bold text-blue-600">
                 {summary.totalOrders}
               </p>
@@ -312,9 +328,14 @@ export default function CustomersPage() {
               <TrendingUp className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Customer Revenue</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Customer Revenue
+              </p>
               <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                ৳{Number(summary.totalRevenue).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                ৳
+                {Number(summary.totalRevenue).toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
               </p>
             </div>
           </CardContent>
@@ -346,9 +367,13 @@ export default function CustomersPage() {
               }}
               className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium cursor-pointer"
             >
-              <option value="ALL">All Statuses ({summary.totalCustomers})</option>
+              <option value="ALL">
+                All Statuses ({summary.totalCustomers})
+              </option>
               <option value="ACTIVE">Active ({summary.activeCustomers})</option>
-              <option value="INACTIVE">Inactive ({summary.inactiveCustomers})</option>
+              <option value="INACTIVE">
+                Inactive ({summary.inactiveCustomers})
+              </option>
             </select>
 
             <select

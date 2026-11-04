@@ -68,39 +68,33 @@ export default function AdminVariantsPage() {
   }, [allVariants, search]);
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card p-4 sm:p-6 rounded-2xl border shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-              <Layers className="size-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-foreground">
-                Product Variants & Barcodes
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Browse catalog variants, look up SKUs, and print barcode sticker labels.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Layers className="size-6 text-primary" />
+            Product Variants & Barcodes
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Browse catalog variants, look up SKUs, and print barcode sticker labels.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="h-9 gap-1.5 text-xs font-semibold rounded-xl"
+            className="h-9 gap-1.5 text-xs font-semibold"
           >
             <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
 
           <Link href="/admin/products/new">
-            <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold rounded-xl">
+            <Button size="sm" className="h-9 gap-1.5 text-xs font-semibold">
               Add New Product
             </Button>
           </Link>

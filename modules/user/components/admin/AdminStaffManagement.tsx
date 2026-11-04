@@ -165,29 +165,34 @@ export function AdminStaffManagement() {
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Staff & Team Members</h1>
-            <Badge variant="secondary" className="font-semibold text-xs">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Users className="size-6 text-primary" />
+            Staff & Team Members
+            <Badge variant="secondary" className="font-semibold text-xs ml-1">
               RBAC Enabled
             </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Manage administrative personnel, assign roles, and control access permissions across your store.
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="gap-1.5 text-xs"
+            className="gap-1.5 h-9 text-xs"
           >
             <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button onClick={handleCreate} size="sm" className="gap-1.5 shadow-sm">
-            <UserPlus className="size-4" />
+          <Button
+            onClick={handleCreate}
+            size="sm"
+            className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
+          >
+            <UserPlus className="size-3.5" />
             Add Staff Member
           </Button>
         </div>

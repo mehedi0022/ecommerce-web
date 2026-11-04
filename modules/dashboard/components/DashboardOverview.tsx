@@ -150,7 +150,7 @@ export function DashboardOverview() {
   };
 
   return (
-    <div className="mx-auto max-w-[1520px] space-y-6">
+    <div className="space-y-6">
       {/* ── Dashboard Header ────────────────────────────────────────────── */}
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -163,7 +163,7 @@ export function DashboardOverview() {
               Live Sync
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Real-time store performance, fulfillment workload, and stock
             telemetry.
           </p>

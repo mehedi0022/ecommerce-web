@@ -443,17 +443,11 @@ export default function InventoryPage() {
       {/* ── Page Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="mb-1 text-xs text-muted-foreground">
-            <Link href="/admin" className="hover:text-foreground">
-              Dashboard
-            </Link>{" "}
-            <span className="mx-1">/</span>{" "}
-            <span className="text-foreground font-semibold">Inventory</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Boxes className="size-6 text-primary" />
             Stock & Inventory Management
           </h1>
-          <p className="text-xs text-muted-foreground sm:text-sm">
+          <p className="text-sm text-muted-foreground mt-1">
             Track physical stock on-hand, monitor reserved quantities, and
             review audit movement logs.
           </p>

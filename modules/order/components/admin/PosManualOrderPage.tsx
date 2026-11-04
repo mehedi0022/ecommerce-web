@@ -683,31 +683,27 @@ export function PosManualOrderPage() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* Top Header & Fast Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-xl border shadow-sm">
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-lg text-primary">
-              <Store className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">POS & Manual Order Entry</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Create walk-in outlet counter orders, phone call bookings, WhatsApp/Messenger sales, or direct orders.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Store className="size-6 text-primary" />
+            POS & Manual Order Entry
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create walk-in outlet counter orders, phone call bookings, WhatsApp/Messenger sales, or direct orders.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleResetForm} className="gap-1.5 text-xs">
-            <RotateCcw className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={handleResetForm} className="gap-1.5 text-xs h-9">
+            <RotateCcw className="size-3.5" />
             Reset Form
           </Button>
           <Link href="/admin/orders">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <ShoppingBag className="h-3.5 w-3.5" />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs h-9">
+              <ShoppingBag className="size-3.5" />
               All Orders
             </Button>
           </Link>

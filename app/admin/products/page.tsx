@@ -208,22 +208,18 @@ export default function ProductsPage() {
       {/* ── Page Header ───────────────────────────────────────────────── */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            <span>Catalog Management</span>
-            <span>•</span>
-            <span>{meta.total} Total Items</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Package className="size-6 text-primary" />
             Products
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             Manage your store catalog, pricing, variants, and storefront visibility.
           </p>
         </div>
 
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all self-start sm:self-auto shrink-0"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all self-start sm:self-auto shrink-0 h-9"
         >
           <Plus className="size-4" />
           <span>Add Product</span>
