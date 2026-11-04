@@ -88,7 +88,7 @@ const STATUS_TABS = [
 ];
 
 export default function AdminIncompleteOrdersPage() {
-  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+  const [selectedStatus, setSelectedStatus] = useState<string>("PENDING");
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
@@ -499,6 +499,19 @@ export default function AdminIncompleteOrdersPage() {
         </div>
       ) : (
         <div className="space-y-2.5">
+          {/* Table Column Header for desktop */}
+          <div className="hidden lg:grid grid-cols-12 items-center gap-4 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/40 rounded-xl border border-border/50">
+            <div className="col-span-6 flex items-center gap-2">
+              <span>Customer & Lead Info</span>
+            </div>
+            <div className="col-span-3">
+              <span>Cart Items & Value</span>
+            </div>
+            <div className="col-span-3 text-right pr-2">
+              <span>Actions</span>
+            </div>
+          </div>
+
           {incompleteOrders.map((lead) => {
             const isConverted = lead.status === "CONVERTED";
             const isExpanded = Boolean(expandedCardIds[lead.id]);
@@ -511,17 +524,17 @@ export default function AdminIncompleteOrdersPage() {
                   lead.status === "PENDING" && "border-amber-500/30 bg-amber-500/[0.02]"
                 )}
               >
-                {/* ── Compact Main Row ── */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                  {/* Left: Lead Identity, Customer & Status */}
-                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                {/* ── Strict 3-Column Grid Row for 100% Vertical Alignment ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-3 lg:gap-4">
+                  {/* Column 1: Lead Identity, Customer & Status (lg:col-span-6) */}
+                  <div className="lg:col-span-6 flex items-start sm:items-center gap-3 min-w-0">
                     <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xs shrink-0">
                       #{lead.id}
                     </div>
 
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-sm text-foreground truncate max-w-[150px] sm:max-w-[200px]">
+                    <div className="min-w-0 space-y-0.5 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="font-bold text-sm text-foreground truncate max-w-[130px] sm:max-w-[180px]">
                           {lead.customerName || "Customer"}
                         </span>
 
@@ -550,7 +563,7 @@ export default function AdminIncompleteOrdersPage() {
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[9px] font-bold uppercase px-1.5 py-0",
+                            "text-[9px] font-bold uppercase px-1.5 py-0 shrink-0",
                             lead.status === "PENDING" && "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400",
                             lead.status === "CALLED_NO_RESPONSE" && "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-400",
                             lead.status === "CONTACTED" && "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-400",
@@ -568,7 +581,7 @@ export default function AdminIncompleteOrdersPage() {
                         {lead.convertedOrder && (
                           <Link
                             href={`/admin/orders/${lead.convertedOrder.orderNumber}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:underline"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:underline shrink-0"
                           >
                             <span>#{lead.convertedOrder.orderNumber}</span>
                             <ExternalLink className="size-3" />
@@ -588,7 +601,7 @@ export default function AdminIncompleteOrdersPage() {
                         {lead.shippingAddress?.district && (
                           <>
                             <span>•</span>
-                            <span className="flex items-center gap-0.5 truncate max-w-[160px]">
+                            <span className="flex items-center gap-0.5 truncate max-w-[150px]">
                               <MapPin className="size-3 shrink-0 text-muted-foreground" />
                               {lead.shippingAddress.district}
                               {lead.shippingAddress.division ? `, ${lead.shippingAddress.division}` : ""}
@@ -599,8 +612,8 @@ export default function AdminIncompleteOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Middle: Cart Preview & Total Stuck Amount */}
-                  <div className="flex items-center gap-3 lg:px-4 py-1.5 lg:py-0 border-y lg:border-y-0 lg:border-x border-border/50 shrink-0">
+                  {/* Column 2: Cart Preview & Total Stuck Amount (lg:col-span-3) */}
+                  <div className="lg:col-span-3 flex items-center gap-3 py-1.5 lg:py-0 border-y lg:border-y-0 border-border/50">
                     {/* Mini thumbnails stack */}
                     <div className="flex items-center -space-x-2 overflow-hidden shrink-0">
                       {lead.cartItems?.slice(0, 3).map((item, idx) => (
@@ -627,18 +640,18 @@ export default function AdminIncompleteOrdersPage() {
                       )}
                     </div>
 
-                    <div className="text-xs">
+                    <div className="text-xs min-w-0 flex-1">
                       <p className="font-black text-foreground">
                         ৳{Number(lead.totalAmount).toFixed(0)}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-[10px] text-muted-foreground truncate">
                         {lead.cartItems?.length || 0} item{lead.cartItems?.length === 1 ? "" : "s"} · Sub: ৳{Number(lead.subtotal).toFixed(0)}
                       </p>
                     </div>
 
                     {lead.crmNotes && (
                       <div
-                        className="hidden xl:block max-w-[170px] text-[10px] italic text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-1 rounded truncate"
+                        className="hidden xl:block max-w-[120px] text-[10px] italic text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-1 rounded truncate"
                         title={lead.crmNotes}
                       >
                         "{lead.crmNotes}"
@@ -646,14 +659,14 @@ export default function AdminIncompleteOrdersPage() {
                     )}
                   </div>
 
-                  {/* Right: Quick Action Buttons & Expand Toggle */}
-                  <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                  {/* Column 3: Quick Action Buttons & Expand Toggle (lg:col-span-3) */}
+                  <div className="lg:col-span-3 flex items-center justify-end gap-1.5 shrink-0">
                     {/* Call button */}
                     <a
                       href={`tel:${lead.customerPhone}`}
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" }),
-                        "h-7 px-2.5 gap-1 text-[11px] font-bold text-foreground hover:bg-primary/10 hover:text-primary cursor-pointer"
+                        "h-7 px-2 gap-1 text-[11px] font-bold text-foreground hover:bg-primary/10 hover:text-primary cursor-pointer shrink-0"
                       )}
                       title="Direct Call"
                     >
@@ -668,7 +681,7 @@ export default function AdminIncompleteOrdersPage() {
                       rel="noreferrer"
                       className={cn(
                         buttonVariants({ variant: "outline", size: "sm" }),
-                        "h-7 px-2.5 gap-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 cursor-pointer"
+                        "h-7 px-2 gap-1 text-[11px] font-bold text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 cursor-pointer shrink-0"
                       )}
                       title="Chat on WhatsApp"
                     >
@@ -682,7 +695,7 @@ export default function AdminIncompleteOrdersPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenNotesModal(lead)}
-                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="h-7 px-1.5 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
                       title="Update Note & Status"
                     >
                       <FileText className="size-3" />
@@ -696,7 +709,7 @@ export default function AdminIncompleteOrdersPage() {
                         size="sm"
                         disabled={isConverting}
                         onClick={() => handleOpenConvertModal(lead)}
-                        className="h-7 px-2.5 gap-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                        className="h-7 px-2 gap-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs shrink-0"
                       >
                         <CheckCircle2 className="size-3" />
                         <span>Convert</span>
@@ -709,7 +722,7 @@ export default function AdminIncompleteOrdersPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleExpand(lead.id)}
-                      className="size-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                      className="size-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
                       title={isExpanded ? "Hide Details" : "Show Full Details"}
                     >
                       {isExpanded ? (
@@ -817,17 +830,50 @@ export default function AdminIncompleteOrdersPage() {
         </div>
       )}
 
-      {/* ── Pagination Bar ── */}
-      {meta && meta.totalPages > 1 && (
+      {/* ── Server-Side Pagination Bar ── */}
+      {meta && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 text-xs shadow-xs">
-          <div className="text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{(page - 1) * limit + 1}</span> to{" "}
-            <span className="font-semibold text-foreground">
-              {Math.min(page * limit, meta.total)}
-            </span>{" "}
-            of <span className="font-semibold text-foreground">{meta.total}</span> leads
+          {/* Left: Counts and Page size selector */}
+          <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+            <div>
+              Showing{" "}
+              <span className="font-semibold text-foreground">
+                {meta.total === 0 ? 0 : (page - 1) * limit + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-semibold text-foreground">
+                {Math.min(page * limit, meta.total)}
+              </span>{" "}
+              of <span className="font-semibold text-foreground">{meta.total}</span> leads
+            </div>
+
+            <div className="flex items-center gap-1.5 pl-3 border-l border-border/60">
+              <span className="text-[11px]">Per page:</span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="h-7 rounded-lg border border-input bg-background px-2 text-xs font-semibold text-foreground focus:outline-hidden focus:ring-1 focus:ring-ring cursor-pointer"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            {isFetching && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-primary animate-pulse font-medium">
+                <Loader2 className="size-3 animate-spin" />
+                <span>Loading...</span>
+              </span>
+            )}
           </div>
 
+          {/* Right: Page navigation */}
           <div className="flex items-center gap-1.5">
             <Button
               type="button"
@@ -858,7 +904,7 @@ export default function AdminIncompleteOrdersPage() {
                         disabled={isFetching}
                         className={cn(
                           "size-8 p-0 text-xs font-semibold cursor-pointer",
-                          page === p && "shadow-xs"
+                          page === p && "shadow-xs bg-primary text-primary-foreground hover:bg-primary/90"
                         )}
                       >
                         {p}

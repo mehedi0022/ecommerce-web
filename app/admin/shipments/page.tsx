@@ -26,12 +26,17 @@ import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { Order } from "@/modules/order/order.types";
 
 const statusStyle: Record<string, string> = {
-  PENDING: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
+  PENDING:
+    "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   CONFIRMED: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/20",
-  PROCESSING: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
-  SHIPPED: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20",
-  DELIVERED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
-  CANCELLED: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
+  PROCESSING:
+    "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  SHIPPED:
+    "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20",
+  DELIVERED:
+    "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+  CANCELLED:
+    "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20",
 };
 
 export default function ShipmentsPage() {
@@ -39,10 +44,14 @@ export default function ShipmentsPage() {
   const [limit, setLimit] = useState(15);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(new Set());
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   // Modal states
-  const [shippingLabelOrder, setShippingLabelOrder] = useState<Order | null>(null);
+  const [shippingLabelOrder, setShippingLabelOrder] = useState<Order | null>(
+    null,
+  );
   const [isBulkShippingLabelOpen, setIsBulkShippingLabelOpen] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useListAdminOrdersQuery({
@@ -83,19 +92,13 @@ export default function ShipmentsPage() {
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <nav className="mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
-            <Link href="/admin" className="hover:text-foreground">
-              Dashboard
-            </Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Shipments & Dispatch</span>
-          </nav>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Truck className="size-6 text-primary" />
             Shipments & Courier Dispatch
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-            Manage parcel fulfillments, track courier status, and print thermal parcel shipping labels.
+            Manage parcel fulfillments, track courier status, and print thermal
+            parcel shipping labels.
           </p>
         </div>
 
@@ -107,7 +110,9 @@ export default function ShipmentsPage() {
             disabled={isFetching}
             className="gap-1.5 text-xs h-9"
           >
-            <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`size-3.5 ${isFetching ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
 
@@ -132,7 +137,9 @@ export default function ShipmentsPage() {
             setPage(1);
           }}
           className={`shadow-none cursor-pointer transition hover:border-primary/40 ${
-            statusFilter === "ALL" ? "border-primary ring-1 ring-primary/20" : ""
+            statusFilter === "ALL"
+              ? "border-primary ring-1 ring-primary/20"
+              : ""
           }`}
         >
           <CardContent className="p-4 flex items-center gap-3">
@@ -140,7 +147,9 @@ export default function ShipmentsPage() {
               <Package className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">All Shipments</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                All Shipments
+              </p>
               <p className="text-xl font-bold">{totalShipments}</p>
             </div>
           </CardContent>
@@ -152,7 +161,9 @@ export default function ShipmentsPage() {
             setPage(1);
           }}
           className={`shadow-none cursor-pointer transition hover:border-blue-500/40 ${
-            statusFilter === "PROCESSING" ? "border-blue-500 ring-1 ring-blue-500/20" : ""
+            statusFilter === "PROCESSING"
+              ? "border-blue-500 ring-1 ring-blue-500/20"
+              : ""
           }`}
         >
           <CardContent className="p-4 flex items-center gap-3">
@@ -160,7 +171,9 @@ export default function ShipmentsPage() {
               <Clock className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Ready to Dispatch</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Ready to Dispatch
+              </p>
               <p className="text-xl font-bold text-blue-600">{processing}</p>
             </div>
           </CardContent>
@@ -172,7 +185,9 @@ export default function ShipmentsPage() {
             setPage(1);
           }}
           className={`shadow-none cursor-pointer transition hover:border-violet-500/40 ${
-            statusFilter === "SHIPPED" ? "border-violet-500 ring-1 ring-violet-500/20" : ""
+            statusFilter === "SHIPPED"
+              ? "border-violet-500 ring-1 ring-violet-500/20"
+              : ""
           }`}
         >
           <CardContent className="p-4 flex items-center gap-3">
@@ -180,7 +195,9 @@ export default function ShipmentsPage() {
               <Truck className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">In Transit</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                In Transit
+              </p>
               <p className="text-xl font-bold text-violet-600">{inTransit}</p>
             </div>
           </CardContent>
@@ -192,7 +209,9 @@ export default function ShipmentsPage() {
             setPage(1);
           }}
           className={`shadow-none cursor-pointer transition hover:border-emerald-500/40 ${
-            statusFilter === "DELIVERED" ? "border-emerald-500 ring-1 ring-emerald-500/20" : ""
+            statusFilter === "DELIVERED"
+              ? "border-emerald-500 ring-1 ring-emerald-500/20"
+              : ""
           }`}
         >
           <CardContent className="p-4 flex items-center gap-3">
@@ -200,7 +219,9 @@ export default function ShipmentsPage() {
               <CheckCircle2 className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Delivered</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Delivered
+              </p>
               <p className="text-xl font-bold text-emerald-600">{delivered}</p>
             </div>
           </CardContent>
@@ -213,7 +234,9 @@ export default function ShipmentsPage() {
           <div className="flex items-center gap-2">
             <Tag className="size-4 text-primary" />
             <span className="font-bold text-foreground">
-              {selectedOrderIds.size} parcel {selectedOrderIds.size === 1 ? "label" : "labels"} selected for thermal printing
+              {selectedOrderIds.size} parcel{" "}
+              {selectedOrderIds.size === 1 ? "label" : "labels"} selected for
+              thermal printing
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -223,7 +246,8 @@ export default function ShipmentsPage() {
               className="gap-1.5 h-8 text-xs bg-black text-white hover:bg-neutral-800 font-semibold cursor-pointer shadow-xs"
             >
               <Printer className="size-3.5" />
-              Print {selectedOrderIds.size} Thermal Shipping {selectedOrderIds.size === 1 ? "Label" : "Labels"}
+              Print {selectedOrderIds.size} Thermal Shipping{" "}
+              {selectedOrderIds.size === 1 ? "Label" : "Labels"}
             </Button>
             <Button
               size="sm"
@@ -278,7 +302,10 @@ export default function ShipmentsPage() {
                 <th className="p-3.5 pl-4 w-9">
                   <input
                     type="checkbox"
-                    checked={orders.length > 0 && selectedOrderIds.size === orders.length}
+                    checked={
+                      orders.length > 0 &&
+                      selectedOrderIds.size === orders.length
+                    }
                     onChange={handleToggleSelectAll}
                     aria-label="Select all shipments"
                     className="rounded border-input text-primary focus:ring-primary size-4 cursor-pointer"
@@ -296,7 +323,10 @@ export default function ShipmentsPage() {
             <tbody className="divide-y">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="p-8 text-center text-muted-foreground"
+                  >
                     <RefreshCw className="mx-auto size-5 animate-spin mb-2" />
                     Loading parcel shipments...
                   </td>
@@ -357,10 +387,13 @@ export default function ShipmentsPage() {
                           #{order.orderNumber}
                         </Link>
                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                          {new Date(order.placedAt || order.createdAt).toLocaleDateString(
-                            "en-GB",
-                            { day: "numeric", month: "short", year: "numeric" }
-                          )}
+                          {new Date(
+                            order.placedAt || order.createdAt,
+                          ).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
                           {order.items?.length || 0} product lines
@@ -375,7 +408,7 @@ export default function ShipmentsPage() {
                               const firstItem = order.items[0];
                               const img =
                                 firstItem.product?.images?.find(
-                                  (i: any) => i.isPrimary
+                                  (i: any) => i.isPrimary,
                                 )?.imageUrl ||
                                 firstItem.product?.images?.[0]?.imageUrl;
 
@@ -468,13 +501,22 @@ export default function ShipmentsPage() {
                       {/* Payment / COD */}
                       <td className="p-3.5 align-top">
                         {isPrepaid ? (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+                          <Badge
+                            variant="outline"
+                            className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 text-[10px]"
+                          >
                             Prepaid (৳0 COD)
                           </Badge>
                         ) : (
                           <div className="space-y-0.5">
-                            <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px]">
-                              COD: ৳{Number(order.dueAmount || order.grandTotal).toLocaleString()}
+                            <Badge
+                              variant="outline"
+                              className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px]"
+                            >
+                              COD: ৳
+                              {Number(
+                                order.dueAmount || order.grandTotal,
+                              ).toLocaleString()}
                             </Badge>
                           </div>
                         )}

@@ -57,8 +57,8 @@ export function CouponsPage() {
       statusFilter === "ACTIVE"
         ? true
         : statusFilter === "INACTIVE"
-        ? false
-        : undefined,
+          ? false
+          : undefined,
     discountType:
       typeFilter === "PERCENTAGE" || typeFilter === "FIXED_AMOUNT"
         ? (typeFilter as DiscountType)
@@ -120,7 +120,7 @@ export function CouponsPage() {
         data: { isActive: !coupon.isActive },
       }).unwrap();
       toast.success(
-        `Coupon ${coupon.isActive ? "deactivated" : "activated"} successfully`
+        `Coupon ${coupon.isActive ? "deactivated" : "activated"} successfully`,
       );
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to change coupon status");
@@ -136,7 +136,7 @@ export function CouponsPage() {
     } catch (err: any) {
       toast.error(
         err?.data?.message ||
-          "Failed to delete coupon. If used, consider deactivating it."
+          "Failed to delete coupon. If used, consider deactivating it.",
       );
     }
   };
@@ -145,10 +145,10 @@ export function CouponsPage() {
   const totalCoupons = meta?.total ?? coupons.length;
   const activeCount = coupons.filter((c) => c.isActive).length;
   const percentageCount = coupons.filter(
-    (c) => c.discountType === "PERCENTAGE"
+    (c) => c.discountType === "PERCENTAGE",
   ).length;
   const fixedCount = coupons.filter(
-    (c) => c.discountType === "FIXED_AMOUNT"
+    (c) => c.discountType === "FIXED_AMOUNT",
   ).length;
 
   return (
@@ -156,9 +156,13 @@ export function CouponsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Coupons & Discounts</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Tag className="size-6 text-primary" />
+            Coupons & Discounts
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Create promotional codes, set discount values, and configure usage limits.
+            Create promotional codes, set discount values, and configure usage
+            limits.
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="gap-2 shrink-0">
@@ -175,7 +179,9 @@ export function CouponsPage() {
               <Tag className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Total Coupons</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Total Coupons
+              </p>
               <p className="text-xl font-bold">{totalCoupons}</p>
             </div>
           </CardContent>
@@ -187,7 +193,9 @@ export function CouponsPage() {
               <Check className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Active (Loaded)</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Active (Loaded)
+              </p>
               <p className="text-xl font-bold">{activeCount}</p>
             </div>
           </CardContent>
@@ -199,7 +207,9 @@ export function CouponsPage() {
               <Percent className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Percentage Type</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Percentage Type
+              </p>
               <p className="text-xl font-bold">{percentageCount}</p>
             </div>
           </CardContent>
@@ -211,7 +221,9 @@ export function CouponsPage() {
               <Banknote className="size-5" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Fixed Amount</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                Fixed Amount
+              </p>
               <p className="text-xl font-bold">{fixedCount}</p>
             </div>
           </CardContent>
@@ -271,7 +283,9 @@ export function CouponsPage() {
           disabled={isFetching}
           className="gap-1.5 h-9"
         >
-          <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`size-3.5 ${isFetching ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -337,19 +351,31 @@ export function CouponsPage() {
 
                   <div className="flex items-center gap-1.5">
                     {isExpired ? (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                      <Badge
+                        variant="destructive"
+                        className="text-[10px] px-1.5 py-0"
+                      >
                         Expired
                       </Badge>
                     ) : isScheduled ? (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] px-1.5 py-0"
+                      >
                         Scheduled
                       </Badge>
                     ) : coupon.isActive ? (
-                      <Badge variant="default" className="bg-emerald-600 text-[10px] px-1.5 py-0">
+                      <Badge
+                        variant="default"
+                        className="bg-emerald-600 text-[10px] px-1.5 py-0"
+                      >
                         Active
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] px-1.5 py-0"
+                      >
                         Inactive
                       </Badge>
                     )}
@@ -417,11 +443,14 @@ export function CouponsPage() {
                           <Clock className="size-3" /> Expires:
                         </span>
                         <span className="font-medium text-foreground">
-                          {new Date(coupon.expiresAt).toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                          {new Date(coupon.expiresAt).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            },
+                          )}
                         </span>
                       </div>
                     )}
@@ -502,8 +531,8 @@ export function CouponsPage() {
               <strong className="text-foreground">
                 "{deletingCoupon?.code}"
               </strong>
-              ? This action cannot be undone. If this coupon has already been used
-              in completed orders, consider deactivating it instead.
+              ? This action cannot be undone. If this coupon has already been
+              used in completed orders, consider deactivating it instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
