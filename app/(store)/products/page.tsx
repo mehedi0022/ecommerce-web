@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
@@ -10,7 +9,7 @@ import { ProductActiveFilters } from "@/modules/product/components/store/Product
 import { ProductPagination } from "@/modules/product/components/store/ProductPagination";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PackageX, ShoppingBag, Sparkles } from "lucide-react";
+import { PackageX } from "lucide-react";
 import type { Product } from "@/modules/product/types";
 import type { Category } from "@/modules/category/types";
 import type { Brand } from "@/modules/brand/types";
@@ -58,7 +57,7 @@ export async function generateMetadata({
         slug
           .split("-")
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ")
+          .join(" "),
       )
       .join(", ");
     title = `${formattedCat} Products | Store`;
@@ -110,7 +109,7 @@ async function getBrands(): Promise<Brand[]> {
 
 async function getProducts(
   params: ProductsSearchParams,
-  brands: Brand[]
+  brands: Brand[],
 ): Promise<{
   products: Product[];
   meta: {
@@ -151,7 +150,10 @@ async function getProducts(
       cache: "no-store",
     });
     if (!res.ok) {
-      return { products: [], meta: { page: 1, limit: 16, total: 0, totalPages: 1 } };
+      return {
+        products: [],
+        meta: { page: 1, limit: 16, total: 0, totalPages: 1 },
+      };
     }
     const json = await res.json();
     return {
@@ -159,7 +161,10 @@ async function getProducts(
       meta: json.meta || { page: 1, limit: 16, total: 0, totalPages: 1 },
     };
   } catch {
-    return { products: [], meta: { page: 1, limit: 16, total: 0, totalPages: 1 } };
+    return {
+      products: [],
+      meta: { page: 1, limit: 16, total: 0, totalPages: 1 },
+    };
   }
 }
 
@@ -190,8 +195,8 @@ export default async function ProductsPage({
   const pageTitle = params.search
     ? `Search: "${params.search}"`
     : activeCategory
-    ? activeCategory.name
-    : "All Products";
+      ? activeCategory.name
+      : "All Products";
 
   // Schema.org JSON-LD for rich search engine results
   const jsonLd = {
@@ -250,10 +255,7 @@ export default async function ProductsPage({
 
             {/* Mobile Filter Trigger & Sort Dropdown */}
             <div className="flex items-center gap-2.5 self-start sm:self-auto">
-              <ProductFilterDrawer
-                categories={categories}
-                brands={brands}
-              />
+              <ProductFilterDrawer categories={categories} brands={brands} />
               <ProductSortSelect />
             </div>
           </div>
@@ -273,10 +275,7 @@ export default async function ProductsPage({
       <div className="flex items-start gap-8 lg:gap-10">
         {/* Desktop Left Filter Sidebar */}
         <aside className="w-64 shrink-0 hidden lg:block sticky top-24 self-start rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-          <ProductFilterSidebar
-            categories={categories}
-            brands={brands}
-          />
+          <ProductFilterSidebar categories={categories} brands={brands} />
         </aside>
 
         {/* Main Content Area */}
@@ -312,8 +311,9 @@ export default async function ProductsPage({
                   No products found
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  We couldn&apos;t find any items matching your current filters. Try
-                  clearing filters or adjusting your price and search keywords.
+                  We couldn&apos;t find any items matching your current filters.
+                  Try clearing filters or adjusting your price and search
+                  keywords.
                 </p>
               </div>
 
@@ -322,7 +322,7 @@ export default async function ProductsPage({
                   href="/products"
                   className={cn(
                     buttonVariants({ variant: "outline", size: "sm" }),
-                    "font-semibold text-xs"
+                    "font-semibold text-xs",
                   )}
                 >
                   Clear all filters

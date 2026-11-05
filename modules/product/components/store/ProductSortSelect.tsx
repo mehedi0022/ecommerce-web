@@ -42,7 +42,7 @@ export function ProductSortSelect({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <span className="text-xs text-muted-foreground hidden sm:inline flex items-center gap-1 font-medium">
+      <span className="text-xs text-muted-foreground hidden sm:inline md:flex items-center gap-1 font-medium">
         <ArrowUpDown className="size-3.5" /> Sort by:
       </span>
       <select

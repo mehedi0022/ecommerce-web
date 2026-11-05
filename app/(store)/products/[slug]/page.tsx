@@ -143,8 +143,8 @@ function RatingSummaryBadge({
 
 function TrustBadges() {
   const items = [
-    { icon: Truck, title: "Free shipping", desc: "On orders over $50" },
-    { icon: RotateCcw, title: "Easy returns", desc: "30-day return policy" },
+    { icon: Truck, title: "Free shipping", desc: "On orders over BDT 2000" },
+    { icon: RotateCcw, title: "Easy returns", desc: "7-day return policy" },
     {
       icon: ShieldCheck,
       title: "Secure payment",
@@ -450,9 +450,9 @@ export default function ProductDetailsPage() {
               <div className="flex items-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2.5 text-xs text-emerald-800 dark:text-emerald-300">
                 <Truck className="size-4 shrink-0 text-emerald-600" />
                 <span>
-                  <strong>ফ্রি ডেলিভারি:</strong> এই পণ্যটিতে কোনো ডেলিভারি
-                  চার্জ প্রযোজ্য নয় (পুরো অর্ডারে সব ফ্রি শিপিং পণ্য থাকলে
-                  শিপিং সম্পূর্ণ ফ্রি)।
+                  <strong>Free Delivery:</strong> No delivery charges apply to
+                  this product (shipping is completely free if all items in the
+                  order are eligible for free shipping).
                 </span>
               </div>
             )}
@@ -460,15 +460,16 @@ export default function ProductDetailsPage() {
             {product.requiresAdvancePayment && (
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3.5 text-xs text-amber-900 dark:text-amber-200 space-y-1">
                 <p className="font-semibold flex items-center gap-1.5">
-                  <span>⚡</span> আংশিক অগ্রিম পেমেন্ট পলিসি
+                  <span>⚡</span> Partial Advance Payment Policy
                 </p>
                 <p className="leading-relaxed">
-                  এই অর্ডারের জন্য{" "}
+                  An advance payment of{" "}
                   <strong>
-                    ৳{product.advancePaymentAmount ?? "ডেলিভারি চার্জ"}
+                    ৳{product.advancePaymentAmount ?? "Delivery Charge"}
                   </strong>{" "}
-                  অগ্রিম পেমেন্ট আবশ্যক। পণ্য হাতে পাওয়ার পর বাকি টাকা{" "}
-                  <strong>ক্যাশ অন ডেলিভারি (COD)</strong> হিসেবে পরিশোধ করবেন।
+                  is required for this order. The remaining amount must be paid
+                  upon receiving the product through{" "}
+                  <strong>Cash on Delivery (COD)</strong>.
                 </p>
               </div>
             )}
@@ -488,20 +489,6 @@ export default function ProductDetailsPage() {
                   setQuantity(1);
                 }}
               />
-            )}
-
-            {/* Standalone Size Guide Button if product has size chart */}
-            {sizeChart && (
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowSizeGuide(true)}
-                  className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline cursor-pointer"
-                >
-                  <Ruler className="size-3.5" />
-                  <span>View Size Guide ({sizeChart.name})</span>
-                </button>
-              </div>
             )}
 
             {/* ── Quantity ── */}
@@ -737,51 +724,6 @@ export default function ProductDetailsPage() {
                   No detailed description has been added for this product yet.
                 </div>
               )}
-
-              {/* Product Feature Highlights */}
-              <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="flex items-start gap-3 rounded-xl border bg-card p-4 shadow-2xs">
-                  <Award className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold">
-                      Authentic Guaranteed
-                    </h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      100% genuine sourced pieces.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-xl border bg-card p-4 shadow-2xs">
-                  <PackageCheck className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold">Carefully Packed</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Protected and quality-checked.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-xl border bg-card p-4 shadow-2xs">
-                  <Truck className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold">Tracked Dispatch</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Real-time status updates.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-xl border bg-card p-4 shadow-2xs">
-                  <RotateCcw className="size-5 text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold">30-Day Guarantee</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Simple hassle-free returns.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
@@ -975,7 +917,8 @@ export default function ProductDetailsPage() {
                 </div>
               ) : (
                 <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
-                  No technical specifications have been added for this product yet.
+                  No technical specifications have been added for this product
+                  yet.
                 </div>
               )}
             </div>
@@ -1072,7 +1015,11 @@ export default function ProductDetailsPage() {
               )}
 
               <div className="flex justify-end pt-4 mt-2">
-                <Button type="button" variant="outline" onClick={() => setShowSizeGuide(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowSizeGuide(false)}
+                >
                   Close Guide
                 </Button>
               </div>
