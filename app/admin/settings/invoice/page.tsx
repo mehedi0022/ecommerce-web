@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminInvoiceSettingsPage() {
-  return (
-    <div className="container mx-auto max-w-7xl py-2 space-y-6">
-      <InvoiceSettingsManagement />
-    </div>
-  );
+  return <InvoiceSettingsManagement />;
 }

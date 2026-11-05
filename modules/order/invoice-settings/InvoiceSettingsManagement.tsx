@@ -157,9 +157,9 @@ export function InvoiceSettingsManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <FileText className="size-6 text-primary" />
             Invoice & Shipping Label Customization
           </h1>
@@ -168,14 +168,14 @@ export function InvoiceSettingsManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleReset}
             disabled={isSaving}
-            className="text-xs gap-1.5"
+            className="h-9 text-xs gap-1.5"
           >
             <RotateCcw className="size-3.5" />
             Reset Defaults
@@ -185,7 +185,7 @@ export function InvoiceSettingsManagement() {
             size="sm"
             onClick={handleSave}
             disabled={isSaving}
-            className="gap-1.5 font-semibold shadow-xs"
+            className="h-9 gap-1.5 font-semibold shadow-xs text-xs bg-primary"
           >
             {isSaving ? (
               <Loader2 className="size-3.5 animate-spin" />

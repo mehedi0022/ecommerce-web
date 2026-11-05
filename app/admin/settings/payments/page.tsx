@@ -7,9 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminPaymentsPage() {
-  return (
-    <div className="container mx-auto max-w-6xl py-4 space-y-6">
-      <PaymentMethodsManagement />
-    </div>
-  );
+  return <PaymentMethodsManagement />;
 }

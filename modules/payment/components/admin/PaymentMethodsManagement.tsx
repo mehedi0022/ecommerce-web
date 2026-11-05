@@ -86,21 +86,22 @@ export function PaymentMethodsManagement() {
       {/* ── Top Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <CreditCard className="size-6 text-primary" />
             Payment Methods & Gateways
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-sm text-muted-foreground mt-1">
             Configure manual MFS (bKash, Nagad, Rocket), Bank transfer, and automated gateways.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="cursor-pointer"
+            className="gap-1.5 h-9 text-xs"
           >
             <RefreshCw className={cn("size-3.5", isFetching && "animate-spin")} />
             <span>Refresh</span>
@@ -112,9 +113,9 @@ export function PaymentMethodsManagement() {
               setEditingMethod(null);
               setIsMethodModalOpen(true);
             }}
-            className="cursor-pointer font-semibold shadow-xs"
+            className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
           >
-            <Plus className="size-4" />
+            <Plus className="size-3.5" />
             <span>Add Payment Method</span>
           </Button>
         </div>

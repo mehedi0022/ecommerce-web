@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminCourierSettingsPage() {
-  return (
-    <div className="container mx-auto max-w-6xl py-4 space-y-6">
-      <CourierSettingsManagement />
-    </div>
-  );
+  return <CourierSettingsManagement />;
 }

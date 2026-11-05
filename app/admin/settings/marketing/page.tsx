@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function MarketingSettingsPage() {
-  return (
-    <div className="container mx-auto max-w-5xl py-2">
-      <MarketingSettingsManagement />
-    </div>
-  );
+  return <MarketingSettingsManagement />;
 }

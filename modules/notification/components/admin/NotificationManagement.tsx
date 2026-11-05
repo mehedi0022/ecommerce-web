@@ -201,8 +201,11 @@ export function NotificationManagement() {
       {/* ─── Top Header & Quick Actions ───────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">SMS & Notification Engine</h2>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Radio className="size-6 text-primary" />
+            SMS & Notification Engine
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Configure Bangladeshi SMS gateways, dynamic event templates, and monitor delivery audit logs.
           </p>
         </div>
@@ -212,9 +215,9 @@ export function NotificationManagement() {
             variant="outline"
             size="sm"
             onClick={() => setIsTestSmsModalOpen(true)}
-            className="gap-1.5"
+            className="gap-1.5 h-9 text-xs"
           >
-            <Send className="size-4 text-primary" />
+            <Send className="size-3.5 text-primary" />
             Send Test SMS
           </Button>
 
@@ -224,9 +227,9 @@ export function NotificationManagement() {
               setEditingProvider(null);
               setIsProviderModalOpen(true);
             }}
-            className="gap-1.5"
+            className="gap-1.5 h-9 bg-primary font-semibold shadow-xs text-xs"
           >
-            <Plus className="size-4" />
+            <Plus className="size-3.5" />
             Add New Gateway
           </Button>
         </div>

@@ -105,25 +105,26 @@ export function MarketingSettingsManagement() {
   return (
     <div className="space-y-6">
       {/* Header & Quick Save */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Activity className="size-6 text-primary" />
             Marketing & Tracking Pixels
-            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 ml-1">
               CAPI Deduplication Active
             </Badge>
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Configure Facebook Pixel, Conversions API (CAPI), Google Tag Manager, GA4, and TikTok Ads with 100% duplicate purchase protection.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
-            className="h-9 gap-1 text-xs"
+            className="h-9 gap-1.5 text-xs"
           >
             <RefreshCw className="size-3.5" />
             Reload
@@ -132,7 +133,7 @@ export function MarketingSettingsManagement() {
             size="sm"
             onClick={handleSave}
             disabled={isSaving}
-            className="h-9 gap-1.5 text-xs font-semibold"
+            className="h-9 gap-1.5 text-xs font-semibold bg-primary shadow-xs"
           >
             {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
             Save Settings

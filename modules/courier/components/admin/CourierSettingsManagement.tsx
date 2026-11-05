@@ -94,7 +94,7 @@ export function CourierSettingsManagement() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Truck className="size-6 text-primary" />
             Courier Logistics Integration
           </h1>
@@ -103,11 +103,11 @@ export function CourierSettingsManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="default"
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 h-9 text-xs font-semibold bg-primary shadow-xs"
             disabled={isSyncingActive}
             onClick={handleSyncAllActive}
             title="Poll live delivery statuses from courier APIs for all pending parcels"
@@ -119,7 +119,7 @@ export function CourierSettingsManagement() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 h-9 text-xs"
             onClick={() => refetch()}
             disabled={isLoading}
           >
