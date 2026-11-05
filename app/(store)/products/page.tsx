@@ -184,12 +184,21 @@ export default async function ProductsPage({
 
   const { products, meta } = await getProducts(params, brands);
 
+  // Helper to find category at any depth in tree
+  const findCategoryBySlug = (list: Category[], slug: string): Category | null => {
+    for (const item of list) {
+      if (item.slug === slug) return item;
+      if (item.children?.length) {
+        const found = findCategoryBySlug(item.children, slug);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // Determine current active category title
   const activeCategory = params.category
-    ? categories.find((c) => c.slug === params.category) ||
-      categories
-        .flatMap((c) => c.children || [])
-        .find((c) => c.slug === params.category)
+    ? findCategoryBySlug(categories, params.category)
     : null;
 
   const pageTitle = params.search

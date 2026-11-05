@@ -70,6 +70,17 @@ export const categoryApi = baseApi.injectEndpoints({
       query: (id) => ({ url: "/categories/" + id, method: "DELETE" }),
       invalidatesTags: ["Category"],
     }),
+    migrateCategoryProducts: builder.mutation<
+      ApiResponse<{ migratedCount: number }>,
+      { id: number; targetCategoryId: number }
+    >({
+      query: ({ id, targetCategoryId }) => ({
+        url: `/categories/${id}/migrate-products`,
+        method: "POST",
+        body: { targetCategoryId },
+      }),
+      invalidatesTags: ["Category", "Product"],
+    }),
   }),
 });
 export const {
@@ -84,4 +95,5 @@ export const {
   useReorderCategoryMutation,
   useUploadCategoryImageMutation,
   useDeleteCategoryMutation,
+  useMigrateCategoryProductsMutation,
 } = categoryApi;

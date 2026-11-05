@@ -78,6 +78,7 @@ import {
 } from "@/modules/product/editor-workflow";
 import type { ProductStatus } from "@/modules/product/types";
 import { ChecklistItem, Field, Section, selectClass } from "./EditorFields";
+import { CategorySelector } from "./CategorySelector";
 
 export function ProductEditor({
   edit = false,
@@ -729,25 +730,46 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                   Loading categories and brands…
                 </p>
               ) : (
-                <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-6">
+                  {/* Brand Selector */}
                   <Field
-                    name="category"
-                    label="Primary category"
-                    error={errors.category}
-                    hint={
-                      categoryLocked
-                        ? "The primary category is locked after variants are saved."
-                        : "Choose a leaf category. This determines the available variant options."
-                    }
+                    name="brand"
+                    label="Brand"
+                    optional
+                    hint="Select the manufacturer or brand name for this product."
                   >
                     <select
-                      id="category"
+                      id="brand"
+                      className={cn(selectClass, "max-w-md")}
+                      value={form.brandId}
+                      onChange={(e) => field("brandId", e.target.value)}
+                    >
+                      <option value="">No brand</option>
+                      {form.brandId &&
+                        !options.data?.brands.some(
+                          (b) => b.id === Number(form.brandId),
+                        ) && (
+                          <option value={form.brandId}>
+                            Current brand (unavailable)
+                          </option>
+                        )}
+                      {options.data?.brands.map((brand) => (
+                        <option key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  {/* Cascading Category Selector */}
+                  <div data-field="category">
+                    <CategorySelector
+                      categories={options.data?.categories ?? []}
+                      primaryCategoryId={form.primaryCategoryId}
+                      categoryIds={form.categoryIds}
                       disabled={categoryLocked}
-                      className={selectClass}
-                      value={form.primaryCategoryId}
-                      aria-invalid={Boolean(errors.category)}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                      error={errors.category}
+                      onSelectPrimary={(value) => {
                         change((old) => ({
                           ...old,
                           primaryCategoryId: value,
@@ -768,95 +790,17 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                           })),
                         }));
                       }}
-                    >
-                      <option value="">Choose a category</option>
-                      {form.primaryCategoryId &&
-                        !options.data?.categories.some(
-                          (c) => c.id === Number(form.primaryCategoryId),
-                        ) && (
-                          <option value={form.primaryCategoryId}>
-                            Current category (unavailable)
-                          </option>
-                        )}
-                      {options.data?.categories.map((category) => (
-                        <option
-                          value={category.id}
-                          key={category.id}
-                          disabled={
-                            category.isLeaf === false &&
-                            category.id !== Number(form.primaryCategoryId)
-                          }
-                        >
-                          {category.path ?? category.name}
-                          {category.isLeaf === false ? " (group)" : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field name="brand" label="Brand" optional>
-                    <select
-                      id="brand"
-                      className={selectClass}
-                      value={form.brandId}
-                      onChange={(e) => field("brandId", e.target.value)}
-                    >
-                      <option value="">No brand</option>
-                      {form.brandId &&
-                        !options.data?.brands.some(
-                          (b) => b.id === Number(form.brandId),
-                        ) && (
-                          <option value={form.brandId}>
-                            Current brand (unavailable)
-                          </option>
-                        )}
-                      {options.data?.brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  {Boolean(form.primaryCategoryId) && (
-                    <details className="sm:col-span-2">
-                      <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-                        Additional categories ·{" "}
-                        {
-                          form.categoryIds.filter(
-                            (id) => id !== Number(form.primaryCategoryId),
-                          ).length
-                        }{" "}
-                        selected
-                      </summary>
-                      <div className="mt-3 grid max-h-44 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
-                        {options.data?.categories
-                          .filter(
-                            (c) => c.id !== Number(form.primaryCategoryId),
-                          )
-                          .map((category) => (
-                            <label
-                              key={category.id}
-                              className="flex items-center gap-2 text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={form.categoryIds.includes(category.id)}
-                                onChange={(e) =>
-                                  field(
-                                    "categoryIds",
-                                    e.target.checked
-                                      ? [...form.categoryIds, category.id]
-                                      : form.categoryIds.filter(
-                                          (id) => id !== category.id,
-                                        ),
-                                  )
-                                }
-                              />
-                              {category.name}
-                            </label>
-                          ))}
-                      </div>
-                    </details>
-                  )}
+                      onToggleAdditional={(catId) => {
+                        const isChecked = form.categoryIds.includes(catId);
+                        field(
+                          "categoryIds",
+                          isChecked
+                            ? form.categoryIds.filter((id) => id !== catId)
+                            : [...form.categoryIds, catId],
+                        );
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -1018,11 +962,11 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                     htmlFor="isFreeShipping"
                     className="text-sm font-medium leading-none cursor-pointer"
                   >
-                    🚚 Free Shipping (ফ্রি ডেলিভারি)
+                    🚚 Free Shipping
                   </label>
                   <p className="text-xs text-muted-foreground">
                     Orders containing only free shipping products will qualify
-                    for free delivery (৳0), regardless of cart amount.
+                    for free delivery, regardless of cart amount.
                   </p>
                 </div>
               </div>
@@ -1040,7 +984,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                     htmlFor="isCodAvailable"
                     className="text-sm font-medium leading-none cursor-pointer"
                   >
-                    💵 Allow Cash on Delivery (ক্যাশ অন ডেলিভারি)
+                    💵 Allow Cash on Delivery (COD)
                   </label>
                   <p className="text-xs text-muted-foreground">
                     When enabled, customers can choose full Cash on Delivery
@@ -1065,7 +1009,7 @@ function Editor({ initial }: { initial?: EditorInitial }) {
                       htmlFor="requiresAdvancePayment"
                       className="text-sm font-medium leading-none cursor-pointer"
                     >
-                      ⚡ Require Minimum Advance Payment (আংশিক অগ্রিম পেমেন্ট)
+                      ⚡ Require Minimum Advance Payment
                     </label>
                     <p className="text-xs text-muted-foreground">
                       Disable full COD. Customer must pay a minimum advance

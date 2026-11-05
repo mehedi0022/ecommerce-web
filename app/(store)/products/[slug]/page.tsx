@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShoppingCart,
   Heart,
@@ -50,9 +51,45 @@ import { VariantSelector } from "@/modules/product/components/store/VariantSelec
 import { ProductCard } from "@/modules/product/components/store/ProductCard";
 import { useListPublicProductsQuery } from "@/modules/product/productApi";
 import { useWishlist } from "@/modules/wishlist/useWishlist";
+import { mediaUrl } from "@/modules/catalog/catalog.utils";
 import type { ProductVariant } from "@/modules/product/types";
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+function BrandDisplay({
+  brand,
+}: {
+  brand: { id: number; name: string; slug: string; logo?: string | null };
+}) {
+  const [imgError, setImgError] = useState(false);
+  const logoUrl = brand.logo ? mediaUrl(brand.logo) : null;
+
+  return (
+    <Link
+      href={`/products?brandId=${brand.id}`}
+      className="inline-flex items-center gap-2 w-fit group transition-opacity hover:opacity-85"
+      title={`Browse more products from ${brand.name}`}
+    >
+      {logoUrl && !imgError ? (
+        <div className="relative h-8 w-24 shrink-0 rounded-md border bg-background/80 p-1 flex items-center justify-center group-hover:border-primary/40 transition-colors shadow-2xs">
+          <Image
+            unoptimized
+            src={logoUrl}
+            alt={brand.name}
+            fill
+            sizes="96px"
+            className="object-contain"
+            onError={() => setImgError(true)}
+          />
+        </div>
+      ) : (
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">
+          {brand.name}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 function Breadcrumb({ name, category }: { name: string; category?: string }) {
   return (
@@ -361,14 +398,7 @@ export default function ProductDetailsPage() {
           ════════════════════════════════════════ */}
           <div className="flex flex-col gap-5">
             {/* Brand */}
-            {product.brand && (
-              <Link
-                href={`/products?brandId=${product.brand.id}`}
-                className="text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
-              >
-                {product.brand.name}
-              </Link>
-            )}
+            {product.brand && <BrandDisplay brand={product.brand} />}
 
             {/* Name */}
             <div className="flex flex-col gap-2">

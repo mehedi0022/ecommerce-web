@@ -40,7 +40,7 @@ export interface ProductVariant {
   attributeValues?: Array<{ attributeValue: ProductAttributeValue }>;
 }
 export interface Product {
-  brand?: { id: number; name: string; slug: string } | null;
+  brand?: { id: number; name: string; slug: string; logo?: string | null } | null;
   id: number;
   name: string;
   slug: string;

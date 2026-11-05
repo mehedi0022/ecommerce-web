@@ -45,6 +45,97 @@ const RATING_OPTIONS = [
   { rating: 1, label: "1.0 & above" },
 ];
 
+// ─── Recursive Category Filter Node (Supports unlimited depth levels) ───────
+function CategoryFilterNode({
+  cat,
+  depth = 0,
+  activeCategorySlugs,
+  expandedCategories,
+  onToggleExpand,
+  onToggleCategory,
+}: {
+  cat: Category;
+  depth?: number;
+  activeCategorySlugs: string[];
+  expandedCategories: Set<number>;
+  onToggleExpand: (id: number) => void;
+  onToggleCategory: (slug: string) => void;
+}) {
+  const hasChildren = Boolean(cat.children && cat.children.length > 0);
+  const isExpanded = expandedCategories.has(cat.id);
+  const isChecked = activeCategorySlugs.includes(cat.slug);
+
+  return (
+    <div className="space-y-0.5">
+      <div
+        className={cn(
+          "flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors group",
+          isChecked ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/50 text-foreground"
+        )}
+      >
+        <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer select-none">
+          <Checkbox
+            checked={isChecked}
+            onCheckedChange={() => onToggleCategory(cat.slug)}
+            className="size-3.5 shrink-0"
+          />
+          <span
+            className={cn(
+              "truncate text-xs transition-colors",
+              isChecked
+                ? "text-primary font-bold"
+                : depth === 0
+                ? "font-medium text-foreground group-hover:text-primary"
+                : "text-muted-foreground group-hover:text-foreground"
+            )}
+          >
+            {cat.name}
+          </span>
+        </label>
+
+        {/* Collapsible toggle chevron button if category has subcategories */}
+        {hasChildren && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleExpand(cat.id);
+            }}
+            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0 ml-1"
+            title={isExpanded ? "Collapse" : "Expand subcategories"}
+            aria-label={isExpanded ? `Collapse ${cat.name}` : `Expand ${cat.name}`}
+          >
+            <ChevronRight
+              className={cn(
+                "size-3.5 transition-transform duration-200",
+                isExpanded && "rotate-90"
+              )}
+            />
+          </button>
+        )}
+      </div>
+
+      {/* Recursive Subcategories at any depth */}
+      {hasChildren && isExpanded && (
+        <div className="ml-3 pl-2 border-l border-border/60 space-y-0.5 pt-0.5 animate-in fade-in-50 duration-200">
+          {cat.children!.map((child) => (
+            <CategoryFilterNode
+              key={child.id}
+              cat={child}
+              depth={depth + 1}
+              activeCategorySlugs={activeCategorySlugs}
+              expandedCategories={expandedCategories}
+              onToggleExpand={onToggleExpand}
+              onToggleCategory={onToggleCategory}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ProductFilterSidebar({
   categories,
   brands,
@@ -129,6 +220,30 @@ export function ProductFilterSidebar({
   const activeCategorySlugs = currentCategory
     ? currentCategory.split(",").filter(Boolean)
     : [];
+
+  // Auto-expand ancestors of active category selections
+  useEffect(() => {
+    if (!activeCategorySlugs.length) return;
+    const toExpand = new Set<number>();
+    const findAncestors = (list: Category[], ancestors: number[] = []) => {
+      for (const item of list) {
+        if (activeCategorySlugs.includes(item.slug)) {
+          ancestors.forEach((id) => toExpand.add(id));
+        }
+        if (item.children?.length) {
+          findAncestors(item.children, [...ancestors, item.id]);
+        }
+      }
+    };
+    findAncestors(categories);
+    if (toExpand.size > 0) {
+      setExpandedCategories((prev) => {
+        const next = new Set(prev);
+        toExpand.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  }, [activeCategorySlugs, categories]);
 
   // Toggle category checkbox selection
   const handleToggleCategory = (catSlug: string) => {
@@ -273,93 +388,18 @@ export function ProductFilterSidebar({
           )}
         </div>
 
-        <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
-          {categories.map((cat) => {
-            const hasChildren = Boolean(cat.children && cat.children.length > 0);
-            const isExpanded = expandedCategories.has(cat.id);
-            const isChecked = activeCategorySlugs.includes(cat.slug);
-
-            return (
-              <div key={cat.id} className="space-y-0.5">
-                <div
-                  className={cn(
-                    "flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors group",
-                    isChecked ? "bg-primary/5" : "hover:bg-muted/50"
-                  )}
-                >
-                  <label className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none">
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={() => handleToggleCategory(cat.slug)}
-                      className="size-3.5 shrink-0"
-                    />
-                    <span
-                      className={cn(
-                        "truncate text-xs font-medium transition-colors",
-                        isChecked
-                          ? "text-primary font-bold"
-                          : "text-foreground group-hover:text-primary"
-                      )}
-                    >
-                      {cat.name}
-                    </span>
-                  </label>
-
-                  {/* Collapsible toggle chevron button if category has subcategories */}
-                  {hasChildren && (
-                    <button
-                      type="button"
-                      onClick={() => toggleExpandCategory(cat.id)}
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0 ml-1"
-                      title={isExpanded ? "Collapse" : "Expand subcategories"}
-                      aria-label={
-                        isExpanded
-                          ? `Collapse ${cat.name}`
-                          : `Expand ${cat.name}`
-                      }
-                    >
-                      <ChevronRight
-                        className={cn(
-                          "size-3.5 transition-transform duration-200",
-                          isExpanded && "rotate-90"
-                        )}
-                      />
-                    </button>
-                  )}
-                </div>
-
-                {/* Subcategories (Initially Collapsed, Expanded on click) */}
-                {hasChildren && isExpanded && (
-                  <div className="ml-4 pl-2.5 border-l-2 border-border/60 space-y-0.5 pt-0.5 animate-in fade-in-50 duration-200">
-                    {cat.children!.map((sub) => {
-                      const isSubChecked = activeCategorySlugs.includes(sub.slug);
-
-                      return (
-                        <label
-                          key={sub.id}
-                          className={cn(
-                            "flex items-center gap-2 rounded-md px-2 py-1 text-xs cursor-pointer select-none transition-colors",
-                            isSubChecked
-                              ? "bg-primary/10 text-primary font-semibold"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                          )}
-                        >
-                          <Checkbox
-                            checked={isSubChecked}
-                            onCheckedChange={() =>
-                              handleToggleCategory(sub.slug)
-                            }
-                            className="size-3 shrink-0"
-                          />
-                          <span className="truncate">{sub.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="space-y-1 max-h-80 overflow-y-auto pr-1">
+          {categories.map((cat) => (
+            <CategoryFilterNode
+              key={cat.id}
+              cat={cat}
+              depth={0}
+              activeCategorySlugs={activeCategorySlugs}
+              expandedCategories={expandedCategories}
+              onToggleExpand={toggleExpandCategory}
+              onToggleCategory={handleToggleCategory}
+            />
+          ))}
         </div>
       </div>
 

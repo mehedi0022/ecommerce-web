@@ -552,9 +552,22 @@ export function ProductCard({
 
               <div className="flex flex-col min-w-0 flex-1 gap-1">
                 {activeProduct.brand && (
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {activeProduct.brand.name}
-                  </span>
+                  activeProduct.brand.logo ? (
+                    <div className="relative h-6 w-20 shrink-0 rounded border bg-background/80 p-0.5 shadow-2xs">
+                      <Image
+                        unoptimized
+                        src={mediaUrl(activeProduct.brand.logo)}
+                        alt={activeProduct.brand.name}
+                        fill
+                        sizes="80px"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {activeProduct.brand.name}
+                    </span>
+                  )
                 )}
                 <h3 className="text-sm sm:text-base font-bold leading-snug text-foreground line-clamp-2">
                   {activeProduct.name}

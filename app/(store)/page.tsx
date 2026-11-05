@@ -39,14 +39,13 @@ export default function HomePage() {
   const { data: featuredData, isLoading: isFeaturedLoading } =
     useListPublicProductsQuery({ isFeatured: true, limit: 8 });
 
-  const hasFeatured = Boolean(featuredData?.data && featuredData.data.length > 0);
+  const hasFeatured = Boolean(
+    featuredData?.data && featuredData.data.length > 0,
+  );
 
   // Fallback to latest public products if no featured products are marked
   const { data: latestData, isLoading: isLatestLoading } =
-    useListPublicProductsQuery(
-      { limit: 8 },
-      { skip: hasFeatured }
-    );
+    useListPublicProductsQuery({ limit: 8 }, { skip: hasFeatured });
 
   const isLoading = isFeaturedLoading || (!hasFeatured && isLatestLoading);
   const products = hasFeatured
@@ -86,7 +85,8 @@ export default function HomePage() {
                 Featured Collection
               </h2>
               <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                Handpicked quality essentials designed to elevate your everyday lifestyle
+                Handpicked quality essentials designed to elevate your everyday
+                lifestyle
               </p>
             </div>
             <Link

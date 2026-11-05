@@ -67,6 +67,24 @@ function findCategoryInTree(
   return null;
 }
 
+function findCategoryBreadcrumbs(
+  categories: Category[],
+  targetSlug: string,
+  currentPath: Category[] = []
+): Category[] | null {
+  for (const cat of categories) {
+    const path = [...currentPath, cat];
+    if (cat.slug.toLowerCase() === targetSlug.toLowerCase()) {
+      return path;
+    }
+    if (cat.children && cat.children.length > 0) {
+      const found = findCategoryBreadcrumbs(cat.children, targetSlug, path);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 // ─── SEO Metadata ────────────────────────────────────────────────────────────
 export async function generateMetadata({
   params,
@@ -205,6 +223,7 @@ export default async function CategoryPage({
 
   const activeCategory = findCategoryInTree(categories, slug);
   const categoryTitle = activeCategory ? activeCategory.name : formatSlugTitle(slug);
+  const breadcrumbs = findCategoryBreadcrumbs(categories, slug) || [];
 
   const { products, meta } = await getCategoryProducts(slug, search, brands);
 
@@ -241,23 +260,39 @@ export default async function CategoryPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* ── Breadcrumb ──────────────────────────────────────────────── */}
+      {/* ── Dynamic Multi-level Breadcrumb ───────────────────────────── */}
       <nav
         aria-label="Breadcrumb"
-        className="mb-5 flex items-center gap-1.5 text-xs text-muted-foreground"
+        className="mb-5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
       >
         <Link href="/" className="hover:text-foreground transition-colors">
           Home
         </Link>
-        <ChevronRight className="size-3.5" />
+        <ChevronRight className="size-3.5 shrink-0" />
         <Link
-          href="/products"
+          href="/categories"
           className="hover:text-foreground transition-colors"
         >
           Categories
         </Link>
-        <ChevronRight className="size-3.5" />
-        <span className="font-semibold text-foreground">{categoryTitle}</span>
+        {breadcrumbs.map((crumb, idx) => {
+          const isLast = idx === breadcrumbs.length - 1;
+          return (
+            <span key={crumb.id} className="flex items-center gap-1.5">
+              <ChevronRight className="size-3.5 shrink-0" />
+              {isLast ? (
+                <span className="font-semibold text-foreground">{crumb.name}</span>
+              ) : (
+                <Link
+                  href={`/category/${crumb.slug}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {crumb.name}
+                </Link>
+              )}
+            </span>
+          );
+        })}
       </nav>
 
       {/* ── Category Banner Header ───────────────────────────────────── */}
@@ -305,24 +340,54 @@ export default async function CategoryPage({
 
       {/* ── Subcategories Quick Navigation (If Available) ────────────── */}
       {subcategories.length > 0 && (
-        <div className="mb-8 rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="size-4 text-primary" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Browse Subcategories
-            </h2>
+        <div className="mb-8 rounded-2xl border border-border/80 bg-gradient-to-r from-muted/40 via-card to-muted/20 p-4 sm:p-5 shadow-xs">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4 text-primary" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Browse Subcategories ({subcategories.length})
+              </h2>
+            </div>
+            <span className="text-[11px] text-muted-foreground hidden sm:inline">
+              Select a subcategory to explore specific collections
+            </span>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-            {subcategories.map((sub: Category) => (
-              <Link
-                key={sub.id}
-                href={`/category/${sub.slug}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-muted/30 px-3.5 py-2 text-xs font-semibold text-foreground hover:border-primary hover:bg-card hover:text-primary transition-all shadow-2xs shrink-0 group"
-              >
-                <span>{sub.name}</span>
-                <ArrowRight className="size-3 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            ))}
+
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none items-center">
+            {/* Active Current Root Pill */}
+            <span className="inline-flex items-center gap-1.5 rounded-xl border border-primary bg-primary text-primary-foreground px-4 py-2 text-xs font-bold shadow-xs shrink-0">
+              <Layers className="size-3.5" />
+              <span>All {categoryTitle}</span>
+            </span>
+
+            {/* Subcategories Pills with Thumbnails */}
+            {subcategories.map((sub: Category) => {
+              const subImg = sub.image ? mediaUrl(sub.image) : null;
+              return (
+                <Link
+                  key={sub.id}
+                  href={`/category/${sub.slug}`}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-card hover:border-primary hover:bg-primary/5 hover:text-primary px-3.5 py-2 text-xs font-semibold text-foreground transition-all shadow-2xs shrink-0 group"
+                >
+                  {subImg ? (
+                    <div className="relative size-4 rounded-full overflow-hidden shrink-0 border border-border">
+                      <Image
+                        src={subImg}
+                        alt={sub.name}
+                        fill
+                        unoptimized
+                        sizes="16px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <Layers className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  )}
+                  <span>{sub.name}</span>
+                  <ArrowRight className="size-3 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}

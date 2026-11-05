@@ -20,7 +20,7 @@ import {
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
-import { useListPublicCategoriesQuery } from "../../categoryApi";
+import { useGetPublicCategoryTreeQuery } from "../../categoryApi";
 import type { Category } from "../../types";
 
 const fallbackIcons = [
@@ -85,15 +85,22 @@ function CategoryCircleItem({
       </div>
 
       {/* Category Name Label */}
-      <span className="text-xs sm:text-sm font-semibold text-center text-foreground group-hover:text-primary transition-colors max-w-[85px] sm:max-w-[100px] line-clamp-1">
+      <span className="text-xs sm:text-sm font-semibold text-center text-foreground group-hover:text-primary transition-colors max-w-[90px] sm:max-w-[110px] line-clamp-1">
         {category.name}
       </span>
+
+      {/* Subcategory Count Badge */}
+      {category.children && category.children.length > 0 ? (
+        <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors -mt-1.5 line-clamp-1">
+          {category.children.length} {category.children.length === 1 ? "subcategory" : "subcategories"}
+        </span>
+      ) : null}
     </Link>
   );
 }
 
 export function CategoryCircles() {
-  const { data, isLoading } = useListPublicCategoriesQuery({ limit: 16 });
+  const { data, isLoading } = useGetPublicCategoryTreeQuery();
   const categories = data?.data || [];
 
   const scrollRef = useRef<HTMLDivElement>(null);

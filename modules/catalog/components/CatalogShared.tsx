@@ -242,6 +242,7 @@ export interface RecordFields {
   description: string;
   sortOrder: number;
   parentId: number | null;
+  migrateParentProducts?: boolean;
 }
 export function RecordDialog({
   title,
@@ -356,6 +357,26 @@ export function RecordDialog({
                 <span className="block text-xs font-normal text-muted-foreground">
                   Self and descendant categories cannot be selected.
                 </span>
+              </label>
+            )}
+            {parents && form.parentId && creating && (
+              <label className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.migrateParentProducts ?? true}
+                  onChange={(e) =>
+                    setForm({ ...form, migrateParentProducts: e.target.checked })
+                  }
+                  className="mt-0.5 size-4 rounded text-primary focus:ring-primary"
+                />
+                <div>
+                  <span className="font-semibold text-foreground">
+                    Move existing parent products here (Recommended)
+                  </span>
+                  <p className="text-muted-foreground mt-0.5 leading-relaxed">
+                    If the selected parent currently has products, automatically migrate them to this new subcategory so products always live in leaf categories.
+                  </p>
+                </div>
               </label>
             )}
             {showDescription && (
