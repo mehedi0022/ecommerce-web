@@ -5,35 +5,27 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
-  ArrowLeft,
   Gift,
 } from "lucide-react";
 
 export default function RegisterPage() {
   return (
-    <main className="relative min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-muted/20">
-      {/* Background Ambient Glows */}
-      <div className="pointer-events-none absolute -top-24 -left-20 size-72 sm:size-96 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-1/3 -right-20 size-72 sm:size-96 rounded-full bg-emerald-500/10 blur-3xl" />
+    <main className="relative min-h-screen w-full max-w-full overflow-x-hidden grid grid-cols-1 lg:grid-cols-2 bg-muted/20">
+      {/* Background Ambient Glows - Contained to prevent horizontal scrolling */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-20 size-72 sm:size-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-1/3 -right-20 size-72 sm:size-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
 
       {/* Brand Hero Side (Desktop) */}
       <div className="relative hidden flex-col justify-between overflow-hidden bg-zinc-950 p-12 text-white lg:flex">
         <div className="absolute -left-20 -top-20 size-96 rounded-full bg-primary/20 blur-3xl" />
 
-        <div className="relative z-10 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform group-hover:scale-105">
-              <ShoppingBag className="size-5" />
-            </div>
-            <span className="text-xl font-black tracking-tight">LUXE STORE</span>
-          </Link>
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="size-3.5" />
-            <span>Back to Store</span>
-          </Link>
+        <div className="relative z-10 flex items-center gap-2.5">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+            <ShoppingBag className="size-5" />
+          </div>
+          <span className="text-xl font-black tracking-tight">LUXE STORE</span>
         </div>
 
         {/* Member Benefits Showcase */}
@@ -90,27 +82,17 @@ export default function RegisterPage() {
       </div>
 
       {/* Form Side (Mobile & Desktop) */}
-      <div className="relative z-10 flex flex-col justify-between p-4 sm:p-8 lg:p-12 min-h-screen">
-        {/* Mobile Top Navigation Bar */}
-        <div className="flex items-center justify-between w-full max-w-md mx-auto mb-3 sm:mb-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-background/80 border border-border/70 hover:bg-muted text-foreground transition-all shadow-2xs"
-          >
-            <ArrowLeft className="size-3.5" />
-            <span>Store</span>
-          </Link>
-
-          <Link href="/" className="flex items-center gap-2 lg:hidden">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
-              <ShoppingBag className="size-4" />
+      <div className="relative z-10 flex flex-col justify-between p-4 sm:p-8 lg:p-12 min-h-screen w-full max-w-full overflow-hidden">
+        {/* Mobile Brand Header */}
+        <div className="flex items-center justify-center w-full mb-3 sm:mb-6 lg:hidden">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
+              <ShoppingBag className="size-4.5" />
             </div>
-            <span className="font-black text-sm tracking-tight text-foreground">
+            <span className="font-black text-base tracking-tight text-foreground">
               LUXE STORE
             </span>
           </Link>
-
-          <div className="w-12 lg:hidden" />
         </div>
 
         {/* Main Card */}

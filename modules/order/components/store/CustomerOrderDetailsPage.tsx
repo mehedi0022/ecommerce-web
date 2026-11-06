@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   Package,
@@ -19,14 +18,10 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  UserRound,
-  Heart,
   Star,
-  LogOut,
   RefreshCw,
   ShoppingBag,
 } from "lucide-react";
-import { StoreContainer } from "@/components/layout/store/StoreContainer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,23 +29,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { mediaUrl } from "@/modules/catalog/catalog.utils";
-import { useAppSelector } from "@/redux/hooks";
-import { useLogoutMutation } from "@/modules/auth/authApi";
+import { AccountLayoutShell } from "@/modules/account/components/AccountLayoutShell";
 import { useGetOrderByNumberQuery } from "../../orderApi";
 import { OrderTimeline } from "./OrderTimeline";
 import { OrderInvoiceModal } from "../invoice/OrderInvoiceModal";
 import { CustomerReturnRequestModal } from "@/modules/return/components/customer/CustomerReturnRequestModal";
 import { ReviewModal } from "@/modules/review/components/ReviewModal";
 import type { OrderItem } from "../../order.types";
-
-const menuItems = [
-  { href: "/account", label: "Overview", icon: UserRound },
-  { href: "/account/orders", label: "My orders", icon: Package },
-  { href: "/account/addresses", label: "Addresses", icon: MapPin },
-  { href: "/account/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/account/reviews", label: "My reviews", icon: Star },
-  { href: "/account/returns", label: "Returns", icon: RotateCcw },
-];
 
 const statusConfig: Record<
   string,
@@ -95,10 +80,6 @@ interface CustomerOrderDetailsPageProps {
 }
 
 export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPageProps) {
-  const router = useRouter();
-  const user = useAppSelector((state) => state.auth.user);
-  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
-
   const { data, isLoading, isFetching, isError, refetch } =
     useGetOrderByNumberQuery(orderNumber);
 
@@ -107,14 +88,6 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
   const [reviewingItem, setReviewingItem] = useState<OrderItem | null>(null);
 
   const order = data?.data;
-
-  const handleLogout = async () => {
-    try {
-      await logout().unwrap();
-    } finally {
-      router.replace("/login");
-    }
-  };
 
   const statusInfo = order ? (statusConfig[order.status] ?? {
     label: order.status,
@@ -134,33 +107,18 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
     : "";
 
   return (
-    <main className="min-h-[calc(100vh-5rem)] bg-muted/30 py-8 sm:py-12">
-      <StoreContainer>
-        {/* ── Breadcrumbs ─────────────────────────────────────────────────── */}
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-6 flex items-center gap-2 text-xs text-muted-foreground flex-wrap"
-        >
-          <Link href="/" className="hover:text-foreground">
-            Home
-          </Link>
-          <span>/</span>
-          <Link href="/account" className="hover:text-foreground">
-            Account
-          </Link>
-          <span>/</span>
-          <Link href="/account/orders" className="hover:text-foreground">
-            Orders
-          </Link>
-          <span>/</span>
-          <span className="font-medium font-mono text-foreground">
-            #{orderNumber}
-          </span>
-        </nav>
-
-        {/* ── Top Header with Back Button ──────────────────────────────────── */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
+    <>
+      <AccountLayoutShell
+        title={`Order #${orderNumber}`}
+        description={formattedPlacedDate ? `Placed on ${formattedPlacedDate}` : undefined}
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Account", href: "/account" },
+          { label: "Orders", href: "/account/orders" },
+          { label: `#${orderNumber}` },
+        ]}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
             <Link
               href="/account/orders"
               className={cn(
@@ -171,14 +129,6 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
               <ArrowLeft className="size-4" />
               Back to Orders
             </Link>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground font-mono">
-                Order #{orderNumber}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => refetch()}
@@ -216,56 +166,9 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
               </>
             )}
           </div>
-        </div>
-
-        {/* ── Layout Grid ─────────────────────────────────────────────────── */}
-        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-          {/* Account Sidebar Navigation */}
-          <aside className="hidden lg:block">
-            <Card className="overflow-hidden">
-              <div className="border-b bg-primary p-4 text-primary-foreground">
-                <p className="font-semibold text-sm truncate">
-                  {user?.fullName || user?.userName}
-                </p>
-                <p className="mt-0.5 truncate text-xs text-primary-foreground/70">
-                  {user?.email}
-                </p>
-              </div>
-              <nav className="p-2 space-y-0.5" aria-label="Account navigation">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = item.href === "/account/orders";
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow-xs"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="size-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-destructive transition hover:bg-destructive/10"
-                >
-                  <LogOut className="size-4" />
-                  {isLoggingOut ? "Signing out..." : "Sign out"}
-                </button>
-              </nav>
-            </Card>
-          </aside>
-
-          {/* Main Content */}
-          <section className="space-y-6">
+        }
+      >
+        <div className="space-y-6">
             {isLoading ? (
               <div className="space-y-4">
                 <div className="rounded-2xl border bg-card p-6 space-y-4">
@@ -594,9 +497,8 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
                 </Card>
               </>
             )}
-          </section>
         </div>
-      </StoreContainer>
+      </AccountLayoutShell>
 
       {/* Invoice Modal */}
       {order && (
@@ -631,6 +533,6 @@ export function CustomerOrderDetailsPage({ orderNumber }: CustomerOrderDetailsPa
           onSuccess={() => setReviewingItem(null)}
         />
       )}
-    </main>
+    </>
   );
 }

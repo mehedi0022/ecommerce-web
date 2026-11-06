@@ -20,6 +20,8 @@ export interface ProductReview {
   updatedAt: string;
   approvedAt?: string | null;
   rejectedAt?: string | null;
+  adminFeedback?: string | null;
+  rejectionReason?: string | null;
   user?: ReviewUser;
   product?: {
     id: number;

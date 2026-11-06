@@ -4,10 +4,12 @@ import { ShoppingBag, ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="relative min-h-screen flex flex-col justify-between p-4 sm:p-8 bg-muted/20">
+    <main className="relative min-h-screen w-full max-w-full overflow-x-hidden flex flex-col justify-between p-4 sm:p-8 bg-muted/20">
       {/* Background Ambient Glows */}
-      <div className="pointer-events-none absolute -top-24 -left-20 size-72 sm:size-96 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-1/4 -right-20 size-72 sm:size-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -left-20 size-72 sm:size-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-1/4 -right-20 size-72 sm:size-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
 
       {/* Top Header */}
       <div className="flex items-center justify-between w-full max-w-md mx-auto mb-4">
