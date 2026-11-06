@@ -114,14 +114,27 @@ export function AccountLayoutShell({
         {(title || actions) && (
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {title && (
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
-                  {title}
-                </h1>
-                {description && (
-                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    {description}
-                  </p>
+              <div className="flex items-start justify-between gap-3 w-full sm:w-auto">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                    {title}
+                  </h1>
+                  {description && (
+                    <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {description}
+                    </p>
+                  )}
+                </div>
+                {!hideSidebar && (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="lg:hidden shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 transition-all shadow-2xs disabled:opacity-50 mt-1 cursor-pointer"
+                  >
+                    <LogOut className="size-3.5" />
+                    <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>
+                  </button>
                 )}
               </div>
             )}
@@ -155,6 +168,15 @@ export function AccountLayoutShell({
                 </Link>
               );
             })}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all border border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 select-none disabled:opacity-50 cursor-pointer"
+            >
+              <LogOut className="size-3.5" />
+              <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>
+            </button>
           </div>
         )}
 
@@ -233,7 +255,39 @@ export function AccountLayoutShell({
             </aside>
 
             {/* Content Area */}
-            <section className="min-w-0">{children}</section>
+            <section className="min-w-0">
+              {children}
+
+              {/* Mobile Profile & Logout Card at Bottom */}
+              <div className="mt-8 pt-6 border-t border-border/60 lg:hidden">
+                <div className="flex items-center justify-between p-4 rounded-2xl border border-destructive/20 bg-destructive/5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-destructive/15 text-destructive font-black text-sm shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-foreground truncate">
+                        {displayName}
+                      </p>
+                      {displayContact && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {displayContact}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition shadow-xs disabled:opacity-50 cursor-pointer"
+                  >
+                    <LogOut className="size-3.5" />
+                    <span>{isLoggingOut ? "..." : "Sign out"}</span>
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
         )}
       </StoreContainer>
