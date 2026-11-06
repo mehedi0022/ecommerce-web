@@ -66,19 +66,19 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5 sm:space-y-4" noValidate>
       {/* Full Name */}
       <div className="space-y-1.5">
-        <Label htmlFor="fullName">
+        <Label htmlFor="fullName" className="text-xs sm:text-sm font-semibold text-foreground">
           Full name <span className="text-destructive">*</span>
         </Label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <User className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="fullName"
             type="text"
             placeholder="Jane Doe"
-            className="pl-9 h-10"
+            className="pl-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.fullName)}
             {...register("fullName")}
           />
@@ -92,16 +92,16 @@ export function RegisterForm() {
 
       {/* Phone Number */}
       <div className="space-y-1.5">
-        <Label htmlFor="phone">
+        <Label htmlFor="phone" className="text-xs sm:text-sm font-semibold text-foreground">
           Phone number <span className="text-destructive">*</span>
         </Label>
         <div className="relative">
-          <Phone className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Phone className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="phone"
             type="tel"
             placeholder="01XXXXXXXXX"
-            className="pl-9 h-10"
+            className="pl-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.phone)}
             {...register("phone")}
           />
@@ -112,7 +112,7 @@ export function RegisterForm() {
           </p>
         ) : (
           <p className="text-[11px] text-muted-foreground">
-            We will use this phone number for order updates and verification.
+            Used for order tracking, delivery notifications and SMS updates.
           </p>
         )}
       </div>
@@ -120,16 +120,20 @@ export function RegisterForm() {
       {/* Email (Optional) */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="email">Email address</Label>
-          <span className="text-xs text-muted-foreground">Optional</span>
+          <Label htmlFor="email" className="text-xs sm:text-sm font-semibold text-foreground">
+            Email address
+          </Label>
+          <span className="text-[11px] text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md font-medium">
+            Optional
+          </span>
         </div>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Mail className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
-            className="pl-9 h-10"
+            className="pl-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.email)}
             {...register("email")}
           />
@@ -144,16 +148,20 @@ export function RegisterForm() {
       {/* Username (Optional) */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label htmlFor="userName">Username</Label>
-          <span className="text-xs text-muted-foreground">Optional</span>
+          <Label htmlFor="userName" className="text-xs sm:text-sm font-semibold text-foreground">
+            Username
+          </Label>
+          <span className="text-[11px] text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md font-medium">
+            Optional
+          </span>
         </div>
         <div className="relative">
-          <AtSign className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <AtSign className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="userName"
             type="text"
             placeholder="janedoe"
-            className="pl-9 h-10"
+            className="pl-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.userName)}
             {...register("userName")}
           />
@@ -167,28 +175,28 @@ export function RegisterForm() {
 
       {/* Password */}
       <div className="space-y-1.5">
-        <Label htmlFor="password">
+        <Label htmlFor="password" className="text-xs sm:text-sm font-semibold text-foreground">
           Password <span className="text-destructive">*</span>
         </Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Lock className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             placeholder="••••••••"
-            className="pl-9 pr-9 h-10"
+            className="pl-10 pr-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.password)}
             {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-1"
           >
             {showPassword ? (
-              <EyeOff className="size-4" />
+              <EyeOff className="size-4.5" />
             ) : (
-              <Eye className="size-4" />
+              <Eye className="size-4.5" />
             )}
           </button>
         </div>
@@ -203,7 +211,7 @@ export function RegisterForm() {
       {serverError && (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive"
+          className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive"
         >
           {serverError}
         </div>
@@ -212,14 +220,14 @@ export function RegisterForm() {
       {/* Submit Button */}
       <Button
         type="submit"
-        className="w-full h-10 font-semibold"
+        className="w-full h-11 sm:h-12 rounded-xl font-bold text-sm sm:text-base bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer mt-1"
         disabled={isLoading}
       >
         {isLoading ? (
           "Creating account..."
         ) : (
           <span className="flex items-center gap-2">
-            Create account <ArrowRight className="size-4" />
+            Create account <ArrowRight className="size-4.5" />
           </span>
         )}
       </Button>

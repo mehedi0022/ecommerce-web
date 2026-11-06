@@ -58,18 +58,20 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" noValidate>
       {/* Identifier Input (Phone or Email) */}
-      <div className="space-y-2">
-        <Label htmlFor="identifier">Phone or Email address</Label>
+      <div className="space-y-1.5 sm:space-y-2">
+        <Label htmlFor="identifier" className="text-xs sm:text-sm font-semibold text-foreground">
+          Phone or Email address
+        </Label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <User className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="identifier"
             type="text"
             autoComplete="username"
             placeholder="01XXXXXXXXX or name@example.com"
-            className="pl-9 h-10"
+            className="pl-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.identifier)}
             {...register("identifier")}
           />
@@ -82,36 +84,38 @@ export function LoginForm() {
       </div>
 
       {/* Password Input */}
-      <div className="space-y-2">
+      <div className="space-y-1.5 sm:space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-xs sm:text-sm font-semibold text-foreground">
+            Password
+          </Label>
           <Link
             href="/forgot-password"
-            className="text-xs font-medium text-primary hover:underline"
+            className="text-xs font-semibold text-primary hover:underline underline-offset-4"
           >
             Forgot password?
           </Link>
         </div>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Lock className="absolute left-3.5 top-1/2 size-4.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             placeholder="••••••••"
-            className="pl-9 pr-9 h-10"
+            className="pl-10 pr-10 h-11 sm:h-12 rounded-xl bg-background/50 border-border/80 focus-visible:ring-primary/25 text-sm"
             aria-invalid={Boolean(errors.password)}
             {...register("password")}
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-1"
           >
             {showPassword ? (
-              <EyeOff className="size-4" />
+              <EyeOff className="size-4.5" />
             ) : (
-              <Eye className="size-4" />
+              <Eye className="size-4.5" />
             )}
           </button>
         </div>
@@ -123,17 +127,18 @@ export function LoginForm() {
       </div>
 
       {/* Remember Me */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 pt-0.5">
         <Checkbox
           id="rememberMe"
           checked={rememberMe}
           onCheckedChange={(checked) =>
             setValue("rememberMe", checked === true, { shouldDirty: true })
           }
+          className="rounded-md"
         />
         <Label
           htmlFor="rememberMe"
-          className="cursor-pointer text-sm font-normal text-muted-foreground"
+          className="cursor-pointer text-xs sm:text-sm font-normal text-muted-foreground select-none"
         >
           Remember me for 30 days
         </Label>
@@ -143,7 +148,7 @@ export function LoginForm() {
       {serverError && (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive"
+          className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive"
         >
           {serverError}
         </div>
@@ -152,14 +157,14 @@ export function LoginForm() {
       {/* Submit Button */}
       <Button
         type="submit"
-        className="w-full h-10 font-semibold"
+        className="w-full h-11 sm:h-12 rounded-xl font-bold text-sm sm:text-base bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer"
         disabled={isLoading}
       >
         {isLoading ? (
           "Signing in..."
         ) : (
           <span className="flex items-center gap-2">
-            Sign in <ArrowRight className="size-4" />
+            Sign in <ArrowRight className="size-4.5" />
           </span>
         )}
       </Button>

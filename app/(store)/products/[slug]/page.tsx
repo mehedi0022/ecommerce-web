@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +29,7 @@ import {
   Loader2,
   Ruler,
   X,
+  ArrowRight,
 } from "lucide-react";
 
 import { StoreContainer } from "@/components/layout/store/StoreContainer";
@@ -36,6 +37,13 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RichTextContent } from "@/components/rich-text/RichTextContent";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +53,7 @@ import {
   useGetProductReviewsQuery,
 } from "@/modules/review/reviewApi";
 import { toast } from "sonner";
-import { useAddToCartMutation } from "@/modules/cart/cartApi";
+import { useAddToCartMutation, useGetCartQuery } from "@/modules/cart/cartApi";
 import { ProductGallery } from "@/modules/product/components/store/ProductGallery";
 import { VariantSelector } from "@/modules/product/components/store/VariantSelector";
 import { ProductCard } from "@/modules/product/components/store/ProductCard";
@@ -251,9 +259,33 @@ export default function ProductDetailsPage() {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const ctaAreaRef = useRef<HTMLDivElement>(null);
+
+  const { data: cartData } = useGetCartQuery();
+  const cartSummary = cartData?.data?.summary;
+  const cartCount = cartSummary?.itemCount ?? 0;
+  const cartSubtotal = Number(cartSummary?.subtotal ?? 0);
 
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = product ? isInWishlist(product.id) : false;
+
+  // Track scroll position to toggle bottom sticky Order Now bar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (ctaAreaRef.current) {
+        const rect = ctaAreaRef.current.getBoundingClientRect();
+        // Show sticky bar once user scrolls past the main buy buttons
+        const isPastCta = rect.top < 80;
+        setShowStickyBar(isPastCta);
+      } else {
+        setShowStickyBar(window.scrollY > 300);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Reviews & ratings
   const ratingSummary = ratingData?.data;
@@ -350,6 +382,32 @@ export default function ProductDetailsPage() {
     return match?.id ?? null;
   }, [activeVariant, images]);
 
+  const activeImage = useMemo(() => {
+    return (
+      images.find((img) => img.id === activeVariantImageId) ??
+      images.find((img) => img.isPrimary) ??
+      images[0] ??
+      null
+    );
+  }, [images, activeVariantImageId]);
+
+  const activeImageUrl = useMemo(() => {
+    if (activeImage?.imageUrl) return mediaUrl(activeImage.imageUrl);
+    if (images[0]?.imageUrl) return mediaUrl(images[0].imageUrl);
+    return null;
+  }, [activeImage, images]);
+
+  const selectedVariantAttributes = useMemo(() => {
+    if (!activeVariant?.attributeValues?.length) return [];
+    return activeVariant.attributeValues
+      .map((av) => {
+        const attrName = av.attributeValue?.attribute?.name;
+        const val = av.attributeValue?.value;
+        return attrName && val ? `${attrName}: ${val}` : val;
+      })
+      .filter(Boolean);
+  }, [activeVariant]);
+
   // ── Loading ──
   if (isLoading) return <ProductDetailSkeleton />;
 
@@ -374,7 +432,7 @@ export default function ProductDetailsPage() {
 
   return (
     <>
-      <StoreContainer className="py-6 md:py-10">
+      <StoreContainer className="py-6 md:py-10 pb-24 md:pb-20">
         {/* ── Breadcrumb ─── */}
         <Breadcrumb
           name={product.name}
@@ -556,9 +614,9 @@ export default function ProductDetailsPage() {
             </div>
 
             {/* ── CTA Action Buttons ── */}
-            <div className="flex flex-col gap-3 pt-2">
-              {/* Dual Action Buttons (Add to Cart + Buy Now) */}
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div ref={ctaAreaRef} className="flex flex-col gap-3 pt-2">
+              {/* Dual Action Buttons (Add to Cart + Buy Now) — Side-by-side on all screens */}
+              <div className="flex items-center gap-2.5 sm:gap-3.5 w-full">
                 {/* Add to Cart button */}
                 <Button
                   type="button"
@@ -572,22 +630,22 @@ export default function ProductDetailsPage() {
                     isDirectBuying
                   }
                   className={cn(
-                    "h-12 sm:h-13 flex-1 gap-2.5 text-base font-bold rounded-xl border-2 border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer shadow-xs",
+                    "h-12 sm:h-13 flex-1 min-w-0 px-2 sm:px-4 gap-2 sm:gap-2.5 text-xs xs:text-sm sm:text-base font-bold rounded-xl border-2 border-primary/25 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer shadow-xs active:scale-[0.98]",
                     addedToCart &&
                       "border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20",
                   )}
                 >
                   {isAddingToCart ? (
-                    <Loader2 className="size-5 animate-spin text-primary" />
+                    <Loader2 className="size-4 sm:size-5 animate-spin text-primary shrink-0" />
                   ) : addedToCart ? (
                     <>
-                      <Check className="size-5 text-emerald-600" />
-                      <span>Added to Cart</span>
+                      <Check className="size-4 sm:size-5 text-emerald-600 shrink-0" />
+                      <span className="truncate">Added to Cart</span>
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="size-5 text-primary" />
-                      <span>Add to Cart</span>
+                      <ShoppingCart className="size-4 sm:size-5 text-primary shrink-0" />
+                      <span className="truncate">Add to Cart</span>
                     </>
                   )}
                 </Button>
@@ -598,17 +656,17 @@ export default function ProductDetailsPage() {
                   size="lg"
                   onClick={handleBuyNow}
                   disabled={!activeVariant || isDirectBuying || isAddingToCart}
-                  className="h-12 sm:h-13 flex-1 gap-2.5 text-base font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.99] transition-all cursor-pointer"
+                  className="h-12 sm:h-13 flex-1 min-w-0 px-2 sm:px-4 gap-2 sm:gap-2.5 text-xs xs:text-sm sm:text-base font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg active:scale-[0.98] transition-all cursor-pointer"
                 >
                   {isDirectBuying ? (
                     <>
-                      <Loader2 className="size-5 animate-spin" />
-                      <span>Processing Order...</span>
+                      <Loader2 className="size-4 sm:size-5 animate-spin shrink-0" />
+                      <span className="truncate">Processing...</span>
                     </>
                   ) : (
                     <>
-                      <Zap className="size-5 fill-current" />
-                      <span>Buy Now</span>
+                      <Zap className="size-4 sm:size-5 fill-current shrink-0" />
+                      <span className="truncate">Buy Now</span>
                     </>
                   )}
                 </Button>
@@ -1057,6 +1115,103 @@ export default function ProductDetailsPage() {
           </div>
         )}
       </StoreContainer>
+
+      {/* ── Bottom Sticky Order Now Bar ── */}
+      <div
+        className={cn(
+          "fixed bottom-0 inset-x-0 z-[70] bg-background/95 backdrop-blur-xl border-t border-border/80 shadow-[0_-8px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 transform",
+          showStickyBar
+            ? "translate-y-0 opacity-100 pointer-events-auto"
+            : "translate-y-full opacity-0 pointer-events-none",
+        )}
+      >
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-2.5 sm:gap-4 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+          {/* Left: Product Thumbnail & Price */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+            <div className="relative size-11 sm:size-12 rounded-lg overflow-hidden bg-muted shrink-0 border border-border/60 shadow-2xs flex items-center justify-center">
+              {activeImageUrl ? (
+                <img
+                  src={activeImageUrl}
+                  alt={product.name}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <span className="text-[10px] text-muted-foreground font-semibold">
+                  No img
+                </span>
+              )}
+            </div>
+            <div className="min-w-0 flex flex-col justify-center">
+              <h4 className="font-semibold text-xs sm:text-sm text-foreground line-clamp-1 max-w-[120px] xs:max-w-[180px] sm:max-w-sm md:max-w-md">
+                {product.name}
+              </h4>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                {price !== null && (
+                  <span className="text-sm sm:text-base font-extrabold text-primary">
+                    ৳{price.toLocaleString()}
+                  </span>
+                )}
+                {compareAt && compareAt > (price ?? 0) && (
+                  <span className="text-[11px] sm:text-xs text-muted-foreground line-through">
+                    ৳{compareAt.toLocaleString()}
+                  </span>
+                )}
+                {discount && (
+                  <Badge className="h-4 px-1 text-[9px] font-bold bg-destructive/10 text-destructive border-0 hidden xs:inline-flex">
+                    -{discount}%
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Quick Add To Cart */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddToCart}
+              disabled={!activeVariant || isAddingToCart || isDirectBuying}
+              className="h-10 sm:h-11 px-3 sm:px-4 rounded-xl border-2 border-primary/25 hover:border-primary/50 hover:bg-primary/5 font-bold cursor-pointer"
+              title="Add to Cart"
+            >
+              {isAddingToCart ? (
+                <Loader2 className="size-4 animate-spin text-primary" />
+              ) : (
+                <>
+                  <ShoppingCart className="size-4 text-primary" />
+                  <span className="hidden xs:inline text-xs sm:text-sm">
+                    Add to Cart
+                  </span>
+                </>
+              )}
+            </Button>
+
+            {/* Order Now / Buy Now */}
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleBuyNow}
+              disabled={!activeVariant || isDirectBuying || isAddingToCart}
+              className="h-10 sm:h-11 px-4 sm:px-6 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 text-xs sm:text-sm"
+            >
+              {isDirectBuying ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  <span className="hidden xs:inline">Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="size-4 fill-current" />
+                  <span>Order Now</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
